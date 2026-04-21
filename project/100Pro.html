@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>100Pro — Rede Social de Serviços</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary: oklch(0.42 0.20 250);
+    --primary-light: oklch(0.55 0.18 250);
+    --primary-xlight: oklch(0.94 0.04 250);
+    --accent: oklch(0.58 0.18 165);
+    --accent-light: oklch(0.92 0.06 165);
+    --gold: oklch(0.72 0.14 80);
+    --bg: oklch(0.975 0.008 250);
+    --bg2: oklch(0.965 0.010 250);
+    --card: #ffffff;
+    --border: oklch(0.90 0.010 250);
+    --text: oklch(0.15 0.015 250);
+    --text2: oklch(0.45 0.015 250);
+    --text3: oklch(0.65 0.010 250);
+    --danger: oklch(0.58 0.20 25);
+    --sidebar-w: 240px;
+    --right-w: 320px;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 2px 12px oklch(0.42 0.20 250 / 0.08);
+    --shadow-md: 0 4px 24px oklch(0.42 0.20 250 / 0.12);
+    --transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  html, body { height: 100%; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); }
+  #root { height: 100%; }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; }
+  input { font-family: inherit; }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+  @keyframes heartPop { 0%,100% { transform: scale(1); } 50% { transform: scale(1.4); } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+  @keyframes shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+
+  .fade-in { animation: fadeIn 0.35s ease both; }
+  .pop-in { animation: popIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+  /* Tweaks panel */
+  .tweaks-panel {
+    position: fixed; bottom: 80px; right: 16px; z-index: 1000;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; width: 260px;
+    box-shadow: var(--shadow-md);
+    animation: popIn 0.25s ease both;
+  }
+  .tweaks-panel h4 { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text2); margin-bottom: 14px; }
+  .tweak-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 13px; color: var(--text); }
+  .tweak-toggle { width: 38px; height: 22px; border-radius: 99px; background: var(--border); position: relative; cursor: pointer; transition: var(--transition); }
+  .tweak-toggle.on { background: var(--primary); }
+  .tweak-toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: white; transition: var(--transition); box-shadow: 0 1px 4px #0002; }
+  .tweak-toggle.on::after { left: 19px; }
+  .tweak-select { font-size: 12px; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: inherit; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ─── DATA ──────────────────────────────────────────────────────────────────
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "darkMode": false,
+  "compactFeed": false,
+  "colorScheme": "indigo",
+  "showCalendar": true
+}/*EDITMODE-END*/;
+
+const CATEGORIES = [
+  { id: 'all', label: 'Todos', icon: '⊞' },
+  { id: 'reform', label: 'Reformas', icon: '🔨' },
+  { id: 'beauty', label: 'Beleza', icon: '✂' },
+  { id: 'tech', label: 'Tecnologia', icon: '💻' },
+  { id: 'clean', label: 'Limpeza', icon: '🧹' },
+  { id: 'health', label: 'Saúde', icon: '🏥' },
+  { id: 'edu', label: 'Educação', icon: '📚' },
+  { id: 'photo', label: 'Fotografia', icon: '📷' },
+  { id: 'design', label: 'Design', icon: '🎨' },
+];
+
+const PROVIDERS = [
+  { id: 1, name: 'Carla Mendes', role: 'Arquiteta & Designer de Interiores', category: 'reform', rating: 4.9, reviews: 127, jobs: 341, price: 'R$ 180/h', avatar: null, initials: 'CM', color: 'oklch(0.58 0.18 300)', verified: true, fav: false,
+    services: ['Projeto residencial', 'Design de interiores', 'Consultoria', 'Reforma comercial'],
+    about: 'Arquiteta com 10 anos de experiência em reformas residenciais e comerciais. Especialista em ambientes modernos e sustentáveis.',
+    portfolio: ['Apartamento Jardins SP', 'Escritório Tech Hub', 'Casa de Campo Campos do Jordão'] },
+  { id: 2, name: 'Lucas Ferreira', role: 'Dev Full Stack & Tech', category: 'tech', rating: 4.8, reviews: 89, jobs: 210, price: 'R$ 150/h', avatar: null, initials: 'LF', color: 'oklch(0.58 0.18 220)', verified: true, fav: true,
+    services: ['Desenvolvimento web', 'Apps mobile', 'APIs REST', 'Consultoria TI'],
+    about: 'Desenvolvedor apaixonado por criar soluções digitais elegantes. React, Node.js e AWS são minhas especialidades.',
+    portfolio: ['E-commerce Moda+', 'App Delivery Local', 'Dashboard Analytics'] },
+  { id: 3, name: 'Ana Paula Costa', role: 'Cabeleireira & Colorista', category: 'beauty', rating: 5.0, reviews: 203, jobs: 892, price: 'R$ 120/h', avatar: null, initials: 'AP', color: 'oklch(0.62 0.18 350)', verified: true, fav: false,
+    services: ['Corte feminino', 'Coloração', 'Tratamentos', 'Penteados para eventos'],
+    about: 'Especialista em coloração e cortes modernos. Formada pela L\'Oréal Academy Paris. Atendo em domicílio ou no salão.',
+    portfolio: ['Transformações Loiro Platinum', 'Noivas 2025', 'Cortes Curtos Tendência'] },
+  { id: 4, name: 'Roberto Silva', role: 'Fotógrafo Profissional', category: 'photo', rating: 4.7, reviews: 65, jobs: 156, price: 'R$ 250/h', avatar: null, initials: 'RS', color: 'oklch(0.55 0.18 200)', verified: false, fav: false,
+    services: ['Ensaio residencial', 'Fotografia corporativa', 'Eventos', 'Produto'],
+    about: 'Capturando momentos únicos há 8 anos. Especializado em luz natural e retratos autênticos.',
+    portfolio: ['Casamento Família Gomes', 'Book Corporativo Startup', 'Ensaio Newborn'] },
+  { id: 5, name: 'Priya Sharma', role: 'Personal Trainer & Nutricionista', category: 'health', rating: 4.9, reviews: 148, jobs: 430, price: 'R$ 130/h', avatar: null, initials: 'PS', color: 'oklch(0.60 0.18 160)', verified: true, fav: true,
+    services: ['Treino funcional', 'Emagrecimento', 'Hipertrofia', 'Dieta personalizada'],
+    about: 'Transformando vidas através de exercício e alimentação consciente. Mais de 400 alunos transformados.',
+    portfolio: ['Projeto Verão 2025', 'Atletas Masters', 'Mães Pós-Parto'] },
+  { id: 6, name: 'Marcos Oliveira', role: 'Designer Gráfico & UX', category: 'design', rating: 4.8, reviews: 92, jobs: 275, price: 'R$ 160/h', avatar: null, initials: 'MO', color: 'oklch(0.58 0.20 45)', verified: true, fav: false,
+    services: ['Identidade visual', 'UI/UX Design', 'Motion graphics', 'Branding'],
+    about: 'Criando marcas que contam histórias. Ex-Google Design, experiência em startups e grandes empresas.',
+    portfolio: ['Rebrand Banco Fácil', 'App UX Saúde+', 'Identidade 100Pro'] },
+];
+
+const FEED_POSTS = [
+  { id: 1, provider: PROVIDERS[0], time: '2h', likes: 48, comments: 12, saved: false, liked: false, category: 'reform',
+    text: 'Projeto finalizado! Reforma completa de apartamento de 120m² no Jardins. Do planejamento à execução, 45 dias de trabalho intenso. O cliente ficou encantado com o resultado 🏠✨',
+    imgLabel: 'Sala de estar reformada — tons neutros, iluminação embutida', imgColor: 'oklch(0.88 0.04 80)' },
+  { id: 2, provider: PROVIDERS[2], time: '5h', likes: 127, comments: 34, saved: true, liked: true, category: 'beauty',
+    text: 'Loiro platinum executado em 3 sessões! Cliente chegou com cabelo castanho escuro danificado. Resultado: saudável, brilhoso e zero quebra. Técnica exclusiva de hidratação progressiva 💇‍♀️',
+    imgLabel: 'Antes e depois coloração loiro platinum', imgColor: 'oklch(0.92 0.06 90)' },
+  { id: 3, provider: PROVIDERS[1], time: '1d', likes: 83, comments: 19, saved: false, liked: false, category: 'tech',
+    text: 'Dashboard em tempo real entregue! Sistema de analytics com React + WebSockets, processando 50k eventos/min. Zero downtime, 99.9% uptime no primeiro mês 🚀📊',
+    imgLabel: 'Dashboard analytics com gráficos em tempo real', imgColor: 'oklch(0.88 0.06 240)' },
+  { id: 4, provider: PROVIDERS[3], time: '1d', likes: 61, comments: 8, saved: false, liked: false, category: 'photo',
+    text: 'Ensaio de casamento ao pôr do sol no interior de SP. Cada foto conta uma história de amor. Obrigado, família Ribeiro, por confiar no meu trabalho! 📸💛',
+    imgLabel: 'Casal ao pôr do sol — ensaio de casamento', imgColor: 'oklch(0.85 0.08 70)' },
+  { id: 5, provider: PROVIDERS[4], time: '2d', likes: 214, comments: 52, saved: false, liked: false, category: 'health',
+    text: 'Resultado de 90 dias da aluna Carol: -12kg, -18cm de cintura e autoestima lá em cima! Treino funcional + alimentação personalizada = transformação real 💪🥗',
+    imgLabel: 'Resultado antes e depois — programa 90 dias', imgColor: 'oklch(0.90 0.06 160)' },
+  { id: 6, provider: PROVIDERS[5], time: '3d', likes: 95, comments: 27, saved: false, liked: false, category: 'design',
+    text: 'Identidade visual completa para startup Fintech. Logotipo, tipografia, paleta de cores, manual da marca e aplicações. Projeto de 3 semanas que ficará para sempre 🎨✦',
+    imgLabel: 'Brand book completo — identidade visual fintech', imgColor: 'oklch(0.88 0.08 260)' },
+];
+
+const TESTIMONIALS = [
+  { id: 1, author: 'Beatriz Rocha', role: 'Empresária', provider: 'Carla Mendes', rating: 5, text: 'A Carla transformou meu escritório além do que eu imaginava. Profissionalismo impecável do início ao fim. Já indiquei para 5 pessoas!', avatar: 'BR', color: 'oklch(0.62 0.18 300)' },
+  { id: 2, author: 'Felipe Torres', role: 'Startup Founder', provider: 'Lucas Ferreira', rating: 5, text: 'Em 3 semanas o Lucas entregou o que outros demoraram meses. Código limpo, documentação perfeita. É o meu dev fixo agora.', avatar: 'FT', color: 'oklch(0.58 0.18 220)' },
+  { id: 3, author: 'Renata Lima', role: 'Professora', provider: 'Ana Paula Costa', rating: 5, text: 'Minha transformação de cabelo foi incrível! A Ana Paula é uma artista. Pontual, caprichosa e super atenciosa. Amei demais!', avatar: 'RL', color: 'oklch(0.62 0.18 350)' },
+  { id: 4, author: 'Carlos Souza', role: 'Engenheiro', provider: 'Roberto Silva', rating: 5, text: 'As fotos do casamento da minha filha ficaram perfeitas. O Roberto capturou cada momento especial. Memórias que vão durar para sempre.', avatar: 'CS', color: 'oklch(0.55 0.18 200)' },
+];
+
+const CALENDAR_EVENTS = [
+  { day: 7, provider: 'Carla Mendes', service: 'Consultoria inicial', time: '10:00', color: 'oklch(0.58 0.18 300)' },
+  { day: 11, provider: 'Lucas Ferreira', service: 'Sprint planning', time: '14:00', color: 'oklch(0.58 0.18 220)' },
+  { day: 15, provider: 'Ana Paula Costa', service: 'Coloração', time: '09:30', color: 'oklch(0.62 0.18 350)' },
+  { day: 18, provider: 'Priya Sharma', service: 'Treino funcional', time: '07:00', color: 'oklch(0.60 0.18 160)' },
+  { day: 22, provider: 'Marcos Oliveira', service: 'Revisão de marca', time: '16:00', color: 'oklch(0.58 0.20 45)' },
+  { day: 28, provider: 'Roberto Silva', service: 'Ensaio produto', time: '13:00', color: 'oklch(0.55 0.18 200)' },
+];
+
+// ─── COMPONENTS ────────────────────────────────────────────────────────────
+
+// Logo
+function Logo({ size = 'md' }) {
+  const s = size === 'lg' ? { text: 28, dot: 9, gap: 2 } : size === 'sm' ? { text: 16, dot: 5, gap: 1 } : { text: 20, dot: 7, gap: 1 };
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, userSelect: 'none' }}>
+      <div style={{
+        background: 'linear-gradient(135deg, oklch(0.42 0.20 250), oklch(0.58 0.18 165))',
+        borderRadius: 10, padding: '5px 10px',
+        display: 'flex', alignItems: 'center', gap: s.gap,
+        boxShadow: '0 2px 12px oklch(0.42 0.20 250 / 0.35)'
+      }}>
+        <span style={{ fontSize: s.text, fontWeight: 800, color: 'white', letterSpacing: '-0.03em', lineHeight: 1 }}>100</span>
+        <div style={{
+          width: s.dot, height: s.dot, borderRadius: '50%',
+          background: 'oklch(0.72 0.14 80)',
+          boxShadow: '0 0 8px oklch(0.72 0.14 80 / 0.8)'
+        }} />
+        <span style={{ fontSize: s.text, fontWeight: 800, color: 'white', letterSpacing: '-0.02em', lineHeight: 1 }}>Pro</span>
+      </div>
+    </div>
+  );
+}
+
+// Stars
+function Stars({ rating, size = 14 }) {
+  return (
+    <div style={{ display: 'flex', gap: 1 }}>
+      {[1,2,3,4,5].map(i => (
+        <svg key={i} width={size} height={size} viewBox="0 0 24 24" fill={i <= Math.round(rating) ? 'var(--gold)' : 'var(--border)'}>
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+      ))}
+    </div>
+  );
+}
+
+// Avatar
+function Avatar({ initials, color, size = 44, img }) {
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%',
+      background: img ? 'transparent' : color,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: size * 0.35, fontWeight: 700, color: 'white',
+      flexShrink: 0, overflow: 'hidden',
+      border: '2px solid white',
+      boxShadow: '0 2px 8px #0002'
+    }}>
+      {initials}
+    </div>
+  );
+}
+
+// Provider Card (sidebar)
+function ProviderCard({ provider, onSelect, onFav }) {
+  const [hovered, setHovered] = useState(false);
+  const [favAnim, setFavAnim] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: 'var(--card)', borderRadius: 'var(--radius-sm)',
+        padding: '12px', border: '1px solid var(--border)',
+        transition: 'var(--transition)',
+        transform: hovered ? 'translateY(-2px)' : 'none',
+        boxShadow: hovered ? 'var(--shadow-md)' : 'var(--shadow)',
+        cursor: 'pointer', position: 'relative',
+      }}
+      onClick={() => onSelect(provider)}
+    >
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        <div style={{ position: 'relative' }}>
+          <Avatar initials={provider.initials} color={provider.color} size={42} />
+          {provider.verified && (
+            <div style={{
+              position: 'absolute', bottom: -1, right: -1, width: 16, height: 16,
+              background: 'var(--accent)', borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '2px solid white'
+            }}>
+              <svg width={8} height={8} viewBox="0 0 24 24" fill="white">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="white" strokeWidth={3} fill="none"/>
+              </svg>
+            </div>
+          )}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{provider.name}</div>
+          <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{provider.role}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+            <Stars rating={provider.rating} size={10} />
+            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text)' }}>{provider.rating}</span>
+            <span style={{ fontSize: 11, color: 'var(--text3)' }}>({provider.reviews})</span>
+          </div>
+        </div>
+        <button
+          onClick={e => { e.stopPropagation(); setFavAnim(true); setTimeout(() => setFavAnim(false), 300); onFav(provider.id); }}
+          style={{
+            background: provider.fav ? 'oklch(0.95 0.08 25)' : 'var(--bg2)',
+            border: 'none', borderRadius: 8, width: 28, height: 28,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', transition: 'var(--transition)',
+            animation: favAnim ? 'heartPop 0.3s ease' : 'none',
+            flexShrink: 0
+          }}
+        >
+          <svg width={14} height={14} viewBox="0 0 24 24"
+            fill={provider.fav ? 'var(--danger)' : 'none'}
+            stroke={provider.fav ? 'var(--danger)' : 'var(--text3)'}
+            strokeWidth={2}>
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </button>
+      </div>
+      <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+        <span style={{ fontSize: 11, background: 'var(--primary-xlight)', color: 'var(--primary)', padding: '3px 8px', borderRadius: 99, fontWeight: 600 }}>{provider.price}</span>
+        <span style={{ fontSize: 11, background: 'var(--bg2)', color: 'var(--text2)', padding: '3px 8px', borderRadius: 99 }}>{provider.jobs} serviços</span>
+      </div>
+    </div>
+  );
+}
+
+// Feed Post
+function FeedPost({ post, onToggleLike, onToggleSave, onProfile }) {
+  const [hovered, setHovered] = useState(false);
+  const [commentOpen, setCommentOpen] = useState(false);
+
+  return (
+    <div className="fade-in" style={{
+      background: 'var(--card)', borderRadius: 'var(--radius)',
+      border: '1px solid var(--border)', overflow: 'hidden',
+      boxShadow: 'var(--shadow)', transition: 'var(--transition)',
+      transform: hovered ? 'translateY(-2px)' : 'none',
+      boxShadow: hovered ? 'var(--shadow-md)' : 'var(--shadow)',
+    }}
+    onMouseEnter={() => setHovered(true)}
+    onMouseLeave={() => setHovered(false)}>
+      {/* Header */}
+      <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ cursor: 'pointer' }} onClick={() => onProfile(post.provider)}>
+          <Avatar initials={post.provider.initials} color={post.provider.color} size={40} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontWeight: 700, fontSize: 14, cursor: 'pointer', color: 'var(--text)' }}
+              onClick={() => onProfile(post.provider)}>{post.provider.name}</span>
+            {post.provider.verified && (
+              <div style={{ width: 14, height: 14, background: 'var(--accent)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width={8} height={8} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3}><path d="M5 13l4 4L19 7"/></svg>
+              </div>
+            )}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 1 }}>{post.provider.role} · {post.time}</div>
+        </div>
+        <button style={{
+          background: 'var(--primary-xlight)', color: 'var(--primary)',
+          fontSize: 12, fontWeight: 600, padding: '6px 12px', borderRadius: 99,
+          border: 'none', cursor: 'pointer', transition: 'var(--transition)',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'var(--primary-xlight)'; e.currentTarget.style.color = 'var(--primary)'; }}
+        onClick={() => onProfile(post.provider)}>
+          Contratar
+        </button>
+      </div>
+
+      {/* Image */}
+      <div style={{
+        height: 220, background: post.imgColor,
+        position: 'relative', overflow: 'hidden',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <div style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+          opacity: 0.5
+        }}>
+          <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+          </svg>
+          <span style={{ fontSize: 12, fontFamily: 'monospace', textAlign: 'center', maxWidth: 200, lineHeight: 1.4, color: 'var(--text)' }}>{post.imgLabel}</span>
+        </div>
+        {/* Category badge */}
+        <div style={{
+          position: 'absolute', top: 10, left: 10,
+          background: '#ffffffcc', backdropFilter: 'blur(8px)',
+          padding: '4px 10px', borderRadius: 99, fontSize: 11, fontWeight: 600, color: 'var(--text)'
+        }}>
+          {CATEGORIES.find(c => c.id === post.category)?.label}
+        </div>
+      </div>
+
+      {/* Text */}
+      <div style={{ padding: '12px 16px 0' }}>
+        <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text)', textWrap: 'pretty' }}>{post.text}</p>
+      </div>
+
+      {/* Actions */}
+      <div style={{ padding: '10px 16px 14px', display: 'flex', alignItems: 'center', gap: 4 }}>
+        <ActionBtn icon={
+          <svg width={17} height={17} viewBox="0 0 24 24" fill={post.liked ? 'var(--danger)' : 'none'} stroke={post.liked ? 'var(--danger)' : 'currentColor'} strokeWidth={2}>
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>} label={post.likes + (post.liked ? 1 : 0)} active={post.liked} onClick={() => onToggleLike(post.id)} />
+        <ActionBtn icon={
+          <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>} label={post.comments} onClick={() => setCommentOpen(!commentOpen)} />
+        <ActionBtn icon={
+          <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>} label="Compartilhar" />
+        <div style={{ flex: 1 }} />
+        <ActionBtn icon={
+          <svg width={17} height={17} viewBox="0 0 24 24" fill={post.saved ? 'var(--primary)' : 'none'} stroke={post.saved ? 'var(--primary)' : 'currentColor'} strokeWidth={2}>
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          </svg>} label="Salvar" active={post.saved} onClick={() => onToggleSave(post.id)} />
+      </div>
+
+      {commentOpen && (
+        <div style={{ padding: '0 16px 14px', borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'white', flexShrink: 0 }}>VC</div>
+            <input placeholder="Escreva um comentário..." style={{
+              flex: 1, border: '1px solid var(--border)', borderRadius: 99, padding: '7px 14px',
+              fontSize: 13, background: 'var(--bg)', outline: 'none', color: 'var(--text)',
+              transition: 'var(--transition)'
+            }}
+            onFocus={e => { e.target.style.borderColor = 'var(--primary)'; e.target.style.boxShadow = '0 0 0 3px oklch(0.42 0.20 250 / 0.12)'; }}
+            onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ActionBtn({ icon, label, active, onClick }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <button onClick={onClick}
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px',
+        borderRadius: 8, background: hov ? 'var(--bg2)' : 'transparent',
+        color: active ? 'var(--primary)' : 'var(--text2)',
+        fontSize: 12, fontWeight: 500, transition: 'var(--transition)',
+        transform: hov ? 'scale(1.04)' : 'scale(1)'
+      }}>
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+// Provider Profile Modal
+function ProfileModal({ provider, onClose, onFav }) {
+  const [tab, setTab] = useState('about');
+  const [booked, setBooked] = useState(false);
+  if (!provider) return null;
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 100,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: '#00000066', backdropFilter: 'blur(4px)',
+      padding: 16
+    }} onClick={onClose}>
+      <div className="pop-in" style={{
+        background: 'var(--card)', borderRadius: 'var(--radius)',
+        width: '100%', maxWidth: 540, maxHeight: '85vh', overflow: 'auto',
+        boxShadow: 'var(--shadow-md)'
+      }} onClick={e => e.stopPropagation()}>
+
+        {/* Hero */}
+        <div style={{ height: 120, background: `linear-gradient(135deg, ${provider.color}, oklch(0.42 0.20 250))`, borderRadius: 'var(--radius) var(--radius) 0 0', position: 'relative' }}>
+          <button onClick={onClose} style={{
+            position: 'absolute', top: 12, right: 12,
+            width: 32, height: 32, borderRadius: '50%',
+            background: '#ffffff33', backdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', border: 'none', color: 'white', fontSize: 18, fontWeight: 300
+          }}>×</button>
+        </div>
+
+        <div style={{ padding: '0 24px 24px' }}>
+          {/* Avatar row */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: -28 }}>
+            <div style={{ position: 'relative' }}>
+              <Avatar initials={provider.initials} color={provider.color} size={72} />
+              {provider.verified && (
+                <div style={{
+                  position: 'absolute', bottom: 2, right: 2, width: 20, height: 20,
+                  background: 'var(--accent)', borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid white'
+                }}>
+                  <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3}><path d="M5 13l4 4L19 7"/></svg>
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 8, paddingBottom: 4 }}>
+              <button onClick={() => onFav(provider.id)} style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: provider.fav ? 'oklch(0.95 0.08 25)' : 'var(--bg2)',
+                border: '1px solid var(--border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                transition: 'var(--transition)'
+              }}>
+                <svg width={16} height={16} viewBox="0 0 24 24"
+                  fill={provider.fav ? 'var(--danger)' : 'none'}
+                  stroke={provider.fav ? 'var(--danger)' : 'var(--text2)'} strokeWidth={2}>
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+              </button>
+              <button onClick={() => setBooked(!booked)} style={{
+                height: 36, padding: '0 18px', borderRadius: 10,
+                background: booked ? 'var(--accent)' : 'var(--primary)',
+                color: 'white', fontWeight: 600, fontSize: 13,
+                border: 'none', cursor: 'pointer', transition: 'var(--transition)'
+              }}>
+                {booked ? '✓ Agendado!' : 'Agendar'}
+              </button>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 800 }}>{provider.name}</h2>
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--text2)', marginTop: 2 }}>{provider.role}</div>
+            <div style={{ display: 'flex', gap: 16, marginTop: 10 }}>
+              <Stat value={provider.rating} label="Avaliação" gold />
+              <Stat value={`${provider.reviews}`} label="Reviews" />
+              <Stat value={`${provider.jobs}`} label="Serviços" />
+              <Stat value={provider.price} label="Por hora" />
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div style={{ display: 'flex', gap: 4, marginTop: 20, borderBottom: '1px solid var(--border)', paddingBottom: 0 }}>
+            {['about', 'services', 'portfolio'].map(t => (
+              <button key={t} onClick={() => setTab(t)} style={{
+                padding: '8px 14px', borderRadius: '8px 8px 0 0',
+                fontWeight: 600, fontSize: 13,
+                background: tab === t ? 'var(--primary-xlight)' : 'transparent',
+                color: tab === t ? 'var(--primary)' : 'var(--text2)',
+                border: 'none', cursor: 'pointer',
+                borderBottom: tab === t ? '2px solid var(--primary)' : '2px solid transparent',
+                transition: 'var(--transition)'
+              }}>
+                {{ about: 'Sobre', services: 'Serviços', portfolio: 'Portfolio' }[t]}
+              </button>
+            ))}
+          </div>
+          <div style={{ marginTop: 16, animation: 'fadeIn 0.2s ease' }}>
+            {tab === 'about' && <p style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--text2)', textWrap: 'pretty' }}>{provider.about}</p>}
+            {tab === 'services' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {provider.services.map((s, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '10px 14px', background: 'var(--bg)', borderRadius: 10,
+                    fontSize: 13, fontWeight: 500, color: 'var(--text)'
+                  }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: provider.color, flexShrink: 0 }} />
+                    {s}
+                  </div>
+                ))}
+              </div>
+            )}
+            {tab === 'portfolio' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {provider.portfolio.map((p, i) => (
+                  <div key={i} style={{
+                    height: 70, borderRadius: 10, background: `oklch(0.92 0.04 ${200 + i * 40})`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 12, fontFamily: 'monospace', color: 'var(--text2)', opacity: 0.7
+                  }}>{p}</div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Stat({ value, label, gold }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <span style={{ fontSize: 18, fontWeight: 800, color: gold ? 'var(--gold)' : 'var(--text)' }}>{value}</span>
+      <span style={{ fontSize: 11, color: 'var(--text3)' }}>{label}</span>
+    </div>
+  );
+}
+
+// Calendar Widget
+function CalendarWidget() {
+  const today = 21;
+  const days = Array.from({ length: 30 }, (_, i) => i + 1);
+  const eventDays = CALENDAR_EVENTS.map(e => e.day);
+  const [selected, setSelected] = useState(today);
+  const selectedEvent = CALENDAR_EVENTS.find(e => e.day === selected);
+
+  return (
+    <div style={{ background: 'var(--card)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', padding: 16, boxShadow: 'var(--shadow)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div style={{ fontWeight: 700, fontSize: 14 }}>Abril 2026</div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <CalNavBtn>‹</CalNavBtn>
+          <CalNavBtn>›</CalNavBtn>
+        </div>
+      </div>
+      {/* Day labels */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 4 }}>
+        {['D','S','T','Q','Q','S','S'].map((d, i) => (
+          <div key={i} style={{ textAlign: 'center', fontSize: 10, fontWeight: 600, color: 'var(--text3)', padding: '2px 0' }}>{d}</div>
+        ))}
+      </div>
+      {/* Days grid — April 2026 starts on Wednesday (offset=3) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
+        {Array.from({ length: 3 }).map((_, i) => <div key={`e${i}`} />)}
+        {days.map(d => {
+          const hasEvent = eventDays.includes(d);
+          const isToday = d === today;
+          const isSel = d === selected;
+          const ev = CALENDAR_EVENTS.find(e => e.day === d);
+          return (
+            <button key={d} onClick={() => setSelected(d)} style={{
+              aspectRatio: '1', borderRadius: 8, border: 'none',
+              background: isSel ? 'var(--primary)' : isToday ? 'var(--primary-xlight)' : 'transparent',
+              color: isSel ? 'white' : isToday ? 'var(--primary)' : 'var(--text)',
+              fontSize: 12, fontWeight: isSel || isToday ? 700 : 400,
+              cursor: 'pointer', transition: 'var(--transition)',
+              position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+            onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = 'var(--bg2)'; }}
+            onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = isToday ? 'var(--primary-xlight)' : 'transparent'; }}>
+              {d}
+              {hasEvent && !isSel && (
+                <div style={{
+                  position: 'absolute', bottom: 2, left: '50%', transform: 'translateX(-50%)',
+                  width: 4, height: 4, borderRadius: '50%', background: ev?.color
+                }} />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {selectedEvent && (
+        <div className="fade-in" style={{
+          marginTop: 12, padding: '10px 12px',
+          background: 'var(--bg)', borderRadius: 10,
+          borderLeft: `3px solid ${selectedEvent.color}`
+        }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{selectedEvent.service}</div>
+          <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 2 }}>{selectedEvent.provider} · {selectedEvent.time}</div>
+        </div>
+      )}
+      {!selectedEvent && selected && (
+        <div style={{ marginTop: 10, fontSize: 12, color: 'var(--text3)', textAlign: 'center', padding: '8px 0' }}>Sem agendamentos neste dia</div>
+      )}
+    </div>
+  );
+}
+
+function CalNavBtn({ children }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <button onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{
+      width: 24, height: 24, borderRadius: 6, border: '1px solid var(--border)',
+      background: hov ? 'var(--primary-xlight)' : 'var(--bg)', color: 'var(--text)',
+      fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      transition: 'var(--transition)'
+    }}>{children}</button>
+  );
+}
+
+// Testimonial Card
+function TestimonialCard({ t, delay }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <div className="fade-in" onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{
+        background: 'var(--card)', borderRadius: 'var(--radius)', padding: 20,
+        border: '1px solid var(--border)', boxShadow: 'var(--shadow)',
+        transition: 'var(--transition)',
+        transform: hov ? 'translateY(-3px)' : 'none',
+        boxShadow: hov ? 'var(--shadow-md)' : 'var(--shadow)',
+        animationDelay: `${delay * 0.08}s`
+      }}>
+      <div style={{ fontSize: 28, color: 'var(--primary)', opacity: 0.3, lineHeight: 1, marginBottom: 10, fontFamily: 'Georgia, serif' }}>"</div>
+      <p style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--text)', textWrap: 'pretty', marginBottom: 14 }}>{t.text}</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 36, height: 36, borderRadius: '50%', background: t.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white' }}>{t.avatar}</div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 13 }}>{t.author}</div>
+          <div style={{ fontSize: 11, color: 'var(--text3)' }}>{t.role} · Avaliou {t.provider}</div>
+        </div>
+        <div style={{ marginLeft: 'auto' }}>
+          <Stars rating={t.rating} size={12} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Search bar + Category chips
+function SearchBar({ query, setQuery, activeCategory, setActiveCategory }) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{
+        display: 'flex', gap: 10, alignItems: 'center',
+        background: 'var(--card)', borderRadius: 'var(--radius)',
+        padding: '10px 16px', border: `1.5px solid ${focused ? 'var(--primary)' : 'var(--border)'}`,
+        boxShadow: focused ? '0 0 0 4px oklch(0.42 0.20 250 / 0.10)' : 'var(--shadow)',
+        transition: 'var(--transition)'
+      }}>
+        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="var(--text3)" strokeWidth={2}>
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input value={query} onChange={e => setQuery(e.target.value)}
+          placeholder="Buscar serviços, profissionais..."
+          onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+          style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: 'var(--text)' }} />
+        {query && <button onClick={() => setQuery('')} style={{ color: 'var(--text3)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>×</button>}
+        <button style={{
+          background: 'var(--primary)', color: 'white', border: 'none',
+          borderRadius: 10, padding: '6px 14px', fontSize: 13, fontWeight: 600,
+          cursor: 'pointer', whiteSpace: 'nowrap', transition: 'var(--transition)'
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-light)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'var(--primary)'}>
+          Buscar
+        </button>
+      </div>
+      {/* Category chips */}
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
+        {CATEGORIES.map(cat => (
+          <button key={cat.id} onClick={() => setActiveCategory(cat.id === activeCategory ? 'all' : cat.id)} style={{
+            padding: '7px 14px', borderRadius: 99, whiteSpace: 'nowrap',
+            fontSize: 12, fontWeight: 600,
+            background: activeCategory === cat.id ? 'var(--primary)' : 'var(--card)',
+            color: activeCategory === cat.id ? 'white' : 'var(--text2)',
+            border: `1px solid ${activeCategory === cat.id ? 'var(--primary)' : 'var(--border)'}`,
+            cursor: 'pointer', transition: 'var(--transition)',
+            display: 'flex', alignItems: 'center', gap: 5
+          }}
+          onMouseEnter={e => { if (activeCategory !== cat.id) { e.currentTarget.style.background = 'var(--primary-xlight)'; e.currentTarget.style.color = 'var(--primary)'; } }}
+          onMouseLeave={e => { if (activeCategory !== cat.id) { e.currentTarget.style.background = 'var(--card)'; e.currentTarget.style.color = 'var(--text2)'; } }}>
+            <span>{cat.icon}</span> {cat.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Sidebar Nav
+function SidebarNav({ activeTab, setActiveTab, isMobile }) {
+  const navItems = [
+    { id: 'feed', label: 'Feed', icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
+    { id: 'explore', label: 'Explorar', icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> },
+    { id: 'schedule', label: 'Agendamentos', icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
+    { id: 'favorites', label: 'Favoritos', icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> },
+    { id: 'messages', label: 'Mensagens', icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> },
+  ];
+
+  if (isMobile) {
+    return (
+      <nav style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, height: 60, zIndex: 50,
+        background: 'var(--card)', borderTop: '1px solid var(--border)',
+        display: 'flex', alignItems: 'center',
+        backdropFilter: 'blur(12px)'
+      }}>
+        {navItems.map(item => (
+          <button key={item.id} onClick={() => setActiveTab(item.id)} style={{
+            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+            padding: '8px 0', border: 'none', background: 'transparent',
+            color: activeTab === item.id ? 'var(--primary)' : 'var(--text3)',
+            cursor: 'pointer', transition: 'var(--transition)',
+            fontSize: 9, fontWeight: activeTab === item.id ? 700 : 500
+          }}>
+            {item.icon}
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </nav>
+    );
+  }
+
+  return (
+    <aside style={{
+      width: 'var(--sidebar-w)', flexShrink: 0,
+      height: '100vh', position: 'sticky', top: 0,
+      display: 'flex', flexDirection: 'column',
+      background: 'var(--card)', borderRight: '1px solid var(--border)',
+      padding: '20px 12px'
+    }}>
+      <div style={{ padding: '0 8px 24px' }}>
+        <Logo />
+      </div>
+
+      <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {navItems.map(item => (
+          <button key={item.id} onClick={() => setActiveTab(item.id)} style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            padding: '10px 12px', borderRadius: 12, border: 'none',
+            background: activeTab === item.id ? 'var(--primary-xlight)' : 'transparent',
+            color: activeTab === item.id ? 'var(--primary)' : 'var(--text2)',
+            fontWeight: activeTab === item.id ? 700 : 500, fontSize: 14,
+            cursor: 'pointer', transition: 'var(--transition)', textAlign: 'left',
+          }}
+          onMouseEnter={e => { if (activeTab !== item.id) e.currentTarget.style.background = 'var(--bg)'; }}
+          onMouseLeave={e => { if (activeTab !== item.id) e.currentTarget.style.background = 'transparent'; }}>
+            {item.icon}
+            {item.label}
+            {item.id === 'messages' && (
+              <span style={{ marginLeft: 'auto', background: 'var(--danger)', color: 'white', width: 18, height: 18, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700 }}>3</span>
+            )}
+          </button>
+        ))}
+      </nav>
+
+      {/* User profile */}
+      <div style={{
+        display: 'flex', gap: 10, alignItems: 'center',
+        padding: 12, borderRadius: 12, background: 'var(--bg)',
+        cursor: 'pointer', transition: 'var(--transition)'
+      }}
+      onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-xlight)'}
+      onMouseLeave={e => e.currentTarget.style.background = 'var(--bg)'}>
+        <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 13 }}>VC</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>Você</div>
+          <div style={{ fontSize: 11, color: 'var(--text3)' }}>@seu_perfil</div>
+        </div>
+        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="var(--text3)" strokeWidth={2}><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      </div>
+    </aside>
+  );
+}
+
+// ─── SCREENS ───────────────────────────────────────────────────────────────
+
+function FeedScreen({ providers, posts, setPosts, onProfile }) {
+  const [query, setQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
+
+  const filtered = posts.filter(p =>
+    (activeCategory === 'all' || p.category === activeCategory) &&
+    (query === '' || p.text.toLowerCase().includes(query.toLowerCase()) || p.provider.name.toLowerCase().includes(query.toLowerCase()))
+  );
+
+  function toggleLike(id) {
+    setPosts(ps => ps.map(p => p.id === id ? { ...p, liked: !p.liked } : p));
+  }
+  function toggleSave(id) {
+    setPosts(ps => ps.map(p => p.id === id ? { ...p, saved: !p.saved } : p));
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <SearchBar query={query} setQuery={setQuery} activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
+      {filtered.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text3)' }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+          <div style={{ fontSize: 14 }}>Nenhum resultado para essa busca</div>
+        </div>
+      )}
+      {filtered.map((post, i) => (
+        <div key={post.id} style={{ animationDelay: `${i * 0.06}s` }}>
+          <FeedPost post={post} onToggleLike={toggleLike} onToggleSave={toggleSave} onProfile={onProfile} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ExploreScreen({ providers, setProviders, onProfile }) {
+  const [query, setQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
+
+  const filtered = providers.filter(p =>
+    (activeCategory === 'all' || p.category === activeCategory) &&
+    (query === '' || p.name.toLowerCase().includes(query.toLowerCase()) || p.role.toLowerCase().includes(query.toLowerCase()))
+  );
+
+  function toggleFav(id) {
+    setProviders(ps => ps.map(p => p.id === id ? { ...p, fav: !p.fav } : p));
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <SearchBar query={query} setQuery={setQuery} activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
+        {filtered.map((p, i) => (
+          <div key={p.id} style={{ animation: `fadeIn 0.3s ease ${i * 0.06}s both` }}>
+            <ExploreCard provider={p} onSelect={onProfile} onFav={toggleFav} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ExploreCard({ provider, onSelect, onFav }) {
+  const [hov, setHov] = useState(false);
+  const [favAnim, setFavAnim] = useState(false);
+  return (
+    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{
+      background: 'var(--card)', borderRadius: 'var(--radius)', border: '1px solid var(--border)',
+      overflow: 'hidden', cursor: 'pointer', transition: 'var(--transition)',
+      transform: hov ? 'translateY(-3px)' : 'none',
+      boxShadow: hov ? 'var(--shadow-md)' : 'var(--shadow)'
+    }} onClick={() => onSelect(provider)}>
+      <div style={{ height: 80, background: `linear-gradient(135deg, ${provider.color}66, ${provider.color}33)`, position: 'relative' }}>
+        <button onClick={e => { e.stopPropagation(); setFavAnim(true); setTimeout(() => setFavAnim(false), 300); onFav(provider.id); }} style={{
+          position: 'absolute', top: 10, right: 10,
+          width: 30, height: 30, borderRadius: '50%', background: '#ffffff99', backdropFilter: 'blur(4px)',
+          border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          animation: favAnim ? 'heartPop 0.3s ease' : 'none'
+        }}>
+          <svg width={14} height={14} viewBox="0 0 24 24" fill={provider.fav ? 'var(--danger)' : 'none'} stroke={provider.fav ? 'var(--danger)' : 'var(--text)'} strokeWidth={2}>
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </button>
+      </div>
+      <div style={{ padding: 16, marginTop: -24 }}>
+        <Avatar initials={provider.initials} color={provider.color} size={48} />
+        <div style={{ marginTop: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ fontWeight: 700, fontSize: 15 }}>{provider.name}</span>
+            {provider.verified && <div style={{ width: 14, height: 14, background: 'var(--accent)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width={8} height={8} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3}><path d="M5 13l4 4L19 7"/></svg></div>}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 2 }}>{provider.role}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+            <Stars rating={provider.rating} size={11} />
+            <span style={{ fontSize: 12, fontWeight: 600 }}>{provider.rating}</span>
+            <span style={{ fontSize: 11, color: 'var(--text3)' }}>({provider.reviews})</span>
+          </div>
+          <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+            <span style={{ fontSize: 11, background: 'var(--primary-xlight)', color: 'var(--primary)', padding: '3px 8px', borderRadius: 99, fontWeight: 600 }}>{provider.price}</span>
+            <span style={{ fontSize: 11, background: 'var(--bg2)', color: 'var(--text2)', padding: '3px 8px', borderRadius: 99 }}>{provider.jobs} jobs</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ScheduleScreen() {
+  const [selected, setSelected] = useState(null);
+  const today = 21;
+  const days = Array.from({ length: 30 }, (_, i) => i + 1);
+  const eventDays = CALENDAR_EVENTS.map(e => e.day);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ background: 'var(--card)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', padding: 24, boxShadow: 'var(--shadow)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 20 }}>Abril 2026</div>
+            <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>6 agendamentos este mês</div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>‹ Março</button>
+            <button style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Maio ›</button>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 8 }}>
+          {['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(d => (
+            <div key={d} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'var(--text3)', padding: '4px 0' }}>{d}</div>
+          ))}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+          {Array.from({ length: 3 }).map((_, i) => <div key={`e${i}`} />)}
+          {days.map(d => {
+            const ev = CALENDAR_EVENTS.find(e => e.day === d);
+            const isToday = d === today;
+            const isSel = selected === d;
+            return (
+              <button key={d} onClick={() => setSelected(d === selected ? null : d)} style={{
+                aspectRatio: '1', borderRadius: 10, border: 'none',
+                background: isSel ? 'var(--primary)' : isToday ? 'var(--primary-xlight)' : ev ? `${ev.color}22` : 'transparent',
+                color: isSel ? 'white' : isToday ? 'var(--primary)' : 'var(--text)',
+                fontSize: 13, fontWeight: isSel || isToday ? 700 : 400,
+                cursor: 'pointer', transition: 'var(--transition)',
+                position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                outline: ev && !isSel ? `2px solid ${ev.color}44` : 'none',
+              }}
+              onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = isToday ? 'var(--primary-xlight)' : ev ? `${ev.color}33` : 'var(--bg2)'; }}
+              onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = isToday ? 'var(--primary-xlight)' : ev ? `${ev.color}22` : 'transparent'; }}>
+                {d}
+                {ev && <div style={{ position: 'absolute', bottom: 3, left: '50%', transform: 'translateX(-50%)', width: 4, height: 4, borderRadius: '50%', background: isSel ? 'white' : ev.color }} />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 12, color: 'var(--text)' }}>Próximos agendamentos</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {CALENDAR_EVENTS.map((ev, i) => (
+            <div key={i} className="fade-in" style={{
+              background: 'var(--card)', borderRadius: 'var(--radius-sm)', padding: '14px 16px',
+              border: '1px solid var(--border)', display: 'flex', gap: 14, alignItems: 'center',
+              boxShadow: 'var(--shadow)', animationDelay: `${i * 0.05}s`,
+              transition: 'var(--transition)',
+              borderLeft: `4px solid ${ev.color}`
+            }}>
+              <div style={{ textAlign: 'center', minWidth: 42 }}>
+                <div style={{ fontWeight: 800, fontSize: 22, color: 'var(--text)', lineHeight: 1 }}>{ev.day}</div>
+                <div style={{ fontSize: 10, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ABR</div>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>{ev.service}</div>
+                <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 2 }}>{ev.provider} · {ev.time}</div>
+              </div>
+              <button style={{
+                background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8,
+                padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                color: 'var(--text2)', transition: 'var(--transition)', fontFamily: 'inherit'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary-xlight)'; e.currentTarget.style.color = 'var(--primary)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg2)'; e.currentTarget.style.color = 'var(--text2)'; }}>
+                Detalhes
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FavoritesScreen({ providers, setProviders, onProfile }) {
+  const favs = providers.filter(p => p.fav);
+  function toggleFav(id) { setProviders(ps => ps.map(p => p.id === id ? { ...p, fav: !p.fav } : p)); }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ fontWeight: 800, fontSize: 20 }}>Favoritos</div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>{favs.length} profissionais salvos</div>
+        </div>
+      </div>
+      {favs.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text3)' }}>
+          <div style={{ fontSize: 48, marginBottom: 12 }}>🤍</div>
+          <div style={{ fontWeight: 600, fontSize: 15 }}>Nenhum favorito ainda</div>
+          <div style={{ fontSize: 13, marginTop: 4 }}>Favorite profissionais para acessá-los rapidamente</div>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
+          {favs.map((p, i) => (
+            <div key={p.id} style={{ animation: `fadeIn 0.3s ease ${i * 0.06}s both` }}>
+              <ExploreCard provider={p} onSelect={onProfile} onFav={toggleFav} />
+            </div>
+          ))}
+        </div>
+      )}
+      {/* Testimonials */}
+      <div style={{ marginTop: 8 }}>
+        <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 16 }}>Depoimentos em destaque</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
+          {TESTIMONIALS.map((t, i) => <TestimonialCard key={t.id} t={t} delay={i} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── ROOT APP ───────────────────────────────────────────────────────────────
+function App() {
+  const [tweaks, setTweaks] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('100pro_tweaks') || 'null') || TWEAK_DEFAULTS; } catch { return TWEAK_DEFAULTS; }
+  });
+  const [showTweaks, setShowTweaks] = useState(false);
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('100pro_tab') || 'feed');
+  const [providers, setProviders] = useState(PROVIDERS);
+  const [posts, setPosts] = useState(FEED_POSTS);
+  const [selectedProvider, setSelectedProvider] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Dark mode via tweaks
+  useEffect(() => {
+    const r = document.documentElement;
+    if (tweaks.darkMode) {
+      r.style.setProperty('--bg', 'oklch(0.12 0.015 250)');
+      r.style.setProperty('--bg2', 'oklch(0.16 0.015 250)');
+      r.style.setProperty('--card', 'oklch(0.17 0.015 250)');
+      r.style.setProperty('--border', 'oklch(0.24 0.015 250)');
+      r.style.setProperty('--text', 'oklch(0.92 0.01 250)');
+      r.style.setProperty('--text2', 'oklch(0.68 0.015 250)');
+      r.style.setProperty('--text3', 'oklch(0.50 0.010 250)');
+    } else {
+      r.style.removeProperty('--bg'); r.style.removeProperty('--bg2'); r.style.removeProperty('--card');
+      r.style.removeProperty('--border'); r.style.removeProperty('--text'); r.style.removeProperty('--text2'); r.style.removeProperty('--text3');
+    }
+    localStorage.setItem('100pro_tweaks', JSON.stringify(tweaks));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: tweaks }, '*');
+  }, [tweaks]);
+
+  useEffect(() => {
+    localStorage.setItem('100pro_tab', activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // Tweaks toggle
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.data?.type === '__activate_edit_mode') setShowTweaks(true);
+      if (e.data?.type === '__deactivate_edit_mode') setShowTweaks(false);
+    };
+    window.addEventListener('message', handler);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
+  function toggleFav(id) { setProviders(ps => ps.map(p => p.id === id ? { ...p, fav: !p.fav } : p)); }
+
+  const showRight = !isMobile && (activeTab === 'feed' || activeTab === 'explore');
+
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
+      {!isMobile && <SidebarNav activeTab={activeTab} setActiveTab={setActiveTab} isMobile={false} />}
+
+      {/* Main */}
+      <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        {/* Mobile header */}
+        {isMobile && (
+          <div style={{
+            position: 'sticky', top: 0, zIndex: 40,
+            background: 'var(--card)', borderBottom: '1px solid var(--border)',
+            padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            backdropFilter: 'blur(12px)'
+          }}>
+            <Logo size="sm" />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 12 }}>VC</div>
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+          {/* Content */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '16px 16px 80px' : '24px 28px', maxWidth: showRight ? 680 : 780, margin: '0 auto', width: '100%' }}>
+            {activeTab === 'feed' && <FeedScreen providers={providers} posts={posts} setPosts={setPosts} onProfile={setSelectedProvider} />}
+            {activeTab === 'explore' && <ExploreScreen providers={providers} setProviders={setProviders} onProfile={setSelectedProvider} />}
+            {activeTab === 'schedule' && <ScheduleScreen />}
+            {activeTab === 'favorites' && <FavoritesScreen providers={providers} setProviders={setProviders} onProfile={setSelectedProvider} />}
+            {activeTab === 'messages' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 4 }}>Mensagens</div>
+                {providers.slice(0, 4).map((p, i) => (
+                  <div key={p.id} className="fade-in" style={{
+                    background: 'var(--card)', borderRadius: 'var(--radius-sm)', padding: '14px 16px',
+                    border: '1px solid var(--border)', display: 'flex', gap: 12, cursor: 'pointer',
+                    transition: 'var(--transition)', boxShadow: 'var(--shadow)', animationDelay: `${i*0.05}s`
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
+                    <div style={{ position: 'relative' }}>
+                      <Avatar initials={p.initials} color={p.color} size={44} />
+                      {i < 2 && <div style={{ position: 'absolute', bottom: 1, right: 1, width: 10, height: 10, borderRadius: '50%', background: 'var(--accent)', border: '2px solid var(--card)' }} />}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                        <span style={{ fontWeight: 700, fontSize: 14 }}>{p.name}</span>
+                        <span style={{ fontSize: 11, color: 'var(--text3)' }}>{['2h', '5h', '1d', '2d'][i]}</span>
+                      </div>
+                      <div style={{ fontSize: 13, color: 'var(--text2)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {['Oi! Posso passar amanhã confirmar o projeto?', 'Entregando na sexta como combinado ✓', 'Disponível essa semana para agendamento', 'Obrigada pelo feedback! 😊'][i]}
+                      </div>
+                    </div>
+                    {i < 2 && <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'white', flexShrink: 0, alignSelf: 'center' }}>{[2,1][i]}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Right sidebar */}
+          {showRight && !isMobile && (
+            <aside style={{ width: 'var(--right-w)', flexShrink: 0, overflowY: 'auto', padding: '24px 24px 24px 0', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Top Pros */}
+              <div style={{ background: 'var(--card)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', padding: 16, boxShadow: 'var(--shadow)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>Profissionais em destaque</div>
+                  <button style={{ fontSize: 12, color: 'var(--primary)', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600 }} onClick={() => setActiveTab('explore')}>Ver todos</button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {providers.slice(0, 4).map(p => (
+                    <ProviderCard key={p.id} provider={p} onSelect={setSelectedProvider} onFav={toggleFav} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Calendar */}
+              {tweaks.showCalendar && <CalendarWidget />}
+
+              {/* Testimonials widget */}
+              <div style={{ background: 'var(--card)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', padding: 16, boxShadow: 'var(--shadow)' }}>
+                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12 }}>Depoimentos recentes</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {TESTIMONIALS.slice(0, 2).map(t => (
+                    <div key={t.id} style={{ padding: '10px 12px', background: 'var(--bg)', borderRadius: 10 }}>
+                      <p style={{ fontSize: 12, lineHeight: 1.6, color: 'var(--text2)', marginBottom: 8 }}>"{t.text.slice(0, 80)}..."</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                        <div style={{ width: 24, height: 24, borderRadius: '50%', background: t.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: 'white' }}>{t.avatar}</div>
+                        <span style={{ fontSize: 11, fontWeight: 700 }}>{t.author}</span>
+                        <Stars rating={t.rating} size={9} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </aside>
+          )}
+        </div>
+      </main>
+
+      {/* Mobile nav */}
+      {isMobile && <SidebarNav activeTab={activeTab} setActiveTab={setActiveTab} isMobile={true} />}
+
+      {/* Profile modal */}
+      {selectedProvider && (
+        <ProfileModal
+          provider={providers.find(p => p.id === selectedProvider.id) || selectedProvider}
+          onClose={() => setSelectedProvider(null)}
+          onFav={toggleFav}
+        />
+      )}
+
+      {/* Tweaks Panel */}
+      {showTweaks && (
+        <div className="tweaks-panel">
+          <h4>Tweaks</h4>
+          <div className="tweak-row">
+            <span>Modo escuro</span>
+            <div className={`tweak-toggle ${tweaks.darkMode ? 'on' : ''}`} onClick={() => setTweaks(t => ({...t, darkMode: !t.darkMode}))} />
+          </div>
+          <div className="tweak-row">
+            <span>Feed compacto</span>
+            <div className={`tweak-toggle ${tweaks.compactFeed ? 'on' : ''}`} onClick={() => setTweaks(t => ({...t, compactFeed: !t.compactFeed}))} />
+          </div>
+          <div className="tweak-row">
+            <span>Mostrar calendário</span>
+            <div className={`tweak-toggle ${tweaks.showCalendar ? 'on' : ''}`} onClick={() => setTweaks(t => ({...t, showCalendar: !t.showCalendar}))} />
+          </div>
+          <div className="tweak-row">
+            <span>Esquema de cores</span>
+            <select className="tweak-select" value={tweaks.colorScheme} onChange={e => setTweaks(t => ({...t, colorScheme: e.target.value}))}>
+              <option value="indigo">Índigo</option>
+              <option value="violet">Violeta</option>
+              <option value="teal">Teal</option>
+            </select>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

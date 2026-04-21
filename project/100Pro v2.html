@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>100Pro v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p:oklch(0.42 0.20 250);--pl:oklch(0.55 0.18 250);--px:oklch(0.94 0.04 250);
+  --ac:oklch(0.58 0.18 165);--ax:oklch(0.91 0.06 165);
+  --go:oklch(0.72 0.14 80);--re:oklch(0.58 0.20 25);--or:oklch(0.68 0.16 50);
+  --bg:oklch(0.975 0.008 250);--bg2:oklch(0.962 0.012 250);
+  --ca:#fff;--bo:oklch(0.905 0.010 250);
+  --t:oklch(0.14 0.015 250);--t2:oklch(0.44 0.015 250);--t3:oklch(0.65 0.010 250);
+  --r:14px;--rs:9px;--sh:0 2px 12px oklch(0.42 0.20 250/0.08);--shm:0 4px 24px oklch(0.42 0.20 250/0.13);
+  --tr:all 0.2s cubic-bezier(.4,0,.2,1);
+}
+html,body{height:100%;font-family:'Plus Jakarta Sans',sans-serif;background:'var(--bg)';color:'var(--t)'}
+#root{height:100%}
+button,input,textarea,select{font-family:inherit}
+button{cursor:pointer;border:none;background:none}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:'var(--bo)';border-radius:99px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pop{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+@keyframes hpop{0%,100%{transform:scale(1)}50%{transform:scale(1.45)}}
+.fu{animation:fadeUp .3s ease both}
+.pop{animation:pop .25s cubic-bezier(.34,1.56,.64,1) both}
+
+/* shared atoms */
+.card{background:'var(--ca)';border-radius:'var(--r)';border:1px solid var(--bo);box-shadow:'var(--sh)'}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border-radius:'var(--rs)';font-size:13px;font-weight:600;cursor:pointer;transition:'var(--tr)';border:none}
+.btn-p{background:'var(--p)';color:#fff}.btn-p:hover{background:'var(--pl)'}
+.btn-o{background:'var(--px)';color:'var(--p)';border:1px solid var(--p)}.btn-o:hover{background:'var(--p)';color:#fff}
+.btn-g{background:'var(--bg2)';color:'var(--t2)';border:1px solid var(--bo)}.btn-g:hover{background:'var(--px)';color:'var(--p)'}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-p{background:'var(--px)';color:'var(--p)'}
+.badge-g{background:'var(--bg2)';color:'var(--t2)'}
+.badge-promo{background:oklch(0.95 0.08 25);color:'var(--re)'}
+.badge-ac{background:'var(--ax)';color:'var(--ac)'}
+input[type=text],input[type=number],input[type=date],textarea,select{
+  width:100%;padding:9px 12px;border:1.5px solid var(--bo);border-radius:'var(--rs)';
+  font-size:13px;color:'var(--t)';background:'var(--bg)';outline:none;transition:'var(--tr)'}
+input:focus,textarea:focus,select:focus{border-color:'var(--p)';box-shadow:0 0 0 3px oklch(0.42 0.20 250/.10)}
+textarea{resize:vertical;min-height:72px;line-height:1.5}
+label{font-size:12px;font-weight:600;color:'var(--t2)';display:block;margin-bottom:4px}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+</style>
+</head>
+<body><div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback,useMemo}=React;
+
+// ─── PALETTE / HELPERS ─────────────────────────────────────────────────────
+const COLORS={CM:'oklch(0.58 0.18 300)',LF:'oklch(0.58 0.18 220)',AP:'oklch(0.62 0.18 350)',
+  RS:'oklch(0.55 0.18 200)',PS:'oklch(0.60 0.18 160)',MO:'oklch(0.58 0.20 45)'};
+
+const CATS=[
+  {id:'all',label:'Todos',icon:'⊞'},{id:'reform',label:'Reformas',icon:'🔨'},
+  {id:'beauty',label:'Beleza',icon:'✂'},{id:'tech',label:'Tecnologia',icon:'💻'},
+  {id:'clean',label:'Limpeza',icon:'🧹'},{id:'health',label:'Saúde',icon:'🏥'},
+  {id:'edu',label:'Educação',icon:'📚'},{id:'photo',label:'Fotografia',icon:'📷'},
+  {id:'design',label:'Design',icon:'🎨'},
+];
+
+function uid(){return Math.random().toString(36).slice(2)}
+
+// ─── INITIAL DATA ──────────────────────────────────────────────────────────
+const INIT_PROVIDER={
+  name:'Carla Mendes',role:'Arquiteta & Designer de Interiores',
+  category:'reform',bio:'Arquiteta com 10 anos de experiência em reformas residenciais e comerciais. Especialista em ambientes modernos e sustentáveis.',
+  phone:'(11) 98765-4321',city:'São Paulo, SP',initials:'CM',verified:true,
+  rating:4.9,reviews:127,jobs:341,
+};
+const INIT_SERVICES=[
+  {id:'s1',name:'Projeto Residencial Completo',cat:'reform',price:2800,duration:120,desc:'Da planta à execução, acompanhamento total do projeto residencial.'},
+  {id:'s2',name:'Consultoria de Interiores',cat:'reform',price:380,duration:60,desc:'Consultoria presencial para decoração e reforma de ambientes.'},
+  {id:'s3',name:'Reforma Comercial',cat:'reform',price:4500,duration:180,desc:'Projeto e execução de reforma para espaços comerciais.'},
+];
+const INIT_PROMOS=[
+  {id:'p1',serviceId:'s2',pct:20,title:'Consultoria de Verão',desc:'20% off na consultoria de interiores até fim do mês!',start:'2026-04-01',end:'2026-04-30',active:true},
+];
+
+const HOURS=['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
+const DAYS=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+const buildDefaultSlots=()=>Object.fromEntries(DAYS.map(d=>[d,
+  Object.fromEntries(HOURS.map(h=>[h,d!=='Dom' && h>='09:00' && h<='17:00']))]));
+
+const INIT_POSTS=[
+  {id:'po1',type:'provider',author:{name:'Carla Mendes',initials:'CM',color:COLORS.CM,verified:true,role:'Arquiteta'},
+   text:'Reforma finalizada no Jardins 🏠✨ 45 dias, resultado incrível! Antes e depois impressionante.',
+   imgColor:'oklch(0.88 0.04 80)',imgLabel:'Sala reformada — tons neutros',cat:'reform',time:'2h',
+   likes:48,liked:false,saved:false,
+   comments:[{id:'c1',author:'Maria L.',avatar:'ML',text:'Lindo demais! Quanto ficou o projeto?',time:'1h'},{id:'c2',author:'Pedro R.',avatar:'PR',text:'Incrível trabalho! Tenho interesse na consultoria.',time:'45min'}]},
+  {id:'po2',type:'client',author:{name:'Beatriz Rocha',initials:'BR',color:'oklch(0.62 0.18 300)',role:'Cliente'},
+   providerRef:{name:'Carla Mendes',initials:'CM',color:COLORS.CM},
+   text:'Contratei a Carla para reformar meu escritório e ficou PERFEITO 😍 Super profissional, entregou antes do prazo. Nota 10!',
+   rating:5,cat:'reform',time:'5h',likes:34,liked:false,saved:false,
+   comments:[{id:'c3',author:'Roberta S.',avatar:'RS',text:'Que lindo! Vou contratar também.',time:'3h'}]},
+  {id:'po3',type:'provider',author:{name:'Lucas Ferreira',initials:'LF',color:COLORS.LF,verified:true,role:'Dev Full Stack'},
+   text:'Dashboard entregue 🚀 React + WebSockets, 50k eventos/min, 99.9% uptime. Cliente feliz = missão cumprida!',
+   imgColor:'oklch(0.88 0.06 240)',imgLabel:'Dashboard analytics em tempo real',cat:'tech',time:'1d',
+   likes:83,liked:false,saved:false,
+   comments:[{id:'c4',author:'Startup XYZ',avatar:'SX',text:'Exatamente o que precisávamos. Contratando já!',time:'22h'}]},
+  {id:'po4',type:'client',author:{name:'Felipe Torres',initials:'FT',color:'oklch(0.58 0.18 220)',role:'Cliente'},
+   providerRef:{name:'Lucas Ferreira',initials:'LF',color:COLORS.LF},
+   text:'3 semanas e o sistema está no ar perfeitamente! O Lucas é um gênio. Código limpo, comunicação impecável. Já indiquei pra 3 empresas.',
+   rating:5,cat:'tech',time:'2d',likes:61,liked:false,saved:false,comments:[]},
+  {id:'po5',type:'provider',author:{name:'Ana Paula Costa',initials:'AP',color:COLORS.AP,verified:true,role:'Cabeleireira'},
+   text:'Loiro platinum em 3 sessões! Zero dano, máximo brilho 💇‍♀️ Técnica exclusiva L\'Oréal Academy.',
+   imgColor:'oklch(0.92 0.06 90)',imgLabel:'Transformação loiro platinum',cat:'beauty',time:'3h',
+   likes:127,liked:true,saved:true,
+   comments:[{id:'c5',author:'Camila F.',avatar:'CF',text:'Quero agendar essa transformação! Tem horário essa semana?',time:'2h'},{id:'c6',author:'Juliana M.',avatar:'JM',text:'Perfeito demais! Esse loiro é lindo.',time:'1h'}]},
+  {id:'po6',type:'provider',author:{name:'Priya Sharma',initials:'PS',color:COLORS.PS,verified:true,role:'Personal Trainer'},
+   text:'90 dias, -12kg, -18cm de cintura! Treino funcional + nutrição personalizada = resultados reais 💪🥗',
+   imgColor:'oklch(0.90 0.06 160)',imgLabel:'Resultado programa 90 dias',cat:'health',time:'2d',
+   likes:214,liked:false,saved:false,
+   comments:[{id:'c7',author:'Renata L.',avatar:'RL',text:'INCRÍVEL! Quero começar esse programa!',time:'1d'}]},
+];
+
+const INIT_PROMOS_FEED=[
+  {id:'pr1',provider:'Carla Mendes',initials:'CM',color:COLORS.CM,service:'Consultoria de Interiores',pct:20,price:304,original:380,cat:'reform',end:'30 abr'},
+  {id:'pr2',provider:'Lucas Ferreira',initials:'LF',color:COLORS.LF,service:'Desenvolvimento Web',pct:15,price:850,original:1000,cat:'tech',end:'25 abr'},
+  {id:'pr3',provider:'Ana Paula Costa',initials:'AP',color:COLORS.AP,service:'Coloração Completa',pct:25,price:225,original:300,cat:'beauty',end:'22 abr'},
+  {id:'pr4',provider:'Priya Sharma',initials:'PS',color:COLORS.PS,service:'Avaliação + Plano',pct:30,price:91,original:130,cat:'health',end:'28 abr'},
+  {id:'pr5',provider:'Marcos Oliveira',initials:'MO',color:COLORS.MO,service:'Identidade Visual',pct:10,price:720,original:800,cat:'design',end:'05 mai'},
+];
+
+// ─── ATOMS ─────────────────────────────────────────────────────────────────
+function Logo({size='md'}){
+  const fs=size==='lg'?28:size==='sm'?14:19;
+  return(
+    <div style={{display:'flex',alignItems:'center',gap:6,userSelect:'none'}}>
+      <div style={{background:'linear-gradient(135deg,oklch(0.42 0.20 250),oklch(0.58 0.18 165))',
+        borderRadius:9,padding:`4px ${size==='sm'?8:10}px`,display:'flex',alignItems:'center',gap:2,
+        boxShadow:'0 2px 12px oklch(0.42 0.20 250/.35)'}}>
+        <span style={{fontSize:fs,fontWeight:800,color:'white',letterSpacing:'-0.03em',lineHeight:1}}>100</span>
+        <div style={{width:size==='sm'?5:7,height:size==='sm'?5:7,borderRadius:'50%',background:'oklch(0.72 0.14 80)',
+          boxShadow:'0 0 7px oklch(0.72 0.14 80/.8)'}}/>
+        <span style={{fontSize:fs,fontWeight:800,color:'white',letterSpacing:'-0.02em',lineHeight:1}}>Pro</span>
+      </div>
+    </div>
+  );
+}
+
+function Av({initials,color,size=42,border=true}){
+  return <div style={{width:size,height:size,borderRadius:'50%',background:color,display:'flex',
+    alignItems:'center',justifyContent:'center',fontSize:size*.33,fontWeight:700,color:'white',
+    flexShrink:0,...(border?{border:'2px solid white',boxShadow:'0 2px 6px #0002'}:{})}}>
+    {initials}</div>;
+}
+
+function Stars({r=5,size=12}){
+  return <span style={{color:'var(--go)',fontSize:size,letterSpacing:1}}>
+    {'★'.repeat(Math.round(r))}{'☆'.repeat(5-Math.round(r))}</span>;
+}
+
+function VerBadge(){
+  return <div style={{width:14,height:14,background:'var(--ac)',borderRadius:'50%',display:'flex',
+    alignItems:'center',justifyContent:'center',border:'2px solid white',flexShrink:0}}>
+    <svg width={7} height={7} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3}><path d="M5 13l4 4L19 7"/></svg>
+  </div>;
+}
+
+function FavBtn({on,onClick,size=28}){
+  const [anim,setAnim]=useState(false);
+  return <button onClick={e=>{e.stopPropagation();setAnim(true);setTimeout(()=>setAnim(false),300);onClick&&onClick(e)}}
+    style={{width:size,height:size,borderRadius:'50%',border:'none',cursor:'pointer',transition:'var(--tr)',
+      background:on?'oklch(0.95 0.08 25)':'var(--bg2)',display:'flex',alignItems:'center',justifyContent:'center',
+      animation:anim?'hpop .3s ease':'none',flexShrink:0}}>
+    <svg width={size*.5} height={size*.5} viewBox="0 0 24 24" fill={on?'var(--re)':'none'} stroke={on?'var(--re)':'var(--t3)'} strokeWidth={2}>
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+    </svg>
+  </button>;
+}
+
+// ─── BOOKING MODAL ─────────────────────────────────────────────────────────
+function BookModal({provider,services,promos,onClose}){
+  const [step,setStep]=useState(0); // 0=pick service,1=pick slot,2=confirm
+  const [selSvc,setSelSvc]=useState(null);
+  const [selDay,setSelDay]=useState(null);
+  const [selTime,setSelTime]=useState(null);
+  const today=21;
+  const days=Array.from({length:14},(_,i)=>today+i);
+  const times=['09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
+
+  const promo=selSvc&&promos.find(pr=>pr.serviceId===selSvc.id&&pr.active);
+  const finalPrice=selSvc&&(promo?Math.round(selSvc.price*(1-promo.pct/100)):selSvc.price);
+
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',
+      background:'#00000077',backdropFilter:'blur(4px)',padding:16}} onClick={onClose}>
+      <div className="pop card" style={{width:'100%',maxWidth:460,overflow:'hidden'}} onClick={e=>e.stopPropagation()}>
+        {/* header */}
+        <div style={{background:'linear-gradient(135deg,var(--p),var(--ac))',padding:'16px 20px',display:'flex',alignItems:'center',gap:12}}>
+          <Av initials={provider.initials} color='rgba(255,255,255,0.25)' size={40} border={false}/>
+          <div>
+            <div style={{color:'white',fontWeight:800,fontSize:15}}>{provider.name}</div>
+            <div style={{color:'rgba(255,255,255,0.75)',fontSize:12}}>{provider.role}</div>
+          </div>
+          <button onClick={onClose} style={{marginLeft:'auto',color:'rgba(255,255,255,0.8)',fontSize:22,lineHeight:1,background:'none',border:'none',cursor:'pointer'}}>×</button>
+        </div>
+
+        {/* Steps indicator */}
+        <div style={{display:'flex',padding:'12px 20px 0',gap:6}}>
+          {['Serviço','Horário','Confirmar'].map((s,i)=>(
+            <div key={i} style={{flex:1,textAlign:'center'}}>
+              <div style={{height:3,borderRadius:99,background:i<=step?'var(--p)':'var(--bo)',marginBottom:4,transition:'var(--tr)'}}/>
+              <span style={{fontSize:10,fontWeight:600,color:i<=step?'var(--p)':'var(--t3)'}}>{s}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{padding:'14px 20px 20px',minHeight:260}}>
+          {step===0&&(
+            <div>
+              <p style={{fontSize:12,color:'var(--t2)',marginBottom:10}}>Escolha o serviço:</p>
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                {services.map(s=>{
+                  const pr=promos.find(p=>p.serviceId===s.id&&p.active);
+                  return(
+                    <div key={s.id} onClick={()=>{setSelSvc(s);setStep(1);}}
+                      style={{padding:'11px 14px',borderRadius:'var(--rs)',border:`1.5px solid ${selSvc?.id===s.id?'var(--p)':'var(--bo)'}`,
+                        background:selSvc?.id===s.id?'var(--px)':'var(--bg)',cursor:'pointer',transition:'var(--tr)',
+                        display:'flex',alignItems:'center',gap:10}}
+                      onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--p)';e.currentTarget.style.background='var(--px)'}}
+                      onMouseLeave={e=>{if(selSvc?.id!==s.id){e.currentTarget.style.borderColor='var(--bo)';e.currentTarget.style.background='var(--bg)'}}}>
+                      <div style={{flex:1}}>
+                        <div style={{fontWeight:700,fontSize:13}}>{s.name}</div>
+                        <div style={{fontSize:11,color:'var(--t3)',marginTop:1}}>{s.duration} min</div>
+                      </div>
+                      <div style={{textAlign:'right'}}>
+                        {pr&&<div style={{fontSize:10,color:'var(--re)',fontWeight:700,textDecoration:'line-through',opacity:.7}}>R$ {s.price}</div>}
+                        <div style={{fontWeight:700,fontSize:14,color:pr?'var(--re)':'var(--p)'}}>
+                          R$ {pr?Math.round(s.price*(1-pr.pct/100)):s.price}
+                        </div>
+                        {pr&&<span className="badge badge-promo" style={{fontSize:9}}>-{pr.pct}%</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {step===1&&(
+            <div>
+              <p style={{fontSize:12,color:'var(--t2)',marginBottom:10}}>Escolha o dia:</p>
+              <div style={{display:'flex',gap:6,overflowX:'auto',paddingBottom:6,marginBottom:12}}>
+                {days.map(d=>(
+                  <button key={d} onClick={()=>setSelDay(d)} style={{
+                    flexShrink:0,width:46,borderRadius:'var(--rs)',padding:'7px 0',border:`1.5px solid ${selDay===d?'var(--p)':'var(--bo)'}`,
+                    background:selDay===d?'var(--p)':'var(--bg)',color:selDay===d?'white':'var(--t)',
+                    fontWeight:600,fontSize:13,cursor:'pointer',transition:'var(--tr)'}}>
+                    <div style={{fontSize:9,fontWeight:500,opacity:.7}}>ABR</div>{d}
+                  </button>
+                ))}
+              </div>
+              {selDay&&<>
+                <p style={{fontSize:12,color:'var(--t2)',marginBottom:8}}>Escolha o horário:</p>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6}}>
+                  {times.map(t=>(
+                    <button key={t} onClick={()=>{setSelTime(t);setStep(2);}} style={{
+                      padding:'7px',borderRadius:'var(--rs)',border:`1.5px solid ${selTime===t?'var(--p)':'var(--bo)'}`,
+                      background:selTime===t?'var(--p)':'var(--bg)',color:selTime===t?'white':'var(--t)',
+                      fontWeight:600,fontSize:12,cursor:'pointer',transition:'var(--tr)'}}>
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </>}
+            </div>
+          )}
+
+          {step===2&&(
+            <div style={{textAlign:'center',padding:'10px 0'}}>
+              <div style={{fontSize:40,marginBottom:12}}>🎉</div>
+              <div style={{fontWeight:800,fontSize:18,marginBottom:4}}>Agendamento confirmado!</div>
+              <div style={{fontSize:13,color:'var(--t2)',lineHeight:1.6,marginBottom:16}}>
+                <strong>{selSvc?.name}</strong><br/>
+                com <strong>{provider.name}</strong><br/>
+                dia <strong>{selDay} de abril</strong> às <strong>{selTime}</strong>
+              </div>
+              <div style={{background:'var(--px)',borderRadius:'var(--rs)',padding:'10px 16px',display:'inline-flex',gap:8,alignItems:'center'}}>
+                <span style={{fontSize:13,fontWeight:700,color:'var(--p)'}}>R$ {finalPrice}</span>
+                {promo&&<span className="badge badge-promo">-{promo.pct}% aplicado</span>}
+              </div>
+              <div style={{marginTop:16}}>
+                <button className="btn btn-p" onClick={onClose} style={{width:'100%'}}>Ir para Agendamentos</button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {step>0&&step<2&&(
+          <div style={{padding:'0 20px 16px',display:'flex',gap:8}}>
+            <button className="btn btn-g" onClick={()=>setStep(s=>s-1)}>← Voltar</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── PROMO CARD ────────────────────────────────────────────────────────────
+function PromoCard({promo,onBook}){
+  const [hov,setHov]=useState(false);
+  return(
+    <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{flexShrink:0,width:220,borderRadius:'var(--r)',overflow:'hidden',
+        border:'1px solid var(--bo)',background:'var(--ca)',boxShadow:hov?'var(--shm)':'var(--sh)',
+        transition:'var(--tr)',transform:hov?'translateY(-2px)':'none'}}>
+      <div style={{height:6,background:`linear-gradient(90deg,${promo.color},var(--p))`}}/>
+      <div style={{padding:'12px 14px'}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+          <Av initials={promo.initials} color={promo.color} size={32} border={false}/>
+          <div>
+            <div style={{fontWeight:700,fontSize:12}}>{promo.provider}</div>
+            <div style={{fontSize:10,color:'var(--t3)'}}>até {promo.end}</div>
+          </div>
+          <span className="badge badge-promo" style={{marginLeft:'auto',fontSize:12,fontWeight:800}}>-{promo.pct}%</span>
+        </div>
+        <div style={{fontWeight:600,fontSize:13,marginBottom:4}}>{promo.service}</div>
+        <div style={{display:'flex',alignItems:'baseline',gap:6,marginBottom:10}}>
+          <span style={{fontSize:11,color:'var(--t3)',textDecoration:'line-through'}}>R$ {promo.original}</span>
+          <span style={{fontSize:16,fontWeight:800,color:'var(--re)'}}>R$ {promo.price}</span>
+        </div>
+        <button className="btn btn-p" onClick={()=>onBook&&onBook(promo)} style={{width:'100%',padding:'7px',fontSize:12}}>Agendar promoção</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── FEED POST ─────────────────────────────────────────────────────────────
+function Post({post,onToggle,onBook,providerServices,providerPromos}){
+  const [hov,setHov]=useState(false);
+  const [commentOpen,setCommentOpen]=useState(false);
+  const [newComment,setNewComment]=useState('');
+  const [localComments,setLocalComments]=useState(post.comments||[]);
+  const isProvider=post.type==='provider';
+
+  function sendComment(){
+    if(!newComment.trim())return;
+    setLocalComments(c=>[...c,{id:uid(),author:'Você',avatar:'VC',text:newComment,time:'agora'}]);
+    setNewComment('');
+  }
+
+  return(
+    <div className="card fu" onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{transition:'var(--tr)',transform:hov?'translateY(-2px)':'none',boxShadow:hov?'var(--shm)':'var(--sh)',overflow:'hidden'}}>
+
+      {/* Header */}
+      <div style={{padding:'12px 14px',display:'flex',gap:10,alignItems:'flex-start'}}>
+        <Av initials={post.author.initials} color={post.author.color} size={38}/>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>
+            <span style={{fontWeight:700,fontSize:14}}>{post.author.name}</span>
+            {post.author.verified&&<VerBadge/>}
+            {!isProvider&&<span className="badge badge-g" style={{fontSize:10}}>Cliente</span>}
+            {isProvider&&<span className="badge badge-p" style={{fontSize:10}}>Prestador</span>}
+          </div>
+          <div style={{fontSize:11,color:'var(--t3)',marginTop:1}}>
+            {post.author.role}
+            {!isProvider&&post.providerRef&&<> · avaliou <span style={{fontWeight:600,color:post.providerRef.color}}>{post.providerRef.name}</span></>}
+            {' · '}{post.time}
+          </div>
+          {!isProvider&&<div style={{marginTop:3}}><Stars r={post.rating} size={12}/></div>}
+        </div>
+        <FavBtn on={post.saved} onClick={()=>onToggle(post.id,'saved')}/>
+      </div>
+
+      {/* Image (provider posts) */}
+      {isProvider&&post.imgLabel&&(
+        <div style={{height:200,background:post.imgColor,display:'flex',flexDirection:'column',
+          alignItems:'center',justifyContent:'center',gap:8,position:'relative'}}>
+          <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.2} style={{opacity:.4}}>
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+          </svg>
+          <span style={{fontSize:11,fontFamily:'monospace',opacity:.45,textAlign:'center',maxWidth:180,lineHeight:1.4}}>{post.imgLabel}</span>
+          <div style={{position:'absolute',top:10,left:10,background:'rgba(255,255,255,0.88)',
+            backdropFilter:'blur(6px)',padding:'3px 10px',borderRadius:99,fontSize:11,fontWeight:600}}>
+            {CATS.find(c=>c.id===post.cat)?.icon} {CATS.find(c=>c.id===post.cat)?.label}
+          </div>
+        </div>
+      )}
+
+      {/* Text */}
+      <div style={{padding:'10px 14px'}}>
+        <p style={{fontSize:14,lineHeight:1.65,color:'var(--t)',textWrap:'pretty'}}>{post.text}</p>
+      </div>
+
+      {/* Actions */}
+      <div style={{padding:'6px 10px 8px',display:'flex',alignItems:'center',gap:2,borderTop:'1px solid var(--bo)'}}>
+        <Btn2 icon={<svg width={16} height={16} viewBox="0 0 24 24" fill={post.liked?'var(--re)':'none'} stroke={post.liked?'var(--re)':'currentColor'} strokeWidth={2}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>}
+          label={post.likes+(post.liked?1:0)} active={post.liked} onClick={()=>onToggle(post.id,'liked')}/>
+        <Btn2 icon={<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>}
+          label={localComments.length} onClick={()=>setCommentOpen(o=>!o)}/>
+        <div style={{flex:1}}/>
+        {isProvider&&(
+          <button className="btn btn-p" style={{padding:'6px 14px',fontSize:12}}
+            onClick={()=>onBook&&onBook()}>
+            Agendar
+          </button>
+        )}
+      </div>
+
+      {/* Comments */}
+      {commentOpen&&(
+        <div style={{borderTop:'1px solid var(--bo)',padding:'10px 14px',display:'flex',flexDirection:'column',gap:8}}>
+          {localComments.map(c=>(
+            <div key={c.id} style={{display:'flex',gap:8}}>
+              <div style={{width:28,height:28,borderRadius:'50%',background:'var(--p)',display:'flex',
+                alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'white',flexShrink:0}}>{c.avatar}</div>
+              <div style={{flex:1,background:'var(--bg)',borderRadius:10,padding:'7px 10px'}}>
+                <div style={{display:'flex',gap:6,alignItems:'baseline'}}>
+                  <span style={{fontWeight:700,fontSize:12}}>{c.author}</span>
+                  <span style={{fontSize:10,color:'var(--t3)'}}>{c.time}</span>
+                </div>
+                <p style={{fontSize:12,color:'var(--t)',marginTop:2,lineHeight:1.5}}>{c.text}</p>
+              </div>
+            </div>
+          ))}
+          <div style={{display:'flex',gap:8,marginTop:2}}>
+            <div style={{width:28,height:28,borderRadius:'50%',background:'linear-gradient(135deg,var(--p),var(--ac))',
+              display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'white',flexShrink:0}}>VC</div>
+            <input value={newComment} onChange={e=>setNewComment(e.target.value)}
+              onKeyDown={e=>{if(e.key==='Enter')sendComment();}}
+              placeholder="Escreva um comentário..." style={{flex:1,padding:'6px 12px',borderRadius:99,
+                border:'1px solid var(--bo)',fontSize:12,background:'var(--bg)',outline:'none',color:'var(--t)'}}/>
+            <button className="btn btn-p" style={{padding:'6px 12px',fontSize:12}} onClick={sendComment}>→</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Btn2({icon,label,active,onClick}){
+  const [hov,setHov]=useState(false);
+  return <button onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+    style={{display:'flex',alignItems:'center',gap:5,padding:'6px 10px',borderRadius:8,
+      background:hov?'var(--bg2)':'transparent',color:active?'var(--p)':'var(--t2)',
+      fontSize:12,fontWeight:500,transition:'var(--tr)',transform:hov?'scale(1.04)':'scale(1)'}}>
+    {icon}<span>{label}</span>
+  </button>;
+}
+
+// ─── PROVIDER DASHBOARD ────────────────────────────────────────────────────
+function ProviderDashboard({provider,setProvider,services,setServices,promos,setPromos,slots,setSlots,posts,setPosts}){
+  const [tab,setTab]=useState('profile');
+  const tabs=[
+    {id:'profile',label:'Perfil',icon:'👤'},
+    {id:'services',label:'Serviços',icon:'🛠'},
+    {id:'agenda',label:'Agenda',icon:'📅'},
+    {id:'promos',label:'Promoções',icon:'🏷'},
+    {id:'posts',label:'Postagens',icon:'📝'},
+  ];
+  return(
+    <div style={{display:'flex',flexDirection:'column',gap:14}}>
+      <div style={{display:'flex',alignItems:'center',gap:12,padding:'14px 18px',
+        background:'linear-gradient(135deg,var(--p),var(--ac))',borderRadius:'var(--r)',color:'white'}}>
+        <Av initials={provider.initials} color='rgba(255,255,255,0.25)' size={52} border={false}/>
+        <div>
+          <div style={{fontWeight:800,fontSize:18}}>{provider.name}</div>
+          <div style={{opacity:.8,fontSize:13}}>{provider.role}</div>
+          <div style={{display:'flex',gap:12,marginTop:5}}>
+            <span style={{fontSize:12,opacity:.9}}>⭐ {provider.rating}</span>
+            <span style={{fontSize:12,opacity:.9}}>💬 {provider.reviews} reviews</span>
+            <span style={{fontSize:12,opacity:.9}}>✅ {provider.jobs} jobs</span>
+          </div>
+        </div>
+        <div style={{marginLeft:'auto',background:'rgba(255,255,255,0.18)',
+          padding:'6px 14px',borderRadius:99,fontSize:12,fontWeight:600}}>Modo Prestador</div>
+      </div>
+
+      {/* Tab bar */}
+      <div style={{display:'flex',gap:4,overflowX:'auto',background:'var(--ca)',
+        borderRadius:'var(--r)',padding:6,border:'1px solid var(--bo)',boxShadow:'var(--sh)'}}>
+        {tabs.map(t=>(
+          <button key={t.id} onClick={()=>setTab(t.id)} style={{
+            flex:'0 0 auto',padding:'8px 16px',borderRadius:'var(--rs)',border:'none',
+            background:tab===t.id?'var(--p)':'transparent',
+            color:tab===t.id?'white':'var(--t2)',fontWeight:600,fontSize:13,cursor:'pointer',
+            transition:'var(--tr)',display:'flex',alignItems:'center',gap:6,whiteSpace:'nowrap'}}>
+            <span>{t.icon}</span>{t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab==='profile'&&<ProfileTab provider={provider} setProvider={setProvider}/>}
+      {tab==='services'&&<ServicesTab services={services} setServices={setServices} promos={promos}/>}
+      {tab==='agenda'&&<AgendaTab slots={slots} setSlots={setSlots}/>}
+      {tab==='promos'&&<PromosTab promos={promos} setPromos={setPromos} services={services}/>}
+      {tab==='posts'&&<PostsTab posts={posts} setPosts={setPosts} provider={provider}/>}
+    </div>
+  );
+}
+
+function ProfileTab({provider,setProvider}){
+  const [form,setForm]=useState(provider);
+  const [saved,setSaved]=useState(false);
+  function save(){setProvider(form);setSaved(true);setTimeout(()=>setSaved(false),2000);}
+  return(
+    <div className="card" style={{padding:20}}>
+      <div style={{fontWeight:800,fontSize:16,marginBottom:16}}>Editar perfil</div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+        <div className="field" style={{gridColumn:'1/-1'}}>
+          <label>Nome completo</label>
+          <input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/>
+        </div>
+        <div className="field">
+          <label>Especialidade / Cargo</label>
+          <input value={form.role} onChange={e=>setForm(f=>({...f,role:e.target.value}))}/>
+        </div>
+        <div className="field">
+          <label>Categoria principal</label>
+          <select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>
+            {CATS.filter(c=>c.id!=='all').map(c=><option key={c.id} value={c.id}>{c.icon} {c.label}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <label>Telefone / WhatsApp</label>
+          <input value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))}/>
+        </div>
+        <div className="field">
+          <label>Cidade</label>
+          <input value={form.city} onChange={e=>setForm(f=>({...f,city:e.target.value}))}/>
+        </div>
+        <div className="field" style={{gridColumn:'1/-1'}}>
+          <label>Bio / Sobre você</label>
+          <textarea value={form.bio} onChange={e=>setForm(f=>({...f,bio:e.target.value}))} style={{minHeight:90}}/>
+        </div>
+      </div>
+      <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:4}}>
+        <button className="btn btn-g" onClick={()=>setForm(provider)}>Cancelar</button>
+        <button className="btn btn-p" onClick={save}>{saved?'✓ Salvo!':'Salvar alterações'}</button>
+      </div>
+    </div>
+  );
+}
+
+function ServicesTab({services,setServices,promos}){
+  const [form,setForm]=useState(null); // null=list, {}=new/edit
+  function save(){
+    if(!form.name||!form.price)return;
+    if(form.id){setServices(ss=>ss.map(s=>s.id===form.id?form:s));}
+    else{setServices(ss=>[...ss,{...form,id:uid()}]);}
+    setForm(null);
+  }
+  function del(id){setServices(ss=>ss.filter(s=>s.id!==id));}
+
+  if(form!==null) return(
+    <div className="card" style={{padding:20}}>
+      <div style={{fontWeight:800,fontSize:16,marginBottom:16}}>{form.id?'Editar serviço':'Novo serviço'}</div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+        <div className="field" style={{gridColumn:'1/-1'}}>
+          <label>Nome do serviço *</label>
+          <input value={form.name||''} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="Ex: Projeto Residencial"/>
+        </div>
+        <div className="field">
+          <label>Preço (R$) *</label>
+          <input type="number" value={form.price||''} onChange={e=>setForm(f=>({...f,price:Number(e.target.value)}))} placeholder="0"/>
+        </div>
+        <div className="field">
+          <label>Duração (minutos)</label>
+          <input type="number" value={form.duration||''} onChange={e=>setForm(f=>({...f,duration:Number(e.target.value)}))} placeholder="60"/>
+        </div>
+        <div className="field">
+          <label>Categoria</label>
+          <select value={form.cat||'reform'} onChange={e=>setForm(f=>({...f,cat:e.target.value}))}>
+            {CATS.filter(c=>c.id!=='all').map(c=><option key={c.id} value={c.id}>{c.icon} {c.label}</option>)}
+          </select>
+        </div>
+        <div className="field" style={{gridColumn:'1/-1'}}>
+          <label>Descrição</label>
+          <textarea value={form.desc||''} onChange={e=>setForm(f=>({...f,desc:e.target.value}))} placeholder="Descreva o serviço..."/>
+        </div>
+      </div>
+      <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:4}}>
+        <button className="btn btn-g" onClick={()=>setForm(null)}>Cancelar</button>
+        <button className="btn btn-p" onClick={save}>Salvar serviço</button>
+      </div>
+    </div>
+  );
+
+  return(
+    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <div><div style={{fontWeight:700,fontSize:15}}>Meus Serviços</div>
+          <div style={{fontSize:12,color:'var(--t3)'}}>{services.length} serviços cadastrados</div></div>
+        <button className="btn btn-p" onClick={()=>setForm({})}>+ Novo serviço</button>
+      </div>
+      {services.map(s=>{
+        const pr=promos.find(p=>p.serviceId===s.id&&p.active);
+        return(
+          <div key={s.id} className="card" style={{padding:'14px 16px',display:'flex',gap:12,alignItems:'center'}}>
+            <div style={{flex:1}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
+                <span style={{fontWeight:700,fontSize:14}}>{s.name}</span>
+                {pr&&<span className="badge badge-promo" style={{fontSize:10}}>-{pr.pct}% PROMO</span>}
+              </div>
+              <div style={{fontSize:12,color:'var(--t2)',marginBottom:4}}>{s.desc}</div>
+              <div style={{display:'flex',gap:8}}>
+                <span className="badge badge-p">R$ {s.price}</span>
+                <span className="badge badge-g">{s.duration} min</span>
+                <span className="badge badge-g">{CATS.find(c=>c.id===s.cat)?.icon} {CATS.find(c=>c.id===s.cat)?.label}</span>
+              </div>
+            </div>
+            <div style={{display:'flex',gap:6}}>
+              <button className="btn btn-g" style={{padding:'6px 12px',fontSize:12}} onClick={()=>setForm(s)}>Editar</button>
+              <button className="btn" style={{padding:'6px 12px',fontSize:12,color:'var(--re)',background:'oklch(0.97 0.04 25)',border:'1px solid oklch(0.9 0.05 25)'}}
+                onClick={()=>del(s.id)}>Excluir</button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function AgendaTab({slots,setSlots}){
+  function toggle(day,hour){setSlots(s=>({...s,[day]:{...s[day],[hour]:!s[day][hour]}}))}
+  const activeDays=DAYS.filter(d=>d!=='Dom');
+  return(
+    <div className="card" style={{padding:20,overflowX:'auto'}}>
+      <div style={{fontWeight:700,fontSize:15,marginBottom:4}}>Disponibilidade semanal</div>
+      <div style={{fontSize:12,color:'var(--t3)',marginBottom:16}}>Clique nos horários para ativar/desativar sua disponibilidade</div>
+      <div style={{display:'grid',gridTemplateColumns:`60px repeat(${activeDays.length},1fr)`,gap:3,minWidth:500}}>
+        <div/>
+        {activeDays.map(d=>(
+          <div key={d} style={{textAlign:'center',fontWeight:700,fontSize:11,color:'var(--t2)',
+            padding:'4px 0',background:'var(--bg2)',borderRadius:6}}>{d}</div>
+        ))}
+        {HOURS.map(h=>(
+          <React.Fragment key={h}>
+            <div style={{fontSize:10,color:'var(--t3)',paddingRight:4,display:'flex',alignItems:'center',justifyContent:'flex-end'}}>{h}</div>
+            {activeDays.map(d=>{
+              const on=slots[d]?.[h];
+              return(
+                <button key={d} onClick={()=>toggle(d,h)} style={{
+                  height:28,borderRadius:5,border:'none',cursor:'pointer',transition:'var(--tr)',
+                  background:on?'var(--p)':'var(--bg2)',opacity:on?1:0.5}}>
+                  {on&&<svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3}><path d="M5 13l4 4L19 7"/></svg>}
+                </button>
+              );
+            })}
+          </React.Fragment>
+        ))}
+      </div>
+      <div style={{marginTop:14,display:'flex',gap:12,fontSize:12,color:'var(--t2)'}}>
+        <div style={{display:'flex',gap:5,alignItems:'center'}}>
+          <div style={{width:14,height:14,borderRadius:4,background:'var(--p)'}}/> Disponível
+        </div>
+        <div style={{display:'flex',gap:5,alignItems:'center'}}>
+          <div style={{width:14,height:14,borderRadius:4,background:'var(--bg2)',border:'1px solid var(--bo)'}}/> Indisponível
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PromosTab({promos,setPromos,services}){
+  const [form,setForm]=useState(null);
+  function save(){
+    if(!form.serviceId||!form.pct||!form.title)return;
+    if(form.id){setPromos(ps=>ps.map(p=>p.id===form.id?form:p));}
+    else{setPromos(ps=>[...ps,{...form,id:uid(),active:true}]);}
+    setForm(null);
+  }
+  function toggle(id){setPromos(ps=>ps.map(p=>p.id===id?{...p,active:!p.active}:p));}
+  function del(id){setPromos(ps=>ps.filter(p=>p.id!==id));}
+
+  if(form!==null) return(
+    <div className="card" style={{padding:20}}>
+      <div style={{fontWeight:800,fontSize:16,marginBottom:16}}>{form.id?'Editar promoção':'Nova promoção'}</div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+        <div className="field" style={{gridColumn:'1/-1'}}>
+          <label>Título da promoção *</label>
+          <input value={form.title||''} onChange={e=>setForm(f=>({...f,title:e.target.value}))} placeholder="Ex: Promoção de Verão"/>
+        </div>
+        <div className="field" style={{gridColumn:'1/-1'}}>
+          <label>Serviço *</label>
+          <select value={form.serviceId||''} onChange={e=>setForm(f=>({...f,serviceId:e.target.value}))}>
+            <option value="">Selecione um serviço</option>
+            {services.map(s=><option key={s.id} value={s.id}>{s.name} — R$ {s.price}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <label>Desconto (%) *</label>
+          <input type="number" min={1} max={99} value={form.pct||''} onChange={e=>setForm(f=>({...f,pct:Number(e.target.value)}))} placeholder="Ex: 20"/>
+        </div>
+        <div className="field">
+          <label>Validade até</label>
+          <input type="date" value={form.end||''} onChange={e=>setForm(f=>({...f,end:e.target.value}))}/>
+        </div>
+        <div className="field" style={{gridColumn:'1/-1'}}>
+          <label>Descrição da promoção</label>
+          <textarea value={form.desc||''} onChange={e=>setForm(f=>({...f,desc:e.target.value}))} placeholder="Descreva sua promoção..."/>
+        </div>
+        {form.serviceId&&form.pct&&(
+          <div style={{gridColumn:'1/-1',background:'var(--px)',borderRadius:'var(--rs)',padding:'10px 14px'}}>
+            <div style={{fontSize:12,color:'var(--t2)'}}>Preview do preço:</div>
+            {(()=>{const svc=services.find(s=>s.id===form.serviceId);return svc?(
+              <div style={{display:'flex',gap:10,alignItems:'center',marginTop:4}}>
+                <span style={{fontSize:13,textDecoration:'line-through',color:'var(--t3)'}}>R$ {svc.price}</span>
+                <span style={{fontSize:18,fontWeight:800,color:'var(--re)'}}>R$ {Math.round(svc.price*(1-form.pct/100))}</span>
+                <span className="badge badge-promo">-{form.pct}% OFF</span>
+              </div>
+            ):null;})()}
+          </div>
+        )}
+      </div>
+      <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:4}}>
+        <button className="btn btn-g" onClick={()=>setForm(null)}>Cancelar</button>
+        <button className="btn btn-p" onClick={save}>Publicar promoção</button>
+      </div>
+    </div>
+  );
+
+  return(
+    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <div><div style={{fontWeight:700,fontSize:15}}>Minhas Promoções</div>
+          <div style={{fontSize:12,color:'var(--t3)'}}>{promos.filter(p=>p.active).length} ativas</div></div>
+        <button className="btn btn-p" onClick={()=>setForm({})}>+ Nova promoção</button>
+      </div>
+      {promos.length===0&&<div className="card" style={{padding:40,textAlign:'center',color:'var(--t3)'}}>
+        <div style={{fontSize:32,marginBottom:8}}>🏷</div>
+        <div style={{fontWeight:600}}>Nenhuma promoção ainda</div>
+        <div style={{fontSize:13,marginTop:4}}>Crie promoções para atrair mais clientes</div>
+      </div>}
+      {promos.map(p=>{
+        const svc=services.find(s=>s.id===p.serviceId);
+        return(
+          <div key={p.id} className="card" style={{padding:'14px 16px',display:'flex',gap:12,alignItems:'center',
+            opacity:p.active?1:0.6,borderLeft:`4px solid ${p.active?'var(--re)':'var(--bo)'}`}}>
+            <div style={{flex:1}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:2}}>
+                <span style={{fontWeight:700,fontSize:14}}>{p.title}</span>
+                <span className={`badge ${p.active?'badge-promo':'badge-g'}`}>{p.active?`-${p.pct}% ATIVA`:'INATIVA'}</span>
+              </div>
+              {svc&&<div style={{fontSize:12,color:'var(--t2)',marginBottom:4}}>
+                {svc.name} · <span style={{textDecoration:'line-through'}}>R$ {svc.price}</span>
+                {' → '}<strong style={{color:'var(--re)'}}>R$ {Math.round(svc.price*(1-p.pct/100))}</strong>
+              </div>}
+              {p.end&&<div style={{fontSize:11,color:'var(--t3)'}}>Válido até {p.end}</div>}
+            </div>
+            <div style={{display:'flex',gap:6}}>
+              <button className="btn btn-g" style={{padding:'6px 12px',fontSize:12}} onClick={()=>toggle(p.id)}>
+                {p.active?'Pausar':'Ativar'}
+              </button>
+              <button className="btn btn-g" style={{padding:'6px 12px',fontSize:12}} onClick={()=>setForm(p)}>Editar</button>
+              <button className="btn" style={{padding:'6px 12px',fontSize:12,color:'var(--re)',background:'oklch(0.97 0.04 25)',border:'1px solid oklch(0.9 0.05 25)'}}
+                onClick={()=>del(p.id)}>×</button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function PostsTab({posts,setPosts,provider}){
+  const [form,setForm]=useState({text:'',imgLabel:'',cat:'reform'});
+  const [posting,setPosting]=useState(false);
+  const myPosts=posts.filter(p=>p.type==='provider'&&p.author.name===provider.name);
+
+  function publish(){
+    if(!form.text.trim())return;
+    const newPost={id:uid(),type:'provider',
+      author:{name:provider.name,initials:provider.initials,color:COLORS[provider.initials]||'var(--p)',verified:provider.verified,role:provider.role},
+      text:form.text,imgLabel:form.imgLabel||null,imgColor:form.imgLabel?'oklch(0.90 0.04 250)':null,
+      cat:form.cat,time:'agora',likes:0,liked:false,saved:false,comments:[]};
+    setPosts(ps=>[newPost,...ps]);
+    setForm({text:'',imgLabel:'',cat:'reform'});
+    setPosting(false);
+  }
+
+  return(
+    <div style={{display:'flex',flexDirection:'column',gap:12}}>
+      {/* Composer */}
+      <div className="card" style={{padding:16}}>
+        <div style={{display:'flex',gap:10,marginBottom:12}}>
+          <Av initials={provider.initials} color={COLORS[provider.initials]||'var(--p)'} size={38}/>
+          <textarea value={form.text} onChange={e=>{setForm(f=>({...f,text:e.target.value}));setPosting(!!e.target.value)}}
+            placeholder={`O que você quer compartilhar, ${provider.name.split(' ')[0]}?`}
+            style={{flex:1,border:'1.5px solid var(--bo)',borderRadius:10,padding:'9px 12px',
+              fontSize:14,background:'var(--bg)',outline:'none',resize:'none',minHeight:72,
+              transition:'var(--tr)',color:'var(--t)'}}
+            onFocus={e=>{e.target.style.borderColor='var(--p)'}}
+            onBlur={e=>{e.target.style.borderColor='var(--bo)'}}/>
+        </div>
+        {posting&&(
+          <div style={{display:'flex',gap:10,marginBottom:10,animation:'fadeUp .2s ease'}}>
+            <div className="field" style={{flex:1,marginBottom:0}}>
+              <label>Legenda da imagem (opcional)</label>
+              <input value={form.imgLabel} onChange={e=>setForm(f=>({...f,imgLabel:e.target.value}))} placeholder="Ex: Projeto finalizado em SP"/>
+            </div>
+            <div className="field" style={{width:140,marginBottom:0}}>
+              <label>Categoria</label>
+              <select value={form.cat} onChange={e=>setForm(f=>({...f,cat:e.target.value}))}>
+                {CATS.filter(c=>c.id!=='all').map(c=><option key={c.id} value={c.id}>{c.icon} {c.label}</option>)}
+              </select>
+            </div>
+          </div>
+        )}
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>
+          {posting&&<button className="btn btn-g" onClick={()=>{setForm({text:'',imgLabel:'',cat:'reform'});setPosting(false);}}>Cancelar</button>}
+          <button className="btn btn-p" onClick={publish} style={{opacity:form.text?1:0.5}}>Publicar</button>
+        </div>
+      </div>
+
+      {/* My posts with comments */}
+      <div style={{fontWeight:700,fontSize:15}}>Minhas postagens ({myPosts.length})</div>
+      {myPosts.length===0&&<div className="card" style={{padding:40,textAlign:'center',color:'var(--t3)'}}>
+        <div style={{fontSize:32,marginBottom:8}}>📝</div>
+        <div style={{fontWeight:600}}>Nenhuma postagem ainda</div>
+      </div>}
+      {myPosts.map(p=>(
+        <div key={p.id} className="card" style={{padding:'14px 16px'}}>
+          <p style={{fontSize:13,lineHeight:1.6,color:'var(--t)',marginBottom:10}}>{p.text}</p>
+          <div style={{display:'flex',gap:10,marginBottom:p.comments.length?12:0}}>
+            <span style={{fontSize:12,color:'var(--t3)'}}>❤️ {p.likes} curtidas</span>
+            <span style={{fontSize:12,color:'var(--t3)'}}>💬 {p.comments.length} comentários</span>
+            <span style={{fontSize:12,color:'var(--t3)'}}>{p.time}</span>
+          </div>
+          {p.comments.length>0&&(
+            <div style={{borderTop:'1px solid var(--bo)',paddingTop:10,display:'flex',flexDirection:'column',gap:8}}>
+              <div style={{fontSize:11,fontWeight:700,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Comentários de clientes</div>
+              {p.comments.map(c=>(
+                <div key={c.id} style={{display:'flex',gap:8}}>
+                  <div style={{width:28,height:28,borderRadius:'50%',background:'var(--p)',display:'flex',
+                    alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'white',flexShrink:0}}>{c.avatar}</div>
+                  <div style={{flex:1,background:'var(--bg)',borderRadius:9,padding:'7px 10px'}}>
+                    <div style={{display:'flex',gap:6,alignItems:'baseline'}}>
+                      <span style={{fontWeight:700,fontSize:12}}>{c.author}</span>
+                      <span style={{fontSize:10,color:'var(--t3)'}}>{c.time}</span>
+                    </div>
+                    <p style={{fontSize:12,color:'var(--t)',marginTop:2,lineHeight:1.5}}>{c.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── HOME FEED SCREEN ──────────────────────────────────────────────────────
+function HomeScreen({posts,setPosts,promosFeed,onBookPromo}){
+  const [query,setQuery]=useState('');
+  const [cat,setCat]=useState('all');
+  const [focused,setFocused]=useState(false);
+  const [bookPost,setBookPost]=useState(null);
+
+  function togglePost(id,field){
+    setPosts(ps=>ps.map(p=>p.id===id?{...p,[field]:!p[field]}:p));
+  }
+
+  const filtered=posts.filter(p=>
+    (cat==='all'||p.cat===cat)&&
+    (query===''||p.text.toLowerCase().includes(query.toLowerCase())||p.author.name.toLowerCase().includes(query.toLowerCase()))
+  );
+
+  return(
+    <div style={{display:'flex',flexDirection:'column',gap:14}}>
+      {/* Search */}
+      <div style={{background:'var(--ca)',borderRadius:'var(--r)',padding:'10px 14px',
+        border:`1.5px solid ${focused?'var(--p)':'var(--bo)'}`,
+        boxShadow:focused?'0 0 0 4px oklch(0.42 0.20 250/.09)':'var(--sh)',
+        display:'flex',gap:10,alignItems:'center',transition:'var(--tr)'}}>
+        <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--t3)" strokeWidth={2}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar serviços, profissionais, categorias..."
+          onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)}
+          style={{flex:1,border:'none',outline:'none',background:'transparent',fontSize:14,color:'var(--t)'}}/>
+        {query&&<button onClick={()=>setQuery('')} style={{color:'var(--t3)',fontSize:18,lineHeight:1}}>×</button>}
+        <button className="btn btn-p" style={{padding:'6px 14px',fontSize:12}}>Buscar</button>
+      </div>
+
+      {/* Categories */}
+      <div style={{display:'flex',gap:7,overflowX:'auto',paddingBottom:2}}>
+        {CATS.map(c=>(
+          <button key={c.id} onClick={()=>setCat(c.id===cat?'all':c.id)} style={{
+            flexShrink:0,padding:'7px 13px',borderRadius:99,fontSize:12,fontWeight:600,
+            background:cat===c.id?'var(--p)':'var(--ca)',
+            color:cat===c.id?'white':'var(--t2)',
+            border:`1px solid ${cat===c.id?'var(--p)':'var(--bo)'}`,
+            cursor:'pointer',transition:'var(--tr)',display:'flex',alignItems:'center',gap:4}}
+          onMouseEnter={e=>{if(cat!==c.id){e.currentTarget.style.background='var(--px)';e.currentTarget.style.color='var(--p)';}}}
+          onMouseLeave={e=>{if(cat!==c.id){e.currentTarget.style.background='var(--ca)';e.currentTarget.style.color='var(--t2)';}}}
+          ><span>{c.icon}</span> {c.label}</button>
+        ))}
+      </div>
+
+      {/* Promotions */}
+      <div>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+          <div style={{fontWeight:800,fontSize:15}}>🏷 Promoções em destaque</div>
+          <span className="badge badge-promo">HOT</span>
+        </div>
+        <div style={{display:'flex',gap:10,overflowX:'auto',paddingBottom:6}}>
+          {promosFeed.filter(p=>cat==='all'||p.cat===cat).map(p=>(
+            <PromoCard key={p.id} promo={p} onBook={()=>onBookPromo&&onBookPromo(p)}/>
+          ))}
+        </div>
+      </div>
+
+      {/* Feed */}
+      <div>
+        <div style={{fontWeight:800,fontSize:15,marginBottom:10}}>
+          {cat==='all'?'Feed de serviços':CATS.find(c=>c.id===cat)?.label} · {filtered.length} posts
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+          {filtered.length===0&&(
+            <div style={{textAlign:'center',padding:'40px 0',color:'var(--t3)'}}>
+              <div style={{fontSize:36,marginBottom:8}}>🔍</div>
+              <div style={{fontSize:14}}>Nenhum resultado para essa busca</div>
+            </div>
+          )}
+          {filtered.map((p,i)=>(
+            <div key={p.id} style={{animationDelay:`${i*.06}s`}}>
+              <Post post={p} onToggle={togglePost} onBook={()=>setBookPost(p.author)}/>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {bookPost&&(
+        <BookModal provider={bookPost} services={INIT_SERVICES} promos={INIT_PROMOS} onClose={()=>setBookPost(null)}/>
+      )}
+    </div>
+  );
+}
+
+// ─── SIDEBAR NAV ───────────────────────────────────────────────────────────
+function SideNav({tab,setTab,isMobile}){
+  const items=[
+    {id:'home',icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,label:'Home'},
+    {id:'explore',icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>,label:'Explorar'},
+    {id:'schedule',icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,label:'Agenda'},
+    {id:'messages',icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,label:'Mensagens'},
+    {id:'provider',icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>,label:'Prestador'},
+  ];
+  if(isMobile) return(
+    <nav style={{position:'fixed',bottom:0,left:0,right:0,height:58,zIndex:50,
+      background:'var(--ca)',borderTop:'1px solid var(--bo)',display:'flex',backdropFilter:'blur(12px)'}}>
+      {items.map(it=>(
+        <button key={it.id} onClick={()=>setTab(it.id)} style={{flex:1,display:'flex',flexDirection:'column',
+          alignItems:'center',gap:2,padding:'8px 0',border:'none',background:'transparent',
+          color:tab===it.id?'var(--p)':'var(--t3)',cursor:'pointer',fontSize:9,fontWeight:tab===it.id?700:500,transition:'var(--tr)'}}>
+          {it.icon}<span>{it.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+  return(
+    <aside style={{width:220,flexShrink:0,height:'100vh',position:'sticky',top:0,
+      background:'var(--ca)',borderRight:'1px solid var(--bo)',padding:'18px 10px',display:'flex',flexDirection:'column',gap:2}}>
+      <div style={{padding:'0 8px 20px'}}><Logo/></div>
+      {items.map(it=>(
+        <button key={it.id} onClick={()=>setTab(it.id)} style={{
+          display:'flex',alignItems:'center',gap:12,padding:'10px 12px',borderRadius:11,border:'none',
+          background:tab===it.id?'var(--px)':'transparent',color:tab===it.id?'var(--p)':'var(--t2)',
+          fontWeight:tab===it.id?700:500,fontSize:13,cursor:'pointer',transition:'var(--tr)',textAlign:'left',
+          position:'relative'}}
+          onMouseEnter={e=>{if(tab!==it.id)e.currentTarget.style.background='var(--bg)'}}
+          onMouseLeave={e=>{if(tab!==it.id)e.currentTarget.style.background='transparent'}}>
+          {it.icon}{it.label}
+          {it.id==='messages'&&<span style={{marginLeft:'auto',background:'var(--re)',color:'white',
+            width:17,height:17,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700}}>3</span>}
+          {it.id==='provider'&&<span style={{marginLeft:'auto',background:'var(--ac)',color:'white',
+            padding:'1px 6px',borderRadius:99,fontSize:9,fontWeight:700}}>PRO</span>}
+        </button>
+      ))}
+      <div style={{marginTop:'auto',display:'flex',gap:10,alignItems:'center',padding:'10px 12px',
+        borderRadius:11,background:'var(--bg)',cursor:'pointer',transition:'var(--tr)'}}
+        onMouseEnter={e=>e.currentTarget.style.background='var(--px)'}
+        onMouseLeave={e=>e.currentTarget.style.background='var(--bg)'}>
+        <div style={{width:34,height:34,borderRadius:'50%',background:'linear-gradient(135deg,var(--p),var(--ac))',
+          display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontWeight:700,fontSize:12}}>VC</div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontWeight:700,fontSize:12,color:'var(--t)'}}>Você</div>
+          <div style={{fontSize:10,color:'var(--t3)'}}>@seu_perfil</div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+// ─── EXPLORE SCREEN ────────────────────────────────────────────────────────
+function ExploreScreen({onBook}){
+  const providers=[
+    {id:1,name:'Carla Mendes',role:'Arquiteta & Designer',cat:'reform',rating:4.9,reviews:127,jobs:341,price:180,initials:'CM',verified:true},
+    {id:2,name:'Lucas Ferreira',role:'Dev Full Stack',cat:'tech',rating:4.8,reviews:89,jobs:210,price:150,initials:'LF',verified:true},
+    {id:3,name:'Ana Paula Costa',role:'Cabeleireira & Colorista',cat:'beauty',rating:5.0,reviews:203,jobs:892,price:120,initials:'AP',verified:true},
+    {id:4,name:'Roberto Silva',role:'Fotógrafo',cat:'photo',rating:4.7,reviews:65,jobs:156,price:250,initials:'RS',verified:false},
+    {id:5,name:'Priya Sharma',role:'Personal Trainer',cat:'health',rating:4.9,reviews:148,jobs:430,price:130,initials:'PS',verified:true},
+    {id:6,name:'Marcos Oliveira',role:'Designer Gráfico & UX',cat:'design',rating:4.8,reviews:92,jobs:275,price:160,initials:'MO',verified:true},
+  ];
+  const [favs,setFavs]=useState({});
+  const [cat,setCat]=useState('all');
+  const filtered=providers.filter(p=>cat==='all'||p.cat===cat);
+  return(
+    <div style={{display:'flex',flexDirection:'column',gap:14}}>
+      <div style={{display:'flex',gap:7,overflowX:'auto',paddingBottom:2}}>
+        {CATS.map(c=>(
+          <button key={c.id} onClick={()=>setCat(c.id)} style={{flexShrink:0,padding:'7px 13px',borderRadius:99,fontSize:12,fontWeight:600,
+            background:cat===c.id?'var(--p)':'var(--ca)',color:cat===c.id?'white':'var(--t2)',
+            border:`1px solid ${cat===c.id?'var(--p)':'var(--bo)'}`,cursor:'pointer',transition:'var(--tr)'}}>
+            {c.icon} {c.label}
+          </button>
+        ))}
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(250px,1fr))',gap:12}}>
+        {filtered.map((p,i)=>{
+          const col=COLORS[p.initials]||'var(--p)';
+          const [hov,setHov]=useState(false);
+          return(
+            <div key={p.id} className="fu" onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+              style={{background:'var(--ca)',borderRadius:'var(--r)',border:'1px solid var(--bo)',overflow:'hidden',
+                transition:'var(--tr)',transform:hov?'translateY(-3px)':'none',
+                boxShadow:hov?'var(--shm)':'var(--sh)',animationDelay:`${i*.05}s`}}>
+              <div style={{height:70,background:`linear-gradient(135deg,${col}66,${col}22)`,position:'relative'}}>
+                <FavBtn on={!!favs[p.id]} onClick={()=>setFavs(f=>({...f,[p.id]:!f[p.id]}))}
+                  size={30} style={{position:'absolute',top:8,right:8}}/>
+              </div>
+              <div style={{padding:'0 16px 16px',marginTop:-22}}>
+                <div style={{position:'relative',display:'inline-block',marginBottom:8}}>
+                  <Av initials={p.initials} color={col} size={46}/>
+                  {p.verified&&<div style={{position:'absolute',bottom:0,right:0}}><VerBadge/></div>}
+                </div>
+                <div style={{fontWeight:700,fontSize:14}}>{p.name}</div>
+                <div style={{fontSize:12,color:'var(--t2)',marginTop:1}}>{p.role}</div>
+                <div style={{display:'flex',alignItems:'center',gap:5,margin:'5px 0 8px'}}>
+                  <Stars r={p.rating} size={11}/><span style={{fontSize:11,fontWeight:700}}>{p.rating}</span>
+                  <span style={{fontSize:10,color:'var(--t3)'}}>({p.reviews})</span>
+                </div>
+                <div style={{display:'flex',gap:6,marginBottom:10}}>
+                  <span className="badge badge-p">R$ {p.price}/h</span>
+                  <span className="badge badge-g">{p.jobs} jobs</span>
+                </div>
+                <button className="btn btn-p" style={{width:'100%',padding:'8px',fontSize:13}}
+                  onClick={()=>onBook&&onBook({...p,color:col})}>Agendar agora</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── ROOT APP ───────────────────────────────────────────────────────────────
+function App(){
+  const [tab,setTab]=useState(()=>localStorage.getItem('100pv2_tab')||'home');
+  const [isMobile,setIsMobile]=useState(window.innerWidth<768);
+  const [posts,setPosts]=useState(INIT_POSTS);
+  const [promosFeed]=useState(INIT_PROMOS_FEED);
+  const [bookTarget,setBookTarget]=useState(null);
+  const [provider,setProvider]=useState(INIT_PROVIDER);
+  const [services,setServices]=useState(INIT_SERVICES);
+  const [promos,setPromos]=useState(INIT_PROMOS);
+  const [slots,setSlots]=useState(buildDefaultSlots);
+
+  useEffect(()=>{
+    localStorage.setItem('100pv2_tab',tab);
+  },[tab]);
+  useEffect(()=>{
+    const fn=()=>setIsMobile(window.innerWidth<768);
+    window.addEventListener('resize',fn);return()=>window.removeEventListener('resize',fn);
+  },[]);
+
+  // Tweaks
+  const [showTweaks,setShowTweaks]=useState(false);
+  useEffect(()=>{
+    const h=e=>{
+      if(e.data?.type==='__activate_edit_mode')setShowTweaks(true);
+      if(e.data?.type==='__deactivate_edit_mode')setShowTweaks(false);
+    };
+    window.addEventListener('message',h);
+    window.parent.postMessage({type:'__edit_mode_available'},'*');
+    return()=>window.removeEventListener('message',h);
+  },[]);
+
+  return(
+    <div style={{display:'flex',minHeight:'100vh',background:'var(--bg)'}}>
+      {!isMobile&&<SideNav tab={tab} setTab={setTab} isMobile={false}/>}
+
+      <main style={{flex:1,minWidth:0,display:'flex',flexDirection:'column'}}>
+        {isMobile&&(
+          <div style={{position:'sticky',top:0,zIndex:40,background:'var(--ca)',borderBottom:'1px solid var(--bo)',
+            padding:'10px 14px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <Logo size="sm"/>
+            <div style={{width:30,height:30,borderRadius:'50%',background:'linear-gradient(135deg,var(--p),var(--ac))',
+              display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontWeight:700,fontSize:11}}>VC</div>
+          </div>
+        )}
+        <div style={{flex:1,overflowY:'auto',padding:isMobile?'14px 14px 72px':'22px 26px',maxWidth:720,margin:'0 auto',width:'100%'}}>
+          {tab==='home'&&<HomeScreen posts={posts} setPosts={setPosts} promosFeed={promosFeed} onBookPromo={t=>setBookTarget({name:t.provider,initials:t.initials,role:'Prestador',color:t.color})}/>}
+          {tab==='explore'&&<ExploreScreen onBook={p=>setBookTarget(p)}/>}
+          {tab==='schedule'&&(
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              <div style={{fontWeight:800,fontSize:20}}>Meus Agendamentos</div>
+              {[{d:7,prov:'Carla Mendes',svc:'Consultoria inicial',t:'10:00',col:COLORS.CM},
+                {d:11,prov:'Lucas Ferreira',svc:'Sprint planning',t:'14:00',col:COLORS.LF},
+                {d:15,prov:'Ana Paula Costa',svc:'Coloração',t:'09:30',col:COLORS.AP},
+                {d:18,prov:'Priya Sharma',svc:'Treino funcional',t:'07:00',col:COLORS.PS},
+              ].map((ev,i)=>(
+                <div key={i} className="card fu" style={{padding:'13px 16px',display:'flex',gap:14,alignItems:'center',borderLeft:`4px solid ${ev.col}`,animationDelay:`${i*.05}s`}}>
+                  <div style={{textAlign:'center',minWidth:38}}>
+                    <div style={{fontWeight:800,fontSize:22,lineHeight:1}}>{ev.d}</div>
+                    <div style={{fontSize:9,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'0.06em'}}>ABR</div>
+                  </div>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:700,fontSize:14}}>{ev.svc}</div>
+                    <div style={{fontSize:12,color:'var(--t2)',marginTop:1}}>{ev.prov} · {ev.t}</div>
+                  </div>
+                  <span className="badge badge-p">Confirmado</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {tab==='messages'&&(
+            <div style={{display:'flex',flexDirection:'column',gap:10}}>
+              <div style={{fontWeight:800,fontSize:20}}>Mensagens</div>
+              {Object.entries(COLORS).map(([k,col],i)=>{
+                const names={CM:'Carla Mendes',LF:'Lucas Ferreira',AP:'Ana Paula Costa',RS:'Roberto Silva',PS:'Priya Sharma',MO:'Marcos Oliveira'};
+                const msgs=['Oi! Posso confirmar o horário de amanhã?','Entregando na sexta como combinado ✓','Disponível essa semana!','Obrigada pelo feedback 😊','Boa notícia: encaixe disponível!','Enviando o arquivo agora'];
+                return(
+                  <div key={k} className="card fu" style={{padding:'12px 14px',display:'flex',gap:10,cursor:'pointer',
+                    transition:'var(--tr)',animationDelay:`${i*.05}s`}}
+                    onMouseEnter={e=>e.currentTarget.style.transform='translateY(-1px)'}
+                    onMouseLeave={e=>e.currentTarget.style.transform='none'}>
+                    <div style={{position:'relative'}}>
+                      <Av initials={k} color={col} size={42}/>
+                      {i<2&&<div style={{position:'absolute',bottom:1,right:1,width:10,height:10,borderRadius:'50%',background:'var(--ac)',border:'2px solid var(--ca)'}}/>}
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline'}}>
+                        <span style={{fontWeight:700,fontSize:14}}>{names[k]}</span>
+                        <span style={{fontSize:11,color:'var(--t3)'}}>{['2h','5h','1d','2d','3d','4d'][i]}</span>
+                      </div>
+                      <div style={{fontSize:12,color:'var(--t2)',marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{msgs[i]}</div>
+                    </div>
+                    {i<2&&<div style={{width:18,height:18,borderRadius:'50%',background:'var(--p)',display:'flex',
+                      alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white',flexShrink:0,alignSelf:'center'}}>{[2,1][i]}</div>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {tab==='provider'&&(
+            <ProviderDashboard provider={provider} setProvider={setProvider}
+              services={services} setServices={setServices}
+              promos={promos} setPromos={setPromos}
+              slots={slots} setSlots={setSlots}
+              posts={posts} setPosts={setPosts}/>
+          )}
+        </div>
+      </main>
+
+      {isMobile&&<SideNav tab={tab} setTab={setTab} isMobile={true}/>}
+
+      {bookTarget&&(
+        <BookModal provider={bookTarget} services={services} promos={promos} onClose={()=>setBookTarget(null)}/>
+      )}
+
+      {showTweaks&&(
+        <div style={{position:'fixed',bottom:80,right:16,zIndex:1000,background:'var(--ca)',
+          border:'1px solid var(--bo)',borderRadius:'var(--r)',padding:20,width:240,boxShadow:'var(--shm)',animation:'pop .25s ease'}}>
+          <div style={{fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em',color:'var(--t2)',marginBottom:12}}>Tweaks</div>
+          <div style={{fontSize:12,color:'var(--t3)',lineHeight:1.6}}>
+            Acesse a aba <strong style={{color:'var(--p)'}}>Prestador</strong> para gerenciar serviços, agenda e promoções.<br/><br/>
+            Clique em <strong>Agendar</strong> nos posts do feed para ver o fluxo de agendamento.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

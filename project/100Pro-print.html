@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>100Pro — Rede Social de Serviços</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary: oklch(0.42 0.20 250);
+  --primary-light: oklch(0.55 0.18 250);
+  --primary-xlight: oklch(0.94 0.04 250);
+  --accent: oklch(0.58 0.18 165);
+  --gold: oklch(0.72 0.14 80);
+  --bg: oklch(0.975 0.008 250);
+  --bg2: oklch(0.965 0.010 250);
+  --card: #ffffff;
+  --border: oklch(0.90 0.010 250);
+  --text: oklch(0.15 0.015 250);
+  --text2: oklch(0.45 0.015 250);
+  --text3: oklch(0.65 0.010 250);
+  --danger: oklch(0.58 0.20 25);
+  --radius: 14px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 10px oklch(0.42 0.20 250 / 0.09);
+}
+html, body { font-family: 'Plus Jakarta Sans', sans-serif; background: white; color: var(--text); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+/* ── PAGE LAYOUT ── */
+.page {
+  width: 297mm;
+  min-height: 210mm;
+  padding: 14mm 16mm;
+  background: var(--bg);
+  break-before: page;
+  break-inside: avoid;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.page:first-child { break-before: auto; }
+
+/* ── SHARED ── */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 600;
+}
+.badge-primary { background: var(--primary-xlight); color: var(--primary); }
+.badge-neutral { background: var(--bg2); color: var(--text2); }
+
+/* ── LOGO ── */
+.logo-wrap {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: linear-gradient(135deg, oklch(0.42 0.20 250), oklch(0.58 0.18 165));
+  border-radius: 10px; padding: 5px 11px;
+  box-shadow: 0 2px 12px oklch(0.42 0.20 250 / 0.35);
+}
+.logo-text { font-size: 20px; font-weight: 800; color: white; letter-spacing: -0.03em; line-height: 1; }
+.logo-dot { width: 7px; height: 7px; border-radius: 50%; background: oklch(0.72 0.14 80); box-shadow: 0 0 8px oklch(0.72 0.14 80 / 0.8); }
+
+/* ── NAV BAR ── */
+.topbar {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--card); border-radius: var(--radius);
+  padding: 10px 16px; border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.topbar-search {
+  flex: 1; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 99px; padding: 7px 14px; font-size: 13px;
+  color: var(--text3); display: flex; align-items: center; gap: 8px;
+}
+.nav-btn {
+  padding: 7px 14px; border-radius: 99px; font-size: 12px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--bg2); color: var(--text2);
+  white-space: nowrap;
+}
+.nav-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+/* ── CATEGORIES ── */
+.cats { display: flex; gap: 8px; flex-wrap: wrap; }
+.cat-chip {
+  padding: 6px 13px; border-radius: 99px; font-size: 11px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--card); color: var(--text2);
+  display: flex; align-items: center; gap: 4px;
+}
+.cat-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+/* ── FEED GRID ── */
+.feed-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+.post-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow); }
+.post-img { height: 110px; display: flex; align-items: center; justify-content: center; position: relative; }
+.post-img-label { font-size: 10px; font-family: monospace; text-align: center; max-width: 130px; line-height: 1.4; opacity: 0.5; color: var(--text); }
+.post-img-badge { position: absolute; top: 8px; left: 8px; background: rgba(255,255,255,0.85); padding: 3px 8px; border-radius: 99px; font-size: 10px; font-weight: 600; }
+.post-body { padding: 10px 12px; }
+.post-text { font-size: 11.5px; line-height: 1.6; color: var(--text); }
+.post-footer { padding: 8px 12px; border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center; }
+.post-action { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text3); }
+
+/* ── PROVIDER ── */
+.provider-row {
+  display: flex; gap: 10px; align-items: center; padding: 10px 12px;
+  border-radius: var(--radius-sm); background: var(--card); border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.avatar {
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; color: white; flex-shrink: 0;
+  border: 2px solid white; box-shadow: 0 2px 6px #0002;
+}
+.verified-badge {
+  width: 14px; height: 14px; background: var(--accent); border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center; border: 2px solid white;
+}
+.stars { display: flex; gap: 1px; }
+.star { width: 11px; height: 11px; }
+
+/* ── CALENDAR ── */
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.cal-day {
+  aspect-ratio: 1; border-radius: 7px; display: flex; align-items: center; justify-content: center;
+  font-size: 11.5px; position: relative;
+}
+.cal-day.today { background: var(--primary-xlight); color: var(--primary); font-weight: 700; }
+.cal-day.has-event { font-weight: 600; }
+.cal-event-dot { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; }
+
+/* ── TESTIMONIALS ── */
+.testi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.testi-card { background: var(--card); border-radius: var(--radius); padding: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+.quote-mark { font-size: 32px; color: var(--primary); opacity: 0.25; line-height: 1; font-family: Georgia, serif; margin-bottom: 6px; }
+.testi-text { font-size: 12.5px; line-height: 1.7; color: var(--text); margin-bottom: 12px; }
+
+/* ── PAGE HEADER ── */
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+.page-title { font-size: 18px; font-weight: 800; }
+.page-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+/* ── SCHEDULE LIST ── */
+.sched-item {
+  display: flex; gap: 14px; align-items: center;
+  background: var(--card); border-radius: var(--radius-sm); padding: 11px 14px;
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+}
+
+/* ── SECTION LABEL ── */
+.section-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text3); margin-bottom: 8px;
+}
+
+/* ── COVER ── */
+.cover-page {
+  width: 297mm; min-height: 210mm;
+  background: linear-gradient(135deg, oklch(0.42 0.20 250) 0%, oklch(0.30 0.20 250) 50%, oklch(0.25 0.15 240) 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 24px; position: relative; overflow: hidden;
+  break-before: auto; break-inside: avoid;
+}
+.cover-orb {
+  position: absolute; border-radius: 50%;
+  background: radial-gradient(circle, oklch(0.58 0.18 165 / 0.3), transparent);
+}
+
+/* PRINT */
+@media print {
+  @page { size: A4 landscape; margin: 0; }
+  html, body { background: white; }
+  .page, .cover-page { break-before: page; }
+  .page:first-child, .cover-page:first-child { break-before: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ PAGE 1: COVER ══ -->
+<div class="cover-page">
+  <div class="cover-orb" style="width:400px;height:400px;top:-100px;right:-80px;"></div>
+  <div class="cover-orb" style="width:300px;height:300px;bottom:-80px;left:-60px;background:radial-gradient(circle, oklch(0.72 0.14 80 / 0.2), transparent);"></div>
+
+  <div style="display:flex;flex-direction:column;align-items:center;gap:20px;z-index:1;">
+    <div class="logo-wrap" style="padding:10px 20px;">
+      <span class="logo-text" style="font-size:36px;">100</span>
+      <div class="logo-dot" style="width:12px;height:12px;"></div>
+      <span class="logo-text" style="font-size:36px;">Pro</span>
+    </div>
+
+    <div style="text-align:center;">
+      <div style="font-size:28px;font-weight:800;color:white;letter-spacing:-0.02em;">Rede Social de Serviços</div>
+      <div style="font-size:15px;color:rgba(255,255,255,0.65);margin-top:8px;font-weight:400;">Conectando profissionais e clientes com excelência</div>
+    </div>
+
+    <div style="display:flex;gap:32px;margin-top:8px;">
+      <div style="text-align:center;">
+        <div style="font-size:28px;font-weight:800;color:white;">6+</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px;">Categorias</div>
+      </div>
+      <div style="width:1px;background:rgba(255,255,255,0.15);"></div>
+      <div style="text-align:center;">
+        <div style="font-size:28px;font-weight:800;color:white;">2.1k</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px;">Profissionais</div>
+      </div>
+      <div style="width:1px;background:rgba(255,255,255,0.15);"></div>
+      <div style="text-align:center;">
+        <div style="font-size:28px;font-weight:800;color:white;">4.9★</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px;">Avaliação média</div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+      <span style="background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);color:white;padding:6px 16px;border-radius:99px;font-size:12px;font-weight:600;">🔨 Reformas</span>
+      <span style="background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);color:white;padding:6px 16px;border-radius:99px;font-size:12px;font-weight:600;">💻 Tecnologia</span>
+      <span style="background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);color:white;padding:6px 16px;border-radius:99px;font-size:12px;font-weight:600;">✂ Beleza</span>
+      <span style="background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);color:white;padding:6px 16px;border-radius:99px;font-size:12px;font-weight:600;">📷 Fotografia</span>
+      <span style="background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);color:white;padding:6px 16px;border-radius:99px;font-size:12px;font-weight:600;">🏥 Saúde</span>
+      <span style="background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);color:white;padding:6px 16px;border-radius:99px;font-size:12px;font-weight:600;">🎨 Design</span>
+    </div>
+  </div>
+
+  <div style="position:absolute;bottom:20px;right:28px;font-size:11px;color:rgba(255,255,255,0.35);">100Pro · Abril 2026</div>
+</div>
+
+<!-- ══ PAGE 2: FEED ══ -->
+<div class="page">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="logo-wrap" style="padding:4px 9px;">
+      <span class="logo-text" style="font-size:16px;">100</span>
+      <div class="logo-dot" style="width:5px;height:5px;"></div>
+      <span class="logo-text" style="font-size:16px;">Pro</span>
+    </div>
+    <div class="topbar-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <span>Buscar serviços, profissionais...</span>
+    </div>
+    <div style="display:flex;gap:6px;">
+      <span class="nav-btn active">Feed</span>
+      <span class="nav-btn">Explorar</span>
+      <span class="nav-btn">Agenda</span>
+      <span class="nav-btn">Favoritos</span>
+    </div>
+    <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,oklch(0.42 0.20 250),oklch(0.58 0.18 165));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;">VC</div>
+  </div>
+
+  <!-- Categories -->
+  <div class="cats">
+    <div class="cat-chip active">⊞ Todos</div>
+    <div class="cat-chip">🔨 Reformas</div>
+    <div class="cat-chip">✂ Beleza</div>
+    <div class="cat-chip">💻 Tecnologia</div>
+    <div class="cat-chip">🧹 Limpeza</div>
+    <div class="cat-chip">🏥 Saúde</div>
+    <div class="cat-chip">📚 Educação</div>
+    <div class="cat-chip">📷 Fotografia</div>
+    <div class="cat-chip">🎨 Design</div>
+  </div>
+
+  <!-- Feed Posts Grid -->
+  <div class="feed-grid">
+    <!-- Post 1 -->
+    <div class="post-card">
+      <div class="post-img" style="background:oklch(0.88 0.04 80);">
+        <div class="post-img-label">Sala de estar reformada — tons neutros, iluminação embutida</div>
+        <div class="post-img-badge">Reformas</div>
+      </div>
+      <div class="post-body">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+          <div class="avatar" style="width:30px;height:30px;font-size:10px;background:oklch(0.58 0.18 300);">CM</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;">
+              Carla Mendes
+              <div class="verified-badge" style="width:12px;height:12px;">
+                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
+              </div>
+            </div>
+            <div style="font-size:10px;color:var(--text3);">Arquiteta · 2h</div>
+          </div>
+          <div style="margin-left:auto;background:var(--primary-xlight);color:var(--primary);font-size:10px;font-weight:600;padding:3px 8px;border-radius:99px;">Contratar</div>
+        </div>
+        <p class="post-text">Projeto finalizado! Reforma completa de 120m² no Jardins. 45 dias de trabalho intenso. O cliente ficou encantado com o resultado 🏠✨</p>
+      </div>
+      <div class="post-footer">
+        <div class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 48</div>
+        <div class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 12</div>
+        <div style="margin-left:auto;" class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> Salvar</div>
+      </div>
+    </div>
+
+    <!-- Post 2 -->
+    <div class="post-card">
+      <div class="post-img" style="background:oklch(0.92 0.06 90);">
+        <div class="post-img-label">Antes e depois coloração loiro platinum</div>
+        <div class="post-img-badge">Beleza</div>
+      </div>
+      <div class="post-body">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+          <div class="avatar" style="width:30px;height:30px;font-size:10px;background:oklch(0.62 0.18 350);">AP</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;">
+              Ana Paula Costa
+              <div class="verified-badge" style="width:12px;height:12px;"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>
+            </div>
+            <div style="font-size:10px;color:var(--text3);">Cabeleireira · 5h</div>
+          </div>
+          <div style="margin-left:auto;background:var(--primary-xlight);color:var(--primary);font-size:10px;font-weight:600;padding:3px 8px;border-radius:99px;">Contratar</div>
+        </div>
+        <p class="post-text">Loiro platinum executado em 3 sessões! Técnica exclusiva de hidratação progressiva. Resultado saudável e brilhoso 💇‍♀️</p>
+      </div>
+      <div class="post-footer">
+        <div class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="var(--danger)" stroke="var(--danger)" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 127</div>
+        <div class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 34</div>
+        <div style="margin-left:auto;" class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="var(--primary)" stroke="var(--primary)" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> Salvo</div>
+      </div>
+    </div>
+
+    <!-- Post 3 -->
+    <div class="post-card">
+      <div class="post-img" style="background:oklch(0.88 0.06 240);">
+        <div class="post-img-label">Dashboard analytics com gráficos em tempo real</div>
+        <div class="post-img-badge">Tecnologia</div>
+      </div>
+      <div class="post-body">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+          <div class="avatar" style="width:30px;height:30px;font-size:10px;background:oklch(0.58 0.18 220);">LF</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;">
+              Lucas Ferreira
+              <div class="verified-badge" style="width:12px;height:12px;"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>
+            </div>
+            <div style="font-size:10px;color:var(--text3);">Dev Full Stack · 1d</div>
+          </div>
+          <div style="margin-left:auto;background:var(--primary-xlight);color:var(--primary);font-size:10px;font-weight:600;padding:3px 8px;border-radius:99px;">Contratar</div>
+        </div>
+        <p class="post-text">Dashboard em tempo real entregue! React + WebSockets, 50k eventos/min. Zero downtime, 99.9% uptime no primeiro mês 🚀📊</p>
+      </div>
+      <div class="post-footer">
+        <div class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 83</div>
+        <div class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 19</div>
+        <div style="margin-left:auto;" class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> Salvar</div>
+      </div>
+    </div>
+
+    <!-- Post 4 -->
+    <div class="post-card">
+      <div class="post-img" style="background:oklch(0.85 0.08 70);">
+        <div class="post-img-label">Casal ao pôr do sol — ensaio de casamento</div>
+        <div class="post-img-badge">Fotografia</div>
+      </div>
+      <div class="post-body">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+          <div class="avatar" style="width:30px;height:30px;font-size:10px;background:oklch(0.55 0.18 200);">RS</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;">Roberto Silva</div>
+            <div style="font-size:10px;color:var(--text3);">Fotógrafo · 1d</div>
+          </div>
+          <div style="margin-left:auto;background:var(--primary-xlight);color:var(--primary);font-size:10px;font-weight:600;padding:3px 8px;border-radius:99px;">Contratar</div>
+        </div>
+        <p class="post-text">Ensaio de casamento ao pôr do sol no interior de SP. Cada foto conta uma história de amor. Obrigado, família Ribeiro! 📸💛</p>
+      </div>
+      <div class="post-footer">
+        <div class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 61</div>
+        <div class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 8</div>
+        <div style="margin-left:auto;" class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> Salvar</div>
+      </div>
+    </div>
+
+    <!-- Post 5 -->
+    <div class="post-card">
+      <div class="post-img" style="background:oklch(0.90 0.06 160);">
+        <div class="post-img-label">Resultado antes e depois — programa 90 dias</div>
+        <div class="post-img-badge">Saúde</div>
+      </div>
+      <div class="post-body">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+          <div class="avatar" style="width:30px;height:30px;font-size:10px;background:oklch(0.60 0.18 160);">PS</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;">
+              Priya Sharma
+              <div class="verified-badge" style="width:12px;height:12px;"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>
+            </div>
+            <div style="font-size:10px;color:var(--text3);">Personal Trainer · 2d</div>
+          </div>
+          <div style="margin-left:auto;background:var(--primary-xlight);color:var(--primary);font-size:10px;font-weight:600;padding:3px 8px;border-radius:99px;">Contratar</div>
+        </div>
+        <p class="post-text">90 dias: -12kg, -18cm de cintura. Treino funcional + alimentação personalizada = transformação real 💪🥗</p>
+      </div>
+      <div class="post-footer">
+        <div class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 214</div>
+        <div class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 52</div>
+        <div style="margin-left:auto;" class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> Salvar</div>
+      </div>
+    </div>
+
+    <!-- Post 6 -->
+    <div class="post-card">
+      <div class="post-img" style="background:oklch(0.88 0.08 260);">
+        <div class="post-img-label">Brand book completo — identidade visual fintech</div>
+        <div class="post-img-badge">Design</div>
+      </div>
+      <div class="post-body">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+          <div class="avatar" style="width:30px;height:30px;font-size:10px;background:oklch(0.58 0.20 45);">MO</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;">
+              Marcos Oliveira
+              <div class="verified-badge" style="width:12px;height:12px;"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>
+            </div>
+            <div style="font-size:10px;color:var(--text3);">Designer · 3d</div>
+          </div>
+          <div style="margin-left:auto;background:var(--primary-xlight);color:var(--primary);font-size:10px;font-weight:600;padding:3px 8px;border-radius:99px;">Contratar</div>
+        </div>
+        <p class="post-text">Identidade visual para startup Fintech. Logotipo, tipografia, paleta, manual da marca e aplicações. 3 semanas de puro amor 🎨✦</p>
+      </div>
+      <div class="post-footer">
+        <div class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 95</div>
+        <div class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 27</div>
+        <div style="margin-left:auto;" class="post-action"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> Salvar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align:right;font-size:10px;color:var(--text3);margin-top:auto;padding-top:4px;">100Pro · Feed · Abril 2026</div>
+</div>
+
+
+<!-- ══ PAGE 3: PROVIDERS ══ -->
+<div class="page">
+  <div class="topbar">
+    <div class="logo-wrap" style="padding:4px 9px;"><span class="logo-text" style="font-size:16px;">100</span><div class="logo-dot" style="width:5px;height:5px;"></div><span class="logo-text" style="font-size:16px;">Pro</span></div>
+    <div class="topbar-search" style="max-width:380px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <span>Buscar profissionais...</span>
+    </div>
+    <div style="display:flex;gap:6px;">
+      <span class="nav-btn">Feed</span>
+      <span class="nav-btn active">Explorar</span>
+      <span class="nav-btn">Agenda</span>
+      <span class="nav-btn">Favoritos</span>
+    </div>
+    <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,oklch(0.42 0.20 250),oklch(0.58 0.18 165));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;">VC</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;flex:1;">
+    <!-- Provider cards -->
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="section-label">Profissionais em destaque</div>
+      <!-- Carla -->
+      <div class="card" style="overflow:hidden;">
+        <div style="height:60px;background:linear-gradient(135deg,oklch(0.58 0.18 300 / 0.5),oklch(0.58 0.18 300 / 0.2));position:relative;">
+          <div style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.85);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--danger)" stroke="var(--danger)" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+        </div>
+        <div style="padding:0 14px 14px;margin-top:-20px;">
+          <div style="display:flex;align-items:flex-end;gap:0;">
+            <div class="avatar" style="width:44px;height:44px;font-size:14px;background:oklch(0.58 0.18 300);">CM</div>
+          </div>
+          <div style="margin-top:6px;">
+            <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:5px;">Carla Mendes <div class="verified-badge"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div></div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px;">Arquiteta & Designer de Interiores</div>
+            <div style="display:flex;align-items:center;gap:5px;margin-top:5px;">
+              <div class="stars">★★★★★</div>
+              <span style="font-size:11px;font-weight:700;">4.9</span><span style="font-size:10px;color:var(--text3);">(127)</span>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:8px;">
+              <span class="badge badge-primary">R$ 180/h</span>
+              <span class="badge badge-neutral">341 jobs</span>
+            </div>
+            <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;">
+              <span style="font-size:10px;background:var(--bg2);padding:2px 7px;border-radius:99px;color:var(--text2);">Projeto residencial</span>
+              <span style="font-size:10px;background:var(--bg2);padding:2px 7px;border-radius:99px;color:var(--text2);">Design de interiores</span>
+              <span style="font-size:10px;background:var(--bg2);padding:2px 7px;border-radius:99px;color:var(--text2);">Reforma comercial</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Lucas -->
+      <div class="card" style="overflow:hidden;">
+        <div style="height:60px;background:linear-gradient(135deg,oklch(0.58 0.18 220 / 0.5),oklch(0.58 0.18 220 / 0.2));position:relative;">
+          <div style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.85);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--danger)" stroke="var(--danger)" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+        </div>
+        <div style="padding:0 14px 14px;margin-top:-20px;">
+          <div class="avatar" style="width:44px;height:44px;font-size:14px;background:oklch(0.58 0.18 220);">LF</div>
+          <div style="margin-top:6px;">
+            <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:5px;">Lucas Ferreira <div class="verified-badge"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div></div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px;">Dev Full Stack & Tech</div>
+            <div style="display:flex;align-items:center;gap:5px;margin-top:5px;"><div class="stars">★★★★★</div><span style="font-size:11px;font-weight:700;">4.8</span><span style="font-size:10px;color:var(--text3);">(89)</span></div>
+            <div style="display:flex;gap:6px;margin-top:8px;"><span class="badge badge-primary">R$ 150/h</span><span class="badge badge-neutral">210 jobs</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="section-label">Mais bem avaliados</div>
+      <!-- Ana -->
+      <div class="card" style="overflow:hidden;">
+        <div style="height:60px;background:linear-gradient(135deg,oklch(0.62 0.18 350 / 0.5),oklch(0.62 0.18 350 / 0.2));"></div>
+        <div style="padding:0 14px 14px;margin-top:-20px;">
+          <div class="avatar" style="width:44px;height:44px;font-size:14px;background:oklch(0.62 0.18 350);">AP</div>
+          <div style="margin-top:6px;">
+            <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:5px;">Ana Paula Costa <div class="verified-badge"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div></div>
+            <div style="font-size:11px;color:var(--text2);">Cabeleireira & Colorista</div>
+            <div style="display:flex;align-items:center;gap:5px;margin-top:5px;"><span style="font-size:11px;color:var(--gold);">★★★★★</span><span style="font-size:11px;font-weight:700;">5.0</span><span style="font-size:10px;color:var(--text3);">(203)</span></div>
+            <div style="display:flex;gap:6px;margin-top:8px;"><span class="badge badge-primary">R$ 120/h</span><span class="badge badge-neutral">892 jobs</span></div>
+          </div>
+        </div>
+      </div>
+      <!-- Priya -->
+      <div class="card" style="overflow:hidden;">
+        <div style="height:60px;background:linear-gradient(135deg,oklch(0.60 0.18 160 / 0.5),oklch(0.60 0.18 160 / 0.2));"></div>
+        <div style="padding:0 14px 14px;margin-top:-20px;">
+          <div class="avatar" style="width:44px;height:44px;font-size:14px;background:oklch(0.60 0.18 160);">PS</div>
+          <div style="margin-top:6px;">
+            <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:5px;">Priya Sharma <div class="verified-badge"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div></div>
+            <div style="font-size:11px;color:var(--text2);">Personal Trainer & Nutricionista</div>
+            <div style="display:flex;align-items:center;gap:5px;margin-top:5px;"><span style="font-size:11px;color:var(--gold);">★★★★★</span><span style="font-size:11px;font-weight:700;">4.9</span><span style="font-size:10px;color:var(--text3);">(148)</span></div>
+            <div style="display:flex;gap:6px;margin-top:8px;"><span class="badge badge-primary">R$ 130/h</span><span class="badge badge-neutral">430 jobs</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="section-label">Novos talentos</div>
+      <!-- Roberto -->
+      <div class="card" style="overflow:hidden;">
+        <div style="height:60px;background:linear-gradient(135deg,oklch(0.55 0.18 200 / 0.5),oklch(0.55 0.18 200 / 0.2));"></div>
+        <div style="padding:0 14px 14px;margin-top:-20px;">
+          <div class="avatar" style="width:44px;height:44px;font-size:14px;background:oklch(0.55 0.18 200);">RS</div>
+          <div style="margin-top:6px;">
+            <div style="font-weight:700;font-size:14px;">Roberto Silva</div>
+            <div style="font-size:11px;color:var(--text2);">Fotógrafo Profissional</div>
+            <div style="display:flex;align-items:center;gap:5px;margin-top:5px;"><span style="font-size:11px;color:var(--gold);">★★★★☆</span><span style="font-size:11px;font-weight:700;">4.7</span><span style="font-size:10px;color:var(--text3);">(65)</span></div>
+            <div style="display:flex;gap:6px;margin-top:8px;"><span class="badge badge-primary">R$ 250/h</span><span class="badge badge-neutral">156 jobs</span></div>
+          </div>
+        </div>
+      </div>
+      <!-- Marcos -->
+      <div class="card" style="overflow:hidden;">
+        <div style="height:60px;background:linear-gradient(135deg,oklch(0.58 0.20 45 / 0.5),oklch(0.58 0.20 45 / 0.2));"></div>
+        <div style="padding:0 14px 14px;margin-top:-20px;">
+          <div class="avatar" style="width:44px;height:44px;font-size:14px;background:oklch(0.58 0.20 45);">MO</div>
+          <div style="margin-top:6px;">
+            <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:5px;">Marcos Oliveira <div class="verified-badge"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div></div>
+            <div style="font-size:11px;color:var(--text2);">Designer Gráfico & UX</div>
+            <div style="display:flex;align-items:center;gap:5px;margin-top:5px;"><span style="font-size:11px;color:var(--gold);">★★★★★</span><span style="font-size:11px;font-weight:700;">4.8</span><span style="font-size:10px;color:var(--text3);">(92)</span></div>
+            <div style="display:flex;gap:6px;margin-top:8px;"><span class="badge badge-primary">R$ 160/h</span><span class="badge badge-neutral">275 jobs</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:right;font-size:10px;color:var(--text3);padding-top:4px;">100Pro · Explorar Profissionais · Abril 2026</div>
+</div>
+
+
+<!-- ══ PAGE 4: SCHEDULE + CALENDAR ══ -->
+<div class="page">
+  <div class="topbar">
+    <div class="logo-wrap" style="padding:4px 9px;"><span class="logo-text" style="font-size:16px;">100</span><div class="logo-dot" style="width:5px;height:5px;"></div><span class="logo-text" style="font-size:16px;">Pro</span></div>
+    <div style="flex:1;"></div>
+    <div style="display:flex;gap:6px;"><span class="nav-btn">Feed</span><span class="nav-btn">Explorar</span><span class="nav-btn active">Agendamentos</span><span class="nav-btn">Favoritos</span></div>
+    <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,oklch(0.42 0.20 250),oklch(0.58 0.18 165));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;">VC</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;flex:1;align-items:start;">
+    <!-- Calendar -->
+    <div class="card" style="padding:18px;width:280px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div style="font-weight:800;font-size:15px;">Abril 2026</div>
+        <div style="display:flex;gap:4px;">
+          <div style="width:22px;height:22px;border-radius:6px;border:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text2);">‹</div>
+          <div style="width:22px;height:22px;border-radius:6px;border:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text2);">›</div>
+        </div>
+      </div>
+      <!-- Day labels -->
+      <div class="cal-grid" style="margin-bottom:6px;">
+        <div style="text-align:center;font-size:10px;font-weight:600;color:var(--text3);">D</div>
+        <div style="text-align:center;font-size:10px;font-weight:600;color:var(--text3);">S</div>
+        <div style="text-align:center;font-size:10px;font-weight:600;color:var(--text3);">T</div>
+        <div style="text-align:center;font-size:10px;font-weight:600;color:var(--text3);">Q</div>
+        <div style="text-align:center;font-size:10px;font-weight:600;color:var(--text3);">Q</div>
+        <div style="text-align:center;font-size:10px;font-weight:600;color:var(--text3);">S</div>
+        <div style="text-align:center;font-size:10px;font-weight:600;color:var(--text3);">S</div>
+      </div>
+      <!-- Days — April 2026 starts Wednesday (3 empty) -->
+      <div class="cal-grid">
+        <div></div><div></div><div></div>
+        <div class="cal-day">1</div><div class="cal-day">2</div><div class="cal-day">3</div><div class="cal-day">4</div>
+        <div class="cal-day">5</div><div class="cal-day">6</div>
+        <div class="cal-day has-event" style="background:oklch(0.58 0.18 300 / 0.15);border-radius:7px;">7<div class="cal-event-dot" style="background:oklch(0.58 0.18 300);"></div></div>
+        <div class="cal-day">8</div><div class="cal-day">9</div><div class="cal-day">10</div>
+        <div class="cal-day has-event" style="background:oklch(0.58 0.18 220 / 0.15);border-radius:7px;">11<div class="cal-event-dot" style="background:oklch(0.58 0.18 220);"></div></div>
+        <div class="cal-day">12</div><div class="cal-day">13</div><div class="cal-day">14</div>
+        <div class="cal-day has-event" style="background:oklch(0.62 0.18 350 / 0.15);border-radius:7px;">15<div class="cal-event-dot" style="background:oklch(0.62 0.18 350);"></div></div>
+        <div class="cal-day">16</div><div class="cal-day">17</div>
+        <div class="cal-day has-event" style="background:oklch(0.60 0.18 160 / 0.15);border-radius:7px;">18<div class="cal-event-dot" style="background:oklch(0.60 0.18 160);"></div></div>
+        <div class="cal-day">19</div><div class="cal-day">20</div>
+        <div class="cal-day today">21</div>
+        <div class="cal-day has-event" style="background:oklch(0.58 0.20 45 / 0.15);border-radius:7px;">22<div class="cal-event-dot" style="background:oklch(0.58 0.20 45);"></div></div>
+        <div class="cal-day">23</div><div class="cal-day">24</div><div class="cal-day">25</div>
+        <div class="cal-day">26</div><div class="cal-day">27</div>
+        <div class="cal-day has-event" style="background:oklch(0.55 0.18 200 / 0.15);border-radius:7px;">28<div class="cal-event-dot" style="background:oklch(0.55 0.18 200);"></div></div>
+        <div class="cal-day">29</div><div class="cal-day">30</div>
+      </div>
+
+      <!-- Legend -->
+      <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:6px;">
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);"><div style="width:8px;height:8px;border-radius:50%;background:oklch(0.58 0.18 300);"></div>Carla</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);"><div style="width:8px;height:8px;border-radius:50%;background:oklch(0.58 0.18 220);"></div>Lucas</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);"><div style="width:8px;height:8px;border-radius:50%;background:oklch(0.62 0.18 350);"></div>Ana Paula</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);"><div style="width:8px;height:8px;border-radius:50%;background:oklch(0.60 0.18 160);"></div>Priya</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);"><div style="width:8px;height:8px;border-radius:50%;background:oklch(0.58 0.20 45);"></div>Marcos</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);"><div style="width:8px;height:8px;border-radius:50%;background:oklch(0.55 0.18 200);"></div>Roberto</div>
+      </div>
+    </div>
+
+    <!-- Schedule list -->
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div>
+        <div style="font-weight:800;font-size:18px;">Agendamentos de Abril</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px;">6 compromissos este mês</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="sched-item" style="border-left:4px solid oklch(0.58 0.18 300);">
+          <div style="text-align:center;min-width:38px;"><div style="font-weight:800;font-size:20px;line-height:1;">7</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">ABR</div></div>
+          <div style="flex:1;"><div style="font-weight:700;font-size:13px;">Consultoria inicial</div><div style="font-size:11px;color:var(--text2);margin-top:1px;">Carla Mendes · 10:00</div></div>
+          <span class="badge badge-primary">Confirmado</span>
+        </div>
+        <div class="sched-item" style="border-left:4px solid oklch(0.58 0.18 220);">
+          <div style="text-align:center;min-width:38px;"><div style="font-weight:800;font-size:20px;line-height:1;">11</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">ABR</div></div>
+          <div style="flex:1;"><div style="font-weight:700;font-size:13px;">Sprint planning</div><div style="font-size:11px;color:var(--text2);margin-top:1px;">Lucas Ferreira · 14:00</div></div>
+          <span class="badge badge-primary">Confirmado</span>
+        </div>
+        <div class="sched-item" style="border-left:4px solid oklch(0.62 0.18 350);">
+          <div style="text-align:center;min-width:38px;"><div style="font-weight:800;font-size:20px;line-height:1;">15</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">ABR</div></div>
+          <div style="flex:1;"><div style="font-weight:700;font-size:13px;">Coloração</div><div style="font-size:11px;color:var(--text2);margin-top:1px;">Ana Paula Costa · 09:30</div></div>
+          <span class="badge badge-primary">Confirmado</span>
+        </div>
+        <div class="sched-item" style="border-left:4px solid oklch(0.60 0.18 160);">
+          <div style="text-align:center;min-width:38px;"><div style="font-weight:800;font-size:20px;line-height:1;">18</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">ABR</div></div>
+          <div style="flex:1;"><div style="font-weight:700;font-size:13px;">Treino funcional</div><div style="font-size:11px;color:var(--text2);margin-top:1px;">Priya Sharma · 07:00</div></div>
+          <span class="badge badge-neutral">Pendente</span>
+        </div>
+        <div class="sched-item" style="border-left:4px solid oklch(0.58 0.20 45);">
+          <div style="text-align:center;min-width:38px;"><div style="font-weight:800;font-size:20px;line-height:1;">22</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">ABR</div></div>
+          <div style="flex:1;"><div style="font-weight:700;font-size:13px;">Revisão de marca</div><div style="font-size:11px;color:var(--text2);margin-top:1px;">Marcos Oliveira · 16:00</div></div>
+          <span class="badge badge-neutral">Pendente</span>
+        </div>
+        <div class="sched-item" style="border-left:4px solid oklch(0.55 0.18 200);">
+          <div style="text-align:center;min-width:38px;"><div style="font-weight:800;font-size:20px;line-height:1;">28</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">ABR</div></div>
+          <div style="flex:1;"><div style="font-weight:700;font-size:13px;">Ensaio produto</div><div style="font-size:11px;color:var(--text2);margin-top:1px;">Roberto Silva · 13:00</div></div>
+          <span class="badge badge-neutral">Pendente</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:right;font-size:10px;color:var(--text3);">100Pro · Agendamentos · Abril 2026</div>
+</div>
+
+
+<!-- ══ PAGE 5: TESTIMONIALS ══ -->
+<div class="page">
+  <div class="topbar">
+    <div class="logo-wrap" style="padding:4px 9px;"><span class="logo-text" style="font-size:16px;">100</span><div class="logo-dot" style="width:5px;height:5px;"></div><span class="logo-text" style="font-size:16px;">Pro</span></div>
+    <div style="flex:1;"></div>
+    <div style="display:flex;gap:6px;"><span class="nav-btn">Feed</span><span class="nav-btn">Explorar</span><span class="nav-btn">Agenda</span><span class="nav-btn active">Favoritos</span></div>
+    <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,oklch(0.42 0.20 250),oklch(0.58 0.18 165));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;">VC</div>
+  </div>
+
+  <div>
+    <div style="font-weight:800;font-size:18px;">Depoimentos</div>
+    <div style="font-size:12px;color:var(--text3);margin-top:2px;">O que nossos clientes estão dizendo</div>
+  </div>
+
+  <div class="testi-grid">
+    <div class="testi-card">
+      <div class="quote-mark">"</div>
+      <p class="testi-text">A Carla transformou meu escritório além do que eu imaginava. Profissionalismo impecável do início ao fim. Já indiquei para 5 pessoas!</p>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="avatar" style="width:36px;height:36px;font-size:12px;background:oklch(0.62 0.18 300);">BR</div>
+        <div><div style="font-weight:700;font-size:13px;">Beatriz Rocha</div><div style="font-size:11px;color:var(--text3);">Empresária · avaliou Carla Mendes</div></div>
+        <div style="margin-left:auto;font-size:13px;color:var(--gold);">★★★★★</div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="quote-mark">"</div>
+      <p class="testi-text">Em 3 semanas o Lucas entregou o que outros demoraram meses. Código limpo, documentação perfeita. É o meu dev fixo agora.</p>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="avatar" style="width:36px;height:36px;font-size:12px;background:oklch(0.58 0.18 220);">FT</div>
+        <div><div style="font-weight:700;font-size:13px;">Felipe Torres</div><div style="font-size:11px;color:var(--text3);">Startup Founder · avaliou Lucas Ferreira</div></div>
+        <div style="margin-left:auto;font-size:13px;color:var(--gold);">★★★★★</div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="quote-mark">"</div>
+      <p class="testi-text">Minha transformação de cabelo foi incrível! A Ana Paula é uma artista. Pontual, caprichosa e super atenciosa. Amei demais!</p>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="avatar" style="width:36px;height:36px;font-size:12px;background:oklch(0.62 0.18 350);">RL</div>
+        <div><div style="font-weight:700;font-size:13px;">Renata Lima</div><div style="font-size:11px;color:var(--text3);">Professora · avaliou Ana Paula Costa</div></div>
+        <div style="margin-left:auto;font-size:13px;color:var(--gold);">★★★★★</div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="quote-mark">"</div>
+      <p class="testi-text">As fotos do casamento da minha filha ficaram perfeitas. O Roberto capturou cada momento especial. Memórias que vão durar para sempre.</p>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="avatar" style="width:36px;height:36px;font-size:12px;background:oklch(0.55 0.18 200);">CS</div>
+        <div><div style="font-weight:700;font-size:13px;">Carlos Souza</div><div style="font-size:11px;color:var(--text3);">Engenheiro · avaliou Roberto Silva</div></div>
+        <div style="margin-left:auto;font-size:13px;color:var(--gold);">★★★★★</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats bar -->
+  <div style="background:linear-gradient(135deg, oklch(0.42 0.20 250), oklch(0.35 0.18 250));border-radius:var(--radius);padding:20px 28px;display:flex;gap:0;margin-top:auto;">
+    <div style="flex:1;text-align:center;border-right:1px solid rgba(255,255,255,0.15);">
+      <div style="font-size:28px;font-weight:800;color:white;">4.9</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:3px;">Avaliação média</div>
+    </div>
+    <div style="flex:1;text-align:center;border-right:1px solid rgba(255,255,255,0.15);">
+      <div style="font-size:28px;font-weight:800;color:white;">2.1k</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:3px;">Profissionais ativos</div>
+    </div>
+    <div style="flex:1;text-align:center;border-right:1px solid rgba(255,255,255,0.15);">
+      <div style="font-size:28px;font-weight:800;color:white;">18k</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:3px;">Serviços realizados</div>
+    </div>
+    <div style="flex:1;text-align:center;">
+      <div style="font-size:28px;font-weight:800;color:white;">98%</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:3px;">Clientes satisfeitos</div>
+    </div>
+  </div>
+
+  <div style="text-align:right;font-size:10px;color:var(--text3);">100Pro · Depoimentos · Abril 2026</div>
+</div>
+
+<script>
+  document.fonts.ready.then(function() {
+    setTimeout(function() { window.print(); }, 500);
+  });
+</script>
+</body>
+</html>
