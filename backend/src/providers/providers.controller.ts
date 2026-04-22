@@ -18,6 +18,11 @@ export class ProvidersController {
     return this.svc.findByUser(user.id);
   }
 
+  @Get('user/:userId')
+  findByUserId(@Param('userId') userId: string) {
+    return this.svc.findByUser(userId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.svc.findById(id);

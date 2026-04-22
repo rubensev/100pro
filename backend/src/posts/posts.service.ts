@@ -35,4 +35,12 @@ export class PostsService {
     const comment = this.commentRepo.create({ postId, authorId: userId, text });
     return this.commentRepo.save(comment);
   }
+
+  findByAuthor(userId: string) {
+    return this.postRepo.find({
+      where: { authorId: userId },
+      relations: ['author', 'comments', 'comments.author'],
+      order: { createdAt: 'DESC' },
+    });
+  }
 }

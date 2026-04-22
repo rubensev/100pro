@@ -14,13 +14,15 @@ export class ApiService {
     if (category && category !== 'all') params['category'] = category;
     return this.http.get<Post[]>(`${API}/posts`, { params });
   }
+  getMyPosts() { return this.http.get<Post[]>(`${API}/posts/mine`); }
   createPost(data: Partial<Post>) { return this.http.post<Post>(`${API}/posts`, data); }
   likePost(id: string) { return this.http.post<Post>(`${API}/posts/${id}/like`, {}); }
-  addComment(postId: string, text: string) { return this.http.post(`${API}/posts/${postId}/comments`, { text }); }
+  addComment(postId: string, text: string) { return this.http.post<Comment>(`${API}/posts/${postId}/comments`, { text }); }
 
   // Providers
   getProviders() { return this.http.get<ProviderProfile[]>(`${API}/providers`); }
   getMyProfile() { return this.http.get<ProviderProfile>(`${API}/providers/me`); }
+  getProviderByUserId(userId: string) { return this.http.get<ProviderProfile>(`${API}/providers/user/${userId}`); }
   updateMyProfile(data: Partial<ProviderProfile>) { return this.http.put<ProviderProfile>(`${API}/providers/me`, data); }
 
   // Services

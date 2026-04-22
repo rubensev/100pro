@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards, Optional } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../common/current-user.decorator';
@@ -10,6 +10,12 @@ export class PostsController {
   @Get()
   findAll(@Query('category') category?: string) {
     return this.svc.findAll(category);
+  }
+
+  @Get('mine')
+  @UseGuards(JwtAuthGuard)
+  findMine(@CurrentUser() user: { id: string }) {
+    return this.svc.findByAuthor(user.id);
   }
 
   @Post()

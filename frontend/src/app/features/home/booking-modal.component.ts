@@ -59,17 +59,17 @@ import { Service, Promo } from '../../shared/models';
           @if (step() === 1) {
             <p style="font-size:12px;color:var(--t2);margin-bottom:10px">Escolha o dia:</p>
             <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px">
-              @for (d of days; track d) {
+              @for (d of days; track d.full) {
                 <button (click)="selDay.set(d)"
-                        [style.border]="selDay() === d ? '1.5px solid var(--p)' : '1.5px solid var(--bo)'"
-                        [style.background]="selDay() === d ? 'var(--p)' : 'var(--bg)'"
-                        [style.color]="selDay() === d ? 'white' : 'var(--t)'"
+                        [style.border]="selDay()?.full === d.full ? '1.5px solid var(--p)' : '1.5px solid var(--bo)'"
+                        [style.background]="selDay()?.full === d.full ? 'var(--p)' : 'var(--bg)'"
+                        [style.color]="selDay()?.full === d.full ? 'white' : 'var(--t)'"
                         style="flex-shrink:0;width:46px;border-radius:var(--rs);padding:7px 0;font-weight:600;font-size:13px;cursor:pointer;transition:var(--tr)">
-                  <div style="font-size:9px;font-weight:500;opacity:0.7">ABR</div>{{ d }}
+                  <div style="font-size:9px;font-weight:500;opacity:0.7">{{ d.month }}</div>{{ d.day }}
                 </button>
               }
             </div>
-            @if (selDay()) {
+            @if (selDay()?.full) {
               <p style="font-size:12px;color:var(--t2);margin-bottom:8px">Escolha o horário:</p>
               <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
                 @for (t of times; track t) {
@@ -93,7 +93,7 @@ import { Service, Promo } from '../../shared/models';
               <div style="font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:16px">
                 <strong>{{ selSvc()?.name }}</strong><br>
                 com <strong>{{ providerName }}</strong><br>
-                dia <strong>{{ selDay() }} de abril</strong> às <strong>{{ selTime() }}</strong>
+                dia <strong>{{ selDay()?.day }} de {{ selDay()?.month }}</strong> às <strong>{{ selTime() }}</strong>
               </div>
               <div style="background:var(--px);border-radius:var(--rs);padding:10px 16px;display:inline-flex;gap:8px;align-items:center">
                 <span style="font-size:13px;font-weight:700;color:var(--p)">R$ {{ selSvc()?.price }}</span>
@@ -127,11 +127,14 @@ export class BookingModalComponent {
 
   step = signal(0);
   selSvc = signal<Service | null>(null);
-  selDay = signal<number | null>(null);
+  selDay = signal<{ day: number; month: string; full: string } | null>(null);
   selTime = signal<string | null>(null);
 
   steps = ['Serviço', 'Horário', 'Confirmar'];
-  days = Array.from({ length: 14 }, (_, i) => 21 + i);
+  days = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() + i);
+    return { day: d.getDate(), month: d.toLocaleString('pt-BR', { month: 'short' }).toUpperCase(), full: d.toISOString().split('T')[0] };
+  });
   times = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 
   pickService(svc: Service) {
@@ -146,7 +149,7 @@ export class BookingModalComponent {
       this.api.createBooking({
         providerId: this.providerId,
         serviceId: this.selSvc()?.id,
-        date: `2026-04-${this.selDay()}`,
+        date: this.selDay()?.full,
         time: t,
         finalPrice: this.selSvc()?.price,
       }).subscribe();

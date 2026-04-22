@@ -4,16 +4,23 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
-import { getInitialsColor, Message } from '../../shared/models';
+import { getInitialsColor } from '../../shared/models';
 
-const SEED_CONVS = [
-  { name: 'Carla Mendes', initials: 'CM', msg: 'Oi! Posso confirmar o horário de amanhã?', time: '2h', unread: 2, online: true },
-  { name: 'Lucas Ferreira', initials: 'LF', msg: 'Entregando na sexta como combinado ✓', time: '5h', unread: 1, online: true },
-  { name: 'Ana Paula Costa', initials: 'AP', msg: 'Disponível essa semana!', time: '1d', unread: 0, online: false },
-  { name: 'Roberto Silva', initials: 'RS', msg: 'Obrigada pelo feedback 😊', time: '2d', unread: 0, online: false },
-  { name: 'Priya Sharma', initials: 'PS', msg: 'Boa notícia: encaixe disponível!', time: '3d', unread: 0, online: false },
-  { name: 'Marcos Oliveira', initials: 'MO', msg: 'Enviando o arquivo agora', time: '4d', unread: 0, online: false },
-];
+interface Conversation {
+  otherId: string;
+  name: string;
+  initials: string;
+  lastMsg: string;
+  time: string;
+  hasUnread: boolean;
+}
+
+interface ThreadMsg {
+  id: string;
+  text: string;
+  mine: boolean;
+  time: string;
+}
 
 @Component({
   selector: 'app-messages',
@@ -22,7 +29,23 @@ const SEED_CONVS = [
   template: `
     <div style="display:flex;flex-direction:column;gap:10px">
       <div style="font-weight:800;font-size:20px">Mensagens</div>
-      @for (c of convs; track c.name; let i = $index) {
+
+      @if (loading()) {
+        <div style="text-align:center;padding:40px;color:var(--t3)">
+          <div style="font-size:24px;margin-bottom:8px">⏳</div>
+          <div style="font-size:13px">Carregando conversas...</div>
+        </div>
+      }
+
+      @if (!loading() && convs().length === 0) {
+        <div class="card" style="padding:48px;text-align:center;color:var(--t3)">
+          <div style="font-size:40px;margin-bottom:12px">💬</div>
+          <div style="font-weight:600;font-size:16px">Nenhuma conversa ainda</div>
+          <div style="font-size:13px;margin-top:6px">Suas mensagens com prestadores aparecerão aqui</div>
+        </div>
+      }
+
+      @for (c of convs(); track c.otherId; let i = $index) {
         <div class="card fu" style="padding:12px 14px;display:flex;gap:10px;cursor:pointer;transition:var(--tr)"
              [style.animation-delay]="i * 0.05 + 's'"
              (mouseenter)="$any($event.currentTarget).style.transform='translateY(-1px)'"
@@ -30,8 +53,8 @@ const SEED_CONVS = [
              (click)="openChat(c)">
           <div style="position:relative">
             <app-avatar [initials]="c.initials" [color]="color(c.initials)" [size]="42" />
-            @if (c.online) {
-              <div style="position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:var(--ac);border:2px solid var(--ca)"></div>
+            @if (c.hasUnread) {
+              <div style="position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:var(--p);border:2px solid var(--ca)"></div>
             }
           </div>
           <div style="flex:1;min-width:0">
@@ -39,10 +62,10 @@ const SEED_CONVS = [
               <span style="font-weight:700;font-size:14px">{{ c.name }}</span>
               <span style="font-size:11px;color:var(--t3)">{{ c.time }}</span>
             </div>
-            <div style="font-size:12px;color:var(--t2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.msg }}</div>
+            <div style="font-size:12px;color:var(--t2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.lastMsg }}</div>
           </div>
-          @if (c.unread) {
-            <div style="width:18px;height:18px;border-radius:50%;background:var(--p);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0;align-self:center">{{ c.unread }}</div>
+          @if (c.hasUnread) {
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--p);flex-shrink:0;align-self:center"></div>
           }
         </div>
       }
@@ -56,20 +79,21 @@ const SEED_CONVS = [
             <app-avatar [initials]="activeChat()!.initials" [color]="color(activeChat()!.initials)" [size]="36" />
             <div style="flex:1">
               <div style="font-weight:700;font-size:14px">{{ activeChat()!.name }}</div>
-              <div style="font-size:11px;color:var(--ac)">{{ activeChat()!.online ? 'Online agora' : 'Offline' }}</div>
             </div>
             <button (click)="activeChat.set(null)" style="font-size:22px;color:var(--t3);background:none;border:none;cursor:pointer">×</button>
           </div>
           <div style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px">
-            <div style="text-align:center;font-size:11px;color:var(--t3);margin-bottom:6px">Início da conversa</div>
-            <div style="align-self:flex-start;max-width:75%">
-              <div style="background:var(--bg2);border-radius:14px 14px 14px 4px;padding:10px 14px;font-size:13px">{{ activeChat()!.msg }}</div>
-              <div style="font-size:10px;color:var(--t3);margin-top:3px">{{ activeChat()!.time }}</div>
-            </div>
-            @for (m of threadMessages(); track m) {
+            @if (threadLoading()) {
+              <div style="text-align:center;color:var(--t3);font-size:13px;padding:20px">Carregando...</div>
+            }
+            @if (!threadLoading() && threadMessages().length === 0) {
+              <div style="text-align:center;color:var(--t3);font-size:13px;padding:20px">Início da conversa</div>
+            }
+            @for (m of threadMessages(); track m.id) {
               <div [style.align-self]="m.mine ? 'flex-end' : 'flex-start'" style="max-width:75%">
                 <div [style.background]="m.mine ? 'var(--p)' : 'var(--bg2)'" [style.color]="m.mine ? 'white' : 'var(--t)'"
                      style="border-radius:14px;padding:10px 14px;font-size:13px">{{ m.text }}</div>
+                <div style="font-size:10px;color:var(--t3);margin-top:3px" [style.text-align]="m.mine ? 'right' : 'left'">{{ m.time }}</div>
               </div>
             }
           </div>
@@ -88,22 +112,75 @@ export class MessagesComponent implements OnInit {
   api = inject(ApiService);
   auth = inject(AuthService);
 
-  convs = SEED_CONVS;
-  activeChat = signal<typeof SEED_CONVS[0] | null>(null);
-  threadMessages = signal<{ text: string; mine: boolean }[]>([]);
+  convs = signal<Conversation[]>([]);
+  loading = signal(true);
+  activeChat = signal<Conversation | null>(null);
+  threadMessages = signal<ThreadMsg[]>([]);
+  threadLoading = signal(false);
   newMsg = '';
 
-  ngOnInit() {
-    this.api.getConversations().subscribe({ next: () => {}, error: () => {} });
+  ngOnInit() { this.loadConversations(); }
+
+  loadConversations() {
+    this.loading.set(true);
+    this.api.getConversations().subscribe({
+      next: msgs => {
+        const myId = this.auth.user()?.id;
+        this.convs.set(msgs.map(m => {
+          const other = m.senderId === myId ? m.receiver! : m.sender!;
+          return {
+            otherId: other.id,
+            name: other.name,
+            initials: other.avatarInitials || other.name.slice(0, 2).toUpperCase(),
+            lastMsg: m.text,
+            time: this.formatTime(m.createdAt),
+            hasUnread: m.receiverId === myId && !m.read,
+          };
+        }));
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
+    });
   }
 
   color(initials: string) { return getInitialsColor(initials); }
 
-  openChat(c: any) { this.activeChat.set(c); this.threadMessages.set([]); }
+  openChat(c: Conversation) {
+    this.activeChat.set(c);
+    this.threadMessages.set([]);
+    this.threadLoading.set(true);
+    const myId = this.auth.user()?.id;
+    this.api.getThread(c.otherId).subscribe({
+      next: msgs => {
+        this.threadMessages.set(msgs.map(m => ({
+          id: m.id,
+          text: m.text,
+          mine: m.senderId === myId,
+          time: this.formatTime(m.createdAt),
+        })));
+        this.threadLoading.set(false);
+      },
+      error: () => this.threadLoading.set(false),
+    });
+  }
 
   send() {
-    if (!this.newMsg.trim()) return;
-    this.threadMessages.update(m => [...m, { text: this.newMsg, mine: true }]);
+    const c = this.activeChat();
+    if (!c || !this.newMsg.trim()) return;
+    const text = this.newMsg;
     this.newMsg = '';
+    const tempId = Date.now().toString();
+    this.threadMessages.update(ms => [...ms, { id: tempId, text, mine: true, time: 'agora' }]);
+    this.api.sendMessage(c.otherId, text).subscribe({
+      next: () => this.loadConversations(),
+      error: () => {},
+    });
+  }
+
+  formatTime(createdAt: string) {
+    const diff = Date.now() - new Date(createdAt).getTime();
+    if (diff < 3600000) return Math.max(1, Math.floor(diff / 60000)) + 'min';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + 'h';
+    return Math.floor(diff / 86400000) + 'd';
   }
 }

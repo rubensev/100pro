@@ -67,6 +67,7 @@ function buildSlots() {
             <div class="field"><label>Cidade</label><input type="text" [(ngModel)]="pf.city" /></div>
             <div class="field" style="grid-column:1/-1"><label>Bio / Sobre você</label><textarea [(ngModel)]="pf.bio" style="min-height:90px"></textarea></div>
           </div>
+          @if (savePfError()) { <div style="color:var(--re);font-size:12px;margin-top:6px">{{ savePfError() }}</div> }
           <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
             <button class="btn btn-g" (click)="resetPf()">Cancelar</button>
             <button class="btn btn-p" (click)="saveProfile()">{{ savedPf() ? '✓ Salvo!' : 'Salvar alterações' }}</button>
@@ -90,8 +91,9 @@ function buildSlots() {
               </div>
               <div class="field" style="grid-column:1/-1"><label>Descrição</label><textarea [(ngModel)]="svcForm()!.description" placeholder="Descreva o serviço..."></textarea></div>
             </div>
+            @if (svcError()) { <div style="color:var(--re);font-size:12px;margin-top:6px">{{ svcError() }}</div> }
             <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
-              <button class="btn btn-g" (click)="svcForm.set(null)">Cancelar</button>
+              <button class="btn btn-g" (click)="svcForm.set(null);svcError.set('')">Cancelar</button>
               <button class="btn btn-p" (click)="saveService()">Salvar serviço</button>
             </div>
           </div>
@@ -189,8 +191,9 @@ function buildSlots() {
                 </div>
               }
             </div>
+            @if (promoError()) { <div style="color:var(--re);font-size:12px;margin-top:6px">{{ promoError() }}</div> }
             <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
-              <button class="btn btn-g" (click)="promoForm.set(null)">Cancelar</button>
+              <button class="btn btn-g" (click)="promoForm.set(null);promoError.set('')">Cancelar</button>
               <button class="btn btn-p" (click)="savePromo()">Publicar promoção</button>
             </div>
           </div>
@@ -249,6 +252,7 @@ function buildSlots() {
               </div>
             </div>
           }
+          @if (postError()) { <div style="color:var(--re);font-size:12px;margin-bottom:6px">{{ postError() }}</div> }
           <div style="display:flex;gap:8px;justify-content:flex-end">
             @if (showPostForm) { <button class="btn btn-g" (click)="clearPost()">Cancelar</button> }
             <button class="btn btn-p" (click)="publishPost()" [style.opacity]="postText.trim() ? '1' : '0.5'">Publicar</button>
@@ -295,12 +299,15 @@ export class ProviderComponent implements OnInit {
   profile = signal<Partial<ProviderProfile & { name: string }>>({ name: this.auth.user()?.name || '', role: '', category: 'reform', bio: '', phone: '', city: '', rating: 0, reviewsCount: 0, jobsCount: 0 });
   pf: any = { ...this.profile() };
   savedPf = signal(false);
+  savePfError = signal('');
 
   services = signal<Partial<Service>[]>([]);
   svcForm = signal<Partial<Service> | null>(null);
+  svcError = signal('');
 
   promos = signal<Partial<Promo>[]>([]);
   promoForm = signal<Partial<Promo> | null>(null);
+  promoError = signal('');
 
   slots = signal<Record<string, Record<string, boolean>>>(buildSlots());
 
@@ -309,6 +316,7 @@ export class ProviderComponent implements OnInit {
   postImgLabel = '';
   postCat = 'reform';
   showPostForm = false;
+  postError = signal('');
 
   get initials() { return this.auth.user()?.avatarInitials || this.auth.user()?.name?.slice(0, 2).toUpperCase() || 'VC'; }
   get firstName() { return this.auth.user()?.name?.split(' ')[0] || 'Você'; }
@@ -326,30 +334,44 @@ export class ProviderComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.api.getMyProfile().subscribe({ next: p => { this.profile.set({ ...p, name: p.user?.name || this.auth.user()?.name || '' }); this.pf = { ...this.profile() }; }, error: () => {} });
+    this.api.getMyProfile().subscribe({ next: p => { if (p) { this.profile.set({ ...p, name: p.user?.name || this.auth.user()?.name || '' }); this.pf = { ...this.profile() }; } }, error: () => {} });
     this.api.getMyServices().subscribe({ next: s => this.services.set(s), error: () => {} });
     this.api.getMyPromos().subscribe({ next: p => this.promos.set(p), error: () => {} });
+    this.api.getMyPosts().subscribe({ next: p => this.myPosts.set(p), error: () => {} });
   }
 
   resetPf() { this.pf = { ...this.profile() }; }
 
   saveProfile() {
-    this.api.updateMyProfile(this.pf).subscribe({ next: p => { this.profile.set({ ...p, name: p.user?.name || this.pf.name }); this.savedPf.set(true); setTimeout(() => this.savedPf.set(false), 2000); }, error: () => { this.savedPf.set(true); setTimeout(() => this.savedPf.set(false), 2000); } });
+    this.savePfError.set('');
+    this.api.updateMyProfile(this.pf).subscribe({
+      next: p => { this.profile.set({ ...p, name: p.user?.name || this.pf.name }); this.savedPf.set(true); setTimeout(() => this.savedPf.set(false), 2000); },
+      error: () => this.savePfError.set('Erro ao salvar perfil. Tente novamente.'),
+    });
   }
 
   saveService() {
     const f = this.svcForm();
     if (!f || !f.name || !f.price) return;
+    this.svcError.set('');
     if (f.id) {
-      this.api.updateService(f.id, f).subscribe({ next: s => { this.services.update(ss => ss.map(x => x.id === s.id ? s : x)); this.svcForm.set(null); }, error: () => { this.services.update(ss => ss.map(x => x.id === f.id ? f : x)); this.svcForm.set(null); } });
+      this.api.updateService(f.id, f).subscribe({
+        next: s => { this.services.update(ss => ss.map(x => x.id === s.id ? s : x)); this.svcForm.set(null); },
+        error: () => this.svcError.set('Erro ao atualizar serviço.'),
+      });
     } else {
-      this.api.createService(f).subscribe({ next: s => { this.services.update(ss => [...ss, s]); this.svcForm.set(null); }, error: () => { this.services.update(ss => [...ss, { ...f, id: Date.now().toString() }]); this.svcForm.set(null); } });
+      this.api.createService(f).subscribe({
+        next: s => { this.services.update(ss => [...ss, s]); this.svcForm.set(null); },
+        error: () => this.svcError.set('Erro ao criar serviço. Certifique-se de ter um perfil de prestador salvo.'),
+      });
     }
   }
 
   deleteService(id: string) {
-    this.api.deleteService(id).subscribe({ next: () => {}, error: () => {} });
-    this.services.update(ss => ss.filter(s => s.id !== id));
+    this.api.deleteService(id).subscribe({
+      next: () => this.services.update(ss => ss.filter(s => s.id !== id)),
+      error: () => {},
+    });
   }
 
   toggleSlot(day: string, hour: string) {
@@ -359,28 +381,43 @@ export class ProviderComponent implements OnInit {
   savePromo() {
     const f = this.promoForm();
     if (!f || !f.title || !f.serviceId || !f.discountPct) return;
+    this.promoError.set('');
     if (f.id) {
-      this.api.updatePromo(f.id, f).subscribe({ next: p => { this.promos.update(ps => ps.map(x => x.id === p.id ? p : x)); this.promoForm.set(null); }, error: () => { this.promos.update(ps => ps.map(x => x.id === f.id ? f : x)); this.promoForm.set(null); } });
+      this.api.updatePromo(f.id, f).subscribe({
+        next: p => { this.promos.update(ps => ps.map(x => x.id === p.id ? p : x)); this.promoForm.set(null); },
+        error: () => this.promoError.set('Erro ao atualizar promoção.'),
+      });
     } else {
-      this.api.createPromo(f).subscribe({ next: p => { this.promos.update(ps => [...ps, p]); this.promoForm.set(null); }, error: () => { this.promos.update(ps => [...ps, { ...f, id: Date.now().toString(), active: true }]); this.promoForm.set(null); } });
+      this.api.createPromo(f).subscribe({
+        next: p => { this.promos.update(ps => [...ps, p]); this.promoForm.set(null); },
+        error: () => this.promoError.set('Erro ao criar promoção.'),
+      });
     }
   }
 
   togglePromo(p: any) {
     const updated = { ...p, active: !p.active };
-    this.api.updatePromo(p.id, updated).subscribe({ next: () => {}, error: () => {} });
     this.promos.update(ps => ps.map(x => x.id === p.id ? updated : x));
+    this.api.updatePromo(p.id, updated).subscribe({
+      error: () => this.promos.update(ps => ps.map(x => x.id === p.id ? p : x)),
+    });
   }
 
   deletePromo(id: string) {
-    this.api.deletePromo(id).subscribe({ next: () => {}, error: () => {} });
-    this.promos.update(ps => ps.filter(p => p.id !== id));
+    this.api.deletePromo(id).subscribe({
+      next: () => this.promos.update(ps => ps.filter(p => p.id !== id)),
+      error: () => {},
+    });
   }
 
   publishPost() {
     if (!this.postText.trim()) return;
-    const post = { type: 'provider', text: this.postText, imageLabel: this.postImgLabel || undefined, category: this.postCat, likesCount: 0, createdAt: 'agora', comments: [], author: { name: this.auth.user()?.name, avatarInitials: this.initials } };
-    this.api.createPost(post as any).subscribe({ next: p => this.myPosts.update(ps => [p, ...ps]), error: () => this.myPosts.update(ps => [{ ...post, id: Date.now().toString() }, ...ps]) });
+    this.postError.set('');
+    const data = { type: 'provider' as const, text: this.postText, imageLabel: this.postImgLabel || undefined, category: this.postCat };
+    this.api.createPost(data).subscribe({
+      next: p => { this.myPosts.update(ps => [p, ...ps]); this.clearPost(); },
+      error: () => this.postError.set('Erro ao publicar post.'),
+    });
     this.clearPost();
   }
 
