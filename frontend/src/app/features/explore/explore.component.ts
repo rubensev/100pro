@@ -82,10 +82,16 @@ import { TranslationService } from '../../i18n/translation.service';
                   @if (minPrice(p)) { <span class="badge badge-p">R$ {{ minPrice(p) }}/h</span> }
                   <span class="badge badge-g">{{ p.jobsCount }} {{ i18n.t('explore.jobs') }}</span>
                 </div>
-                <button class="btn btn-p" style="width:100%;padding:8px;font-size:13px"
-                  (click)="requireAuth(() => book(p))">
-                  {{ i18n.t('explore.book') }}
-                </button>
+                <div style="display:flex;gap:6px">
+                  <a [routerLink]="['/p', p.id]"
+                     class="btn btn-g" style="flex:1;padding:8px;font-size:12px;text-decoration:none;justify-content:center">
+                    {{ i18n.t('explore.profile') }}
+                  </a>
+                  <button class="btn btn-p" style="flex:1;padding:8px;font-size:12px"
+                    (click)="requireAuth(() => book(p))">
+                    {{ i18n.t('explore.book') }}
+                  </button>
+                </div>
               </div>
             </div>
           }

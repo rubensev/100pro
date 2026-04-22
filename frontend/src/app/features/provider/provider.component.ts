@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, RouterModule } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
@@ -37,7 +37,20 @@ function buildSlots() {
             <span style="font-size:12px;opacity:0.9">✅ {{ profile().jobsCount || 0 }} {{ i18n.t('provider.jobs') }}</span>
           </div>
         </div>
-        <div style="margin-left:auto;background:rgba(255,255,255,0.18);padding:6px 14px;border-radius:99px;font-size:12px;font-weight:600">{{ i18n.t('provider.mode') }}</div>
+        <div style="margin-left:auto;display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+          <div style="background:rgba(255,255,255,0.18);padding:6px 14px;border-radius:99px;font-size:12px;font-weight:600">{{ i18n.t('provider.mode') }}</div>
+          @if (profile().id) {
+            <a [routerLink]="['/p', profile().id]"
+               style="background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);padding:5px 12px;
+               border-radius:99px;font-size:11px;font-weight:600;text-decoration:none;
+               display:flex;align-items:center;gap:4px;white-space:nowrap">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              {{ i18n.t('provider.view.public') }}
+            </a>
+          }
+        </div>
       </div>
 
       <!-- Tab bar -->

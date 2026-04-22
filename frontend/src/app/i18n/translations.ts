@@ -50,6 +50,7 @@ export const T: Record<string, Record<Lang, string>> = {
   'explore.empty.title':{ en: 'No professionals found', pt: 'Nenhum profissional encontrado', fr: 'Aucun professionnel trouvé' },
   'explore.empty.sub':  { en: 'Register as a provider to appear here', pt: 'Cadastre-se como prestador para aparecer aqui', fr: 'Inscrivez-vous comme prestataire pour apparaître ici' },
   'explore.book':       { en: 'Book now',  pt: 'Agendar agora',  fr: 'Réserver' },
+  'explore.profile':    { en: 'Profile',   pt: 'Perfil',          fr: 'Profil' },
   'explore.jobs':       { en: 'jobs',      pt: 'jobs',           fr: 'projets' },
   'explore.reviews':    { en: 'reviews',   pt: 'avaliações',     fr: 'avis' },
 
@@ -81,6 +82,7 @@ export const T: Record<string, Record<Lang, string>> = {
   'provider.tab.agenda':   { en: 'Schedule',    pt: 'Agenda',       fr: 'Agenda' },
   'provider.tab.promos':   { en: 'Promotions',  pt: 'Promoções',    fr: 'Promotions' },
   'provider.tab.posts':    { en: 'Posts',       pt: 'Postagens',    fr: 'Publications' },
+  'provider.view.public':  { en: 'View public page', pt: 'Ver página pública', fr: 'Voir la page publique' },
   // profile tab
   'provider.profile.edit':     { en: 'Edit profile',   pt: 'Editar perfil',     fr: 'Modifier le profil' },
   'provider.profile.name':     { en: 'Full name',       pt: 'Nome completo',     fr: 'Nom complet' },
@@ -231,6 +233,17 @@ export const T: Record<string, Record<Lang, string>> = {
   'profile.plan.save':      { en: 'Confirm change', pt: 'Confirmar mudança', fr: 'Confirmer le changement' },
   'profile.plan.saved':     { en: 'Plan updated!', pt: 'Plano atualizado!', fr: 'Plan mis à jour !' },
   'profile.danger':         { en: 'Account',      pt: 'Conta',         fr: 'Compte' },
+
+  // Public profile
+  'pubprofile.notfound':  { en: 'Provider not found',    pt: 'Prestador não encontrado', fr: 'Prestataire introuvable' },
+  'pubprofile.verified':  { en: 'Verified',              pt: 'Verificado',               fr: 'Vérifié' },
+  'pubprofile.about':     { en: 'About',                 pt: 'Sobre',                    fr: 'À propos' },
+  'pubprofile.services':  { en: 'Services',              pt: 'Serviços',                 fr: 'Services' },
+  'pubprofile.promos':    { en: 'Active promotions',     pt: 'Promoções ativas',         fr: 'Promotions actives' },
+  'pubprofile.posts':     { en: 'Recent posts',          pt: 'Postagens recentes',       fr: 'Publications récentes' },
+  'pubprofile.book':      { en: 'Book now',              pt: 'Agendar agora',            fr: 'Réserver' },
+  'pubprofile.message':   { en: 'Message',               pt: 'Mensagem',                 fr: 'Message' },
+  'pubprofile.share':     { en: 'Share',                 pt: 'Compartilhar',             fr: 'Partager' },
 
   // Common
   'common.cancel':  { en: 'Cancel',  pt: 'Cancelar',  fr: 'Annuler' },

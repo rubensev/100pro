@@ -18,6 +18,7 @@ export const routes: Routes = [
       { path: 'provider', canActivate: [authGuard], loadComponent: () => import('./features/provider/provider.component').then(m => m.ProviderComponent) },
       { path: 'pricing', loadComponent: () => import('./features/pricing/pricing.component').then(m => m.PricingComponent) },
       { path: 'profile', canActivate: [authGuard], loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent) },
+      { path: 'p/:id', loadComponent: () => import('./features/public-profile/public-profile.component').then(m => m.PublicProfileComponent) },
     ],
   },
   { path: '**', redirectTo: 'home' },

@@ -23,12 +23,14 @@ export interface ProviderProfile {
   bio: string;
   phone: string;
   city: string;
+  coverUrl?: string;
   verified: boolean;
   rating: number;
   reviewsCount: number;
   jobsCount: number;
   services?: Service[];
   promos?: Promo[];
+  posts?: Post[];
 }
 
 export interface Service {

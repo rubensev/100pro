@@ -42,6 +42,9 @@ export class ProviderProfile {
   @Column({ default: 0 })
   jobsCount: number;
 
+  @Column({ nullable: true })
+  coverUrl: string;
+
   @OneToMany(() => Service, (s) => s.provider)
   services: Service[];
 

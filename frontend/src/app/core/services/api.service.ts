@@ -23,6 +23,12 @@ export class ApiService {
   getProviders() { return this.http.get<ProviderProfile[]>(`${API}/providers`); }
   getMyProfile() { return this.http.get<ProviderProfile>(`${API}/providers/me`); }
   getProviderByUserId(userId: string) { return this.http.get<ProviderProfile>(`${API}/providers/user/${userId}`); }
+  getPublicProfile(id: string) { return this.http.get<ProviderProfile>(`${API}/providers/${id}/public`); }
+  uploadProviderCover(file: File) {
+    const fd = new FormData();
+    fd.append('cover', file);
+    return this.http.post<{ coverUrl: string }>(`${API}/providers/me/cover`, fd);
+  }
   updateMyProfile(data: Partial<ProviderProfile>) { return this.http.put<ProviderProfile>(`${API}/providers/me`, data); }
 
   // Services
