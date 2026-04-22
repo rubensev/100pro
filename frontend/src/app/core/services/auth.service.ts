@@ -28,6 +28,14 @@ export class AuthService {
       .pipe(tap(res => this.persist(res)));
   }
 
+  updateUser(partial: Partial<User>) {
+    const current = this._user();
+    if (!current) return;
+    const updated = { ...current, ...partial };
+    this._user.set(updated);
+    localStorage.setItem(USER_KEY, JSON.stringify(updated));
+  }
+
   logout() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);

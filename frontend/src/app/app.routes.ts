@@ -17,6 +17,7 @@ export const routes: Routes = [
       { path: 'messages', canActivate: [authGuard], loadComponent: () => import('./features/messages/messages.component').then(m => m.MessagesComponent) },
       { path: 'provider', canActivate: [authGuard], loadComponent: () => import('./features/provider/provider.component').then(m => m.ProviderComponent) },
       { path: 'pricing', loadComponent: () => import('./features/pricing/pricing.component').then(m => m.PricingComponent) },
+      { path: 'profile', canActivate: [authGuard], loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent) },
     ],
   },
   { path: '**', redirectTo: 'home' },

@@ -42,6 +42,16 @@ export class ApiService {
   getBookings() { return this.http.get<Booking[]>(`${API}/bookings`); }
   createBooking(data: any) { return this.http.post<Booking>(`${API}/bookings`, data); }
 
+  // User profile
+  getMe() { return this.http.get<any>(`${API}/users/me`); }
+  updateMe(data: { name?: string; email?: string }) { return this.http.patch<any>(`${API}/users/me`, data); }
+  updatePlan(plan: string) { return this.http.patch<any>(`${API}/users/me/plan`, { plan }); }
+  uploadAvatar(file: File) {
+    const fd = new FormData();
+    fd.append('avatar', file);
+    return this.http.post<any>(`${API}/users/me/avatar`, fd);
+  }
+
   // Messages
   getConversations() { return this.http.get<Message[]>(`${API}/messages`); }
   getThread(otherId: string) { return this.http.get<Message[]>(`${API}/messages/${otherId}`); }

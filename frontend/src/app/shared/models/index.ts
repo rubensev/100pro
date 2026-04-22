@@ -4,6 +4,8 @@ export interface User {
   name: string;
   avatarInitials: string;
   avatarColor?: string;
+  avatarUrl?: string;
+  plan?: string;
   isProvider: boolean;
 }
 

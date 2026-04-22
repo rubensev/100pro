@@ -21,6 +21,12 @@ export class User {
   @Column({ nullable: true })
   avatarColor: string;
 
+  @Column({ nullable: true })
+  avatarUrl: string;
+
+  @Column({ default: 'free' })
+  plan: string;
+
   @Column({ default: false })
   isProvider: boolean;
 

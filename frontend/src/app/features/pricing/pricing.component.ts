@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { TranslationService } from '../../i18n/translation.service';
 import { AuthService } from '../../core/services/auth.service';
+import { ApiService } from '../../core/services/api.service';
 
 type Currency = 'EUR' | 'USD' | 'BRL' | 'GBP';
 
@@ -179,14 +180,31 @@ const PLANS = [
               }
 
               <!-- CTA -->
-              <a [routerLink]="plan.ctaRoute"
-                 [style.background]="plan.highlighted ? 'var(--p)' : 'var(--bg2)'"
-                 [style.color]="plan.highlighted ? 'white' : 'var(--t2)'"
-                 [style.border]="plan.highlighted ? 'none' : '1px solid var(--bo)'"
-                 style="display:block;text-align:center;padding:10px;border-radius:var(--rs);
-                   font-size:13px;font-weight:700;text-decoration:none;transition:var(--tr);margin-bottom:18px">
-                {{ i18n.t(plan.ctaKey) }}
-              </a>
+              @if (isCurrentPlan(plan.id)) {
+                <div style="display:block;text-align:center;padding:10px;border-radius:var(--rs);
+                  font-size:13px;font-weight:700;background:var(--ax);color:var(--ac);margin-bottom:18px">
+                  ✓ {{ i18n.t('pricing.current') }}
+                </div>
+              } @else if (auth.isLoggedIn()) {
+                <button (click)="changePlan(plan.id)"
+                        [disabled]="changingPlan()"
+                        [style.background]="plan.highlighted ? 'var(--p)' : 'var(--bg2)'"
+                        [style.color]="plan.highlighted ? 'white' : 'var(--t2)'"
+                        [style.border]="plan.highlighted ? 'none' : '1px solid var(--bo)'"
+                        style="display:block;width:100%;text-align:center;padding:10px;border-radius:var(--rs);
+                          font-size:13px;font-weight:700;cursor:pointer;transition:var(--tr);margin-bottom:18px">
+                  {{ changingPlan() ? i18n.t('common.loading') : i18n.t(plan.ctaKey) }}
+                </button>
+              } @else {
+                <a [routerLink]="plan.ctaRoute"
+                   [style.background]="plan.highlighted ? 'var(--p)' : 'var(--bg2)'"
+                   [style.color]="plan.highlighted ? 'white' : 'var(--t2)'"
+                   [style.border]="plan.highlighted ? 'none' : '1px solid var(--bo)'"
+                   style="display:block;text-align:center;padding:10px;border-radius:var(--rs);
+                     font-size:13px;font-weight:700;text-decoration:none;transition:var(--tr);margin-bottom:18px">
+                  {{ i18n.t(plan.ctaKey) }}
+                </a>
+              }
 
               <!-- Divider -->
               <div style="height:1px;background:var(--bo);margin-bottom:14px"></div>
@@ -226,6 +244,7 @@ const PLANS = [
 export class PricingComponent implements OnInit {
   i18n = inject(TranslationService);
   auth = inject(AuthService);
+  api = inject(ApiService);
   http = inject(HttpClient);
 
   plans = PLANS;
@@ -235,6 +254,7 @@ export class PricingComponent implements OnInit {
   currency = signal<Currency>('EUR');
   rates = signal<Record<string, number>>({ USD: 1.09, BRL: 5.45, GBP: 0.86, EUR: 1 });
   loadingRates = signal(false);
+  changingPlan = signal(false);
 
   currencySymbol = computed(() => CURRENCIES.find(c => c.code === this.currency())?.symbol ?? '€');
 
@@ -259,6 +279,22 @@ export class PricingComponent implements OnInit {
   displayYearlyTotal(monthlyEUR: number): string {
     const rate = this.rates()[this.currency()] ?? 1;
     return this.format(monthlyEUR * rate * 10);
+  }
+
+  isCurrentPlan(id: string): boolean {
+    return this.auth.isLoggedIn() && (this.auth.user()?.plan ?? 'free') === id;
+  }
+
+  changePlan(id: string) {
+    if (!this.auth.isLoggedIn()) return;
+    this.changingPlan.set(true);
+    this.api.updatePlan(id).subscribe({
+      next: u => {
+        this.auth.updateUser(u);
+        this.changingPlan.set(false);
+      },
+      error: () => this.changingPlan.set(false),
+    });
   }
 
   private format(n: number): string {

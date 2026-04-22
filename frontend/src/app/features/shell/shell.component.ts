@@ -80,16 +80,22 @@ const NAV = [
             </div>
 
             @if (auth.isLoggedIn()) {
-              <div style="display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:11px;
-                background:var(--bg);cursor:pointer;transition:var(--tr)"
+              <a routerLink="/profile"
+                style="display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:11px;
+                background:var(--bg);cursor:pointer;transition:var(--tr);text-decoration:none"
                 (mouseenter)="$any($event.currentTarget).style.background='var(--px)'"
                 (mouseleave)="$any($event.currentTarget).style.background='var(--bg)'">
-                <app-avatar [initials]="userInitials" color="linear-gradient(135deg,var(--p),var(--ac))" [size]="34" />
+                @if (auth.user()?.avatarUrl) {
+                  <img [src]="'http://localhost:3000' + auth.user()!.avatarUrl"
+                       style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0" />
+                } @else {
+                  <app-avatar [initials]="userInitials" color="linear-gradient(135deg,var(--p),var(--ac))" [size]="34" />
+                }
                 <div style="flex:1;min-width:0">
                   <div style="font-weight:700;font-size:12px;color:var(--t)">{{ auth.user()?.name }}</div>
-                  <div style="font-size:10px;color:var(--t3)">{{ auth.user()?.email }}</div>
+                  <div style="font-size:10px;color:var(--t3)">{{ planLabel() }}</div>
                 </div>
-              </div>
+              </a>
               <button class="btn btn-g" style="width:100%;font-size:12px" (click)="auth.logout()">{{ i18n.t('nav.signout') }}</button>
             } @else {
               <a routerLink="/auth/login" class="btn btn-p" style="width:100%;font-size:13px;text-decoration:none;justify-content:center">{{ i18n.t('nav.signin') }}</a>
@@ -133,7 +139,14 @@ const NAV = [
               </button>
             </div>
             @if (auth.isLoggedIn()) {
-              <app-avatar [initials]="userInitials" color="linear-gradient(135deg,var(--p),var(--ac))" [size]="30" />
+              <a routerLink="/profile" style="text-decoration:none">
+                @if (auth.user()?.avatarUrl) {
+                  <img [src]="'http://localhost:3000' + auth.user()!.avatarUrl"
+                       style="width:30px;height:30px;border-radius:50%;object-fit:cover" />
+                } @else {
+                  <app-avatar [initials]="userInitials" color="linear-gradient(135deg,var(--p),var(--ac))" [size]="30" />
+                }
+              </a>
             } @else {
               <a routerLink="/auth/login" class="btn btn-p" style="font-size:12px;padding:6px 12px;text-decoration:none">{{ i18n.t('nav.signin') }}</a>
             }
@@ -189,6 +202,11 @@ export class ShellComponent {
   }
 
   isActive(path: string) { return this.router.url === path || this.router.url.startsWith(path + '/'); }
+
+  planLabel() {
+    const plan = this.auth.user()?.plan ?? 'free';
+    return plan.charAt(0).toUpperCase() + plan.slice(1) + ' plan';
+  }
 
   onHover(e: MouseEvent, on: boolean, path: string) {
     const el = e.currentTarget as HTMLElement;

@@ -212,6 +212,25 @@ export const T: Record<string, Record<Lang, string>> = {
   'pricing.upgrade.title':  { en: 'Upgrade to start selling', pt: 'Faça upgrade para começar a vender', fr: 'Passez à la version supérieure' },
   'pricing.upgrade.sub':    { en: 'Choose a plan to list your services and appear in Explore', pt: 'Escolha um plano para listar seus serviços e aparecer no Explorar', fr: 'Choisissez un plan pour proposer vos services' },
   'pricing.upgrade.cta':    { en: 'See plans',  pt: 'Ver planos',  fr: 'Voir les plans' },
+  'pricing.current':        { en: 'Current plan', pt: 'Plano atual', fr: 'Plan actuel' },
+
+  // Profile
+  'profile.title':          { en: 'My Account',   pt: 'Minha Conta',  fr: 'Mon Compte' },
+  'profile.photo':          { en: 'Profile photo', pt: 'Foto de perfil', fr: 'Photo de profil' },
+  'profile.photo.change':   { en: 'Change photo', pt: 'Alterar foto',  fr: 'Changer la photo' },
+  'profile.photo.hint':     { en: 'JPG, PNG or WebP · max 5MB', pt: 'JPG, PNG ou WebP · máx 5MB', fr: 'JPG, PNG ou WebP · max 5Mo' },
+  'profile.photo.save':     { en: 'Upload photo', pt: 'Enviar foto',   fr: 'Envoyer la photo' },
+  'profile.photo.uploading':{ en: 'Uploading...', pt: 'Enviando...',   fr: 'Envoi en cours...' },
+  'profile.photo.done':     { en: 'Photo updated!', pt: 'Foto atualizada!', fr: 'Photo mise à jour !' },
+  'profile.info':           { en: 'Personal info', pt: 'Informações pessoais', fr: 'Informations personnelles' },
+  'profile.save':           { en: 'Save changes', pt: 'Salvar alterações', fr: 'Sauvegarder' },
+  'profile.saved':          { en: 'Saved!',       pt: 'Salvo!',        fr: 'Enregistré !' },
+  'profile.plan':           { en: 'My plan',      pt: 'Meu plano',     fr: 'Mon plan' },
+  'profile.plan.change':    { en: 'See all plans', pt: 'Ver todos os planos', fr: 'Voir tous les plans' },
+  'profile.plan.services':  { en: 'Up to {n} services', pt: 'Até {n} serviços', fr: "Jusqu'à {n} services" },
+  'profile.plan.save':      { en: 'Confirm change', pt: 'Confirmar mudança', fr: 'Confirmer le changement' },
+  'profile.plan.saved':     { en: 'Plan updated!', pt: 'Plano atualizado!', fr: 'Plan mis à jour !' },
+  'profile.danger':         { en: 'Account',      pt: 'Conta',         fr: 'Compte' },
 
   // Common
   'common.cancel':  { en: 'Cancel',  pt: 'Cancelar',  fr: 'Annuler' },
