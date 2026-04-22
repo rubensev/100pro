@@ -7,6 +7,8 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UsersService } from './users.service';
+import { UpdateMeDto } from './dto/update-me.dto';
+import { UpdatePlanDto } from './dto/update-plan.dto';
 
 @Controller('users')
 export class UsersController {
@@ -21,7 +23,7 @@ export class UsersController {
 
   @Patch('me')
   @UseGuards(JwtAuthGuard)
-  async updateMe(@Request() req, @Body() body: { name?: string; email?: string }) {
+  async updateMe(@Request() req, @Body() body: UpdateMeDto) {
     await this.users.update(req.user.id, body);
     const user = await this.users.findById(req.user.id);
     return this.sanitize(user);
@@ -29,7 +31,7 @@ export class UsersController {
 
   @Patch('me/plan')
   @UseGuards(JwtAuthGuard)
-  async updatePlan(@Request() req, @Body() body: { plan: string }) {
+  async updatePlan(@Request() req, @Body() body: UpdatePlanDto) {
     await this.users.update(req.user.id, { plan: body.plan });
     const user = await this.users.findById(req.user.id);
     return this.sanitize(user);
