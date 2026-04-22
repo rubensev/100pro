@@ -1,7 +1,6 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -244,7 +243,7 @@ const API_BASE = 'http://localhost:3000';
 export class HomeComponent implements OnInit {
   api = inject(ApiService);
   auth = inject(AuthService);
-  router = inject(Router);
+
   i18n = inject(TranslationService);
   sanitizer = inject(DomSanitizer);
 
@@ -330,7 +329,7 @@ export class HomeComponent implements OnInit {
 
   requireAuth(fn: () => void) {
     if (this.auth.isLoggedIn()) fn();
-    else this.router.navigate(['/auth/login']);
+    else this.auth.promptLogin();
   }
 
   openBookingForPost(post: Post) {

@@ -15,6 +15,9 @@ export class AuthService {
   readonly user = this._user.asReadonly();
   readonly token = this._token.asReadonly();
   readonly isLoggedIn = computed(() => !!this._token());
+  readonly loginPromptVisible = signal(false);
+
+  promptLogin() { this.loginPromptVisible.set(true); }
 
   constructor(private http: HttpClient) {}
 

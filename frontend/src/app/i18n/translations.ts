@@ -298,6 +298,12 @@ export const T: Record<string, Record<Lang, string>> = {
   'pubprofile.message':   { en: 'Message',               pt: 'Mensagem',                 fr: 'Message' },
   'pubprofile.share':     { en: 'Share',                 pt: 'Compartilhar',             fr: 'Partager' },
 
+  // Auth prompt overlay
+  'auth.prompt.title':    { en: 'Sign in to continue',   pt: 'Entre para continuar',      fr: 'Connectez-vous pour continuer' },
+  'auth.prompt.sub':      { en: 'Create a free account or sign in to book services and interact with providers.', pt: 'Crie uma conta gratuita ou entre para agendar serviços e interagir com prestadores.', fr: 'Créez un compte gratuit ou connectez-vous pour réserver des services.' },
+  'auth.prompt.register': { en: 'Create free account', pt: 'Criar conta grátis', fr: 'Créer un compte gratuit' },
+  'auth.prompt.later':    { en: 'Maybe later',          pt: 'Mais tarde',        fr: 'Peut-être plus tard' },
+
   // Common
   'common.cancel':  { en: 'Cancel',  pt: 'Cancelar',  fr: 'Annuler' },
   'common.edit':    { en: 'Edit',    pt: 'Editar',     fr: 'Modifier' },

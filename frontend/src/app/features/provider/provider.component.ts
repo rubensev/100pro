@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink, RouterModule } from '@angular/router';
+import { Router, RouterLink, RouterModule, ActivatedRoute } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -483,6 +483,7 @@ export class ProviderComponent implements OnInit {
   api = inject(ApiService);
   auth = inject(AuthService);
   router = inject(Router);
+  route = inject(ActivatedRoute);
   i18n = inject(TranslationService);
   sanitizer = inject(DomSanitizer);
 
@@ -558,6 +559,7 @@ export class ProviderComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.route.queryParams.subscribe(params => { if (params['tab']) this.tab = params['tab']; });
     this.api.getMyProfile().subscribe({ next: p => { if (p) { this.profile.set({ ...p, name: p.user?.name || this.auth.user()?.name || '' }); this.pf = { ...this.profile() }; } }, error: () => {} });
     this.api.getMyServices().subscribe({ next: s => this.services.set(s), error: () => {} });
     this.api.getMyPromos().subscribe({ next: p => this.promos.set(p), error: () => {} });

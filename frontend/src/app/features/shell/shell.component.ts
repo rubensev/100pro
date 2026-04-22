@@ -13,7 +13,7 @@ const NAV = [
   { id: 'explore',  key: 'nav.explore',  path: '/explore',  icon: 'M21 21l-4.35-4.35 M11 11m-8 0a8 8 0 1 0 16 0a8 8 0 0 0 -16 0' },
   { id: 'schedule', key: 'nav.schedule', path: '/schedule', icon: 'M3 4h18v18H3z M16 2v4 M8 2v4 M3 10h18', requireAuth: true },
   { id: 'messages', key: 'nav.messages', path: '/messages', icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', requireAuth: true },
-  { id: 'provider', key: 'nav.provider', path: '/provider', icon: 'M2 7h20v14H2z M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16', badgePro: true, requireAuth: true },
+  { id: 'provider', key: 'nav.provider', path: '/provider', icon: 'M2 7h20v14H2z M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16', requireAuth: true },
   { id: 'pricing', key: 'nav.pricing', path: '/pricing', icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' },
 ];
 
@@ -58,9 +58,6 @@ const NAV = [
               }
               @if (item.id === 'schedule' && notif.upcomingBookings() > 0) {
                 <span style="margin-left:auto;background:var(--p);color:white;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;min-width:20px;text-align:center">{{ notif.upcomingBookings() }}</span>
-              }
-              @if (item.badgePro && !notif.unreadMessages() && !notif.upcomingBookings()) {
-                <span style="margin-left:auto;background:var(--ac);color:white;padding:1px 6px;border-radius:99px;font-size:9px;font-weight:700">PRO</span>
               }
             </a>
           }
@@ -199,6 +196,50 @@ const NAV = [
             </a>
           }
         </nav>
+      }
+
+      <!-- FAB: quick new post for providers -->
+      @if (auth.isLoggedIn() && auth.user()?.isProvider) {
+        <button (click)="router.navigate(['/provider'], { queryParams: { tab: 'posts' } })"
+          style="position:fixed;z-index:60;background:var(--p);color:white;border:none;cursor:pointer;
+                 border-radius:50%;display:flex;align-items:center;justify-content:center;
+                 box-shadow:0 4px 16px oklch(0.42 0.20 250 / 0.35);transition:var(--tr)"
+          [style.width]="mobile() ? '50px' : '44px'"
+          [style.height]="mobile() ? '50px' : '44px'"
+          [style.bottom]="mobile() ? '68px' : '24px'"
+          [style.right]="mobile() ? '16px' : '24px'"
+          (mouseenter)="$any($event.currentTarget).style.transform='scale(1.08)'"
+          (mouseleave)="$any($event.currentTarget).style.transform='scale(1)'">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+      }
+
+      <!-- Login prompt overlay -->
+      @if (auth.loginPromptVisible()) {
+        <div class="overlay" (click)="auth.loginPromptVisible.set(false)"
+             style="z-index:200">
+          <div class="pop card" style="width:100%;max-width:360px;padding:32px 28px;text-align:center"
+               (click)="$event.stopPropagation()">
+            <div style="font-size:36px;margin-bottom:12px">🔐</div>
+            <div style="font-weight:800;font-size:18px;margin-bottom:6px">{{ i18n.t('auth.prompt.title') }}</div>
+            <div style="font-size:13px;color:var(--t2);margin-bottom:24px">{{ i18n.t('auth.prompt.sub') }}</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <a [routerLink]="'/auth/login'" (click)="auth.loginPromptVisible.set(false)"
+                 class="btn btn-p" style="justify-content:center;text-decoration:none;padding:12px">
+                {{ i18n.t('nav.signin') }}
+              </a>
+              <a [routerLink]="'/auth/register'" (click)="auth.loginPromptVisible.set(false)"
+                 class="btn btn-g" style="justify-content:center;text-decoration:none;padding:12px">
+                {{ i18n.t('auth.prompt.register') }}
+              </a>
+              <button (click)="auth.loginPromptVisible.set(false)" class="btn btn-g" style="color:var(--t3)">
+                {{ i18n.t('auth.prompt.later') }}
+              </button>
+            </div>
+          </div>
+        </div>
       }
     </div>
   `,

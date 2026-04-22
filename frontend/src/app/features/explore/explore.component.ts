@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
@@ -152,7 +152,6 @@ import { TranslationService } from '../../i18n/translation.service';
 export class ExploreComponent implements OnInit {
   api = inject(ApiService);
   auth = inject(AuthService);
-  router = inject(Router);
   i18n = inject(TranslationService);
 
   cats = CATEGORIES;
@@ -200,7 +199,7 @@ export class ExploreComponent implements OnInit {
 
   requireAuth(fn: () => void) {
     if (this.auth.isLoggedIn()) fn();
-    else this.router.navigate(['/auth/login']);
+    else this.auth.promptLogin();
   }
 
   book(p: ProviderProfile) {
