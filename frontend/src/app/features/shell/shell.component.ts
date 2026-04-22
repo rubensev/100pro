@@ -1,4 +1,4 @@
-import { Component, inject, HostListener, signal } from '@angular/core';
+import { Component, inject, HostListener, signal, OnInit, OnDestroy, effect } from '@angular/core';
 import { RouterOutlet, RouterLink, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { LogoComponent } from '../../shared/components/logo.component';
@@ -6,6 +6,7 @@ import { AvatarComponent } from '../../shared/components/avatar.component';
 import { AuthService } from '../../core/services/auth.service';
 import { TranslationService } from '../../i18n/translation.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { NotificationsService } from '../../core/services/notifications.service';
 
 const NAV = [
   { id: 'home',     key: 'nav.home',     path: '/home',     icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' },
@@ -40,11 +41,25 @@ const NAV = [
                style="display:flex;align-items:center;gap:12px;padding:10px 12px;
                       border-radius:11px;font-size:13px;cursor:pointer;text-align:left;
                       text-decoration:none;transition:var(--tr);position:relative">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path [attr.d]="item.icon"/>
-              </svg>
+              <div style="position:relative;flex-shrink:0">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path [attr.d]="item.icon"/>
+                </svg>
+                @if (item.id === 'messages' && notif.unreadMessages() > 0) {
+                  <div style="position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:var(--re);border:1.5px solid var(--ca)"></div>
+                }
+                @if (item.id === 'schedule' && notif.upcomingBookings() > 0) {
+                  <div style="position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:var(--p);border:1.5px solid var(--ca)"></div>
+                }
+              </div>
               {{ i18n.t(item.key) }}
-              @if (item.badgePro) {
+              @if (item.id === 'messages' && notif.unreadMessages() > 0) {
+                <span style="margin-left:auto;background:var(--re);color:white;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;min-width:20px;text-align:center">{{ notif.unreadMessages() }}</span>
+              }
+              @if (item.id === 'schedule' && notif.upcomingBookings() > 0) {
+                <span style="margin-left:auto;background:var(--p);color:white;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;min-width:20px;text-align:center">{{ notif.upcomingBookings() }}</span>
+              }
+              @if (item.badgePro && !notif.unreadMessages() && !notif.upcomingBookings()) {
                 <span style="margin-left:auto;background:var(--ac);color:white;padding:1px 6px;border-radius:99px;font-size:9px;font-weight:700">PRO</span>
               }
             </a>
@@ -169,9 +184,17 @@ const NAV = [
                [style.fontWeight]="isActive(item.path) ? '700' : '500'"
                style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
                       padding:8px 0;text-decoration:none;font-size:9px;transition:var(--tr)">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path [attr.d]="item.icon"/>
-              </svg>
+              <div style="position:relative">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path [attr.d]="item.icon"/>
+                </svg>
+                @if (item.id === 'messages' && notif.unreadMessages() > 0) {
+                  <div style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:var(--re);border:1.5px solid var(--ca)"></div>
+                }
+                @if (item.id === 'schedule' && notif.upcomingBookings() > 0) {
+                  <div style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:var(--p);border:1.5px solid var(--ca)"></div>
+                }
+              </div>
               {{ i18n.t(item.key) }}
             </a>
           }
@@ -180,12 +203,16 @@ const NAV = [
     </div>
   `,
 })
-export class ShellComponent {
+export class ShellComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
   i18n = inject(TranslationService);
   theme = inject(ThemeService);
   router = inject(Router);
+  notif = inject(NotificationsService);
   mobile = signal(window.innerWidth < 768);
+
+  ngOnInit() { if (this.auth.isLoggedIn()) this.notif.start(); }
+  ngOnDestroy() { this.notif.stop(); }
 
   langs = [
     { code: 'en' as const, label: 'EN' },

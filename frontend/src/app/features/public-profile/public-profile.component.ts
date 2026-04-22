@@ -298,7 +298,11 @@ export class PublicProfileComponent implements OnInit {
 
   message(p: ProviderProfile) {
     if (!this.auth.isLoggedIn()) { this.router.navigate(['/auth/login']); return; }
-    this.router.navigate(['/messages']);
+    this.router.navigate(['/messages'], { queryParams: {
+      with: p.userId,
+      name: p.user?.name,
+      initials: p.user?.avatarInitials || (p.user?.name?.slice(0, 2).toUpperCase() ?? '??'),
+    }});
   }
 
   share() {

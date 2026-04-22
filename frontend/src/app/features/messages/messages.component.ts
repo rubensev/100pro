@@ -1,8 +1,10 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationsService } from '../../core/services/notifications.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
 import { getInitialsColor } from '../../shared/models';
 import { TranslationService } from '../../i18n/translation.service';
@@ -113,6 +115,8 @@ export class MessagesComponent implements OnInit {
   api = inject(ApiService);
   auth = inject(AuthService);
   i18n = inject(TranslationService);
+  notif = inject(NotificationsService);
+  route = inject(ActivatedRoute);
 
   convs = signal<Conversation[]>([]);
   loading = signal(true);
@@ -121,7 +125,14 @@ export class MessagesComponent implements OnInit {
   threadLoading = signal(false);
   newMsg = '';
 
-  ngOnInit() { this.loadConversations(); }
+  ngOnInit() {
+    this.loadConversations();
+    const p = this.route.snapshot.queryParams;
+    if (p['with']) {
+      const conv: Conversation = { otherId: p['with'], name: p['name'] || 'User', initials: p['initials'] || '??', lastMsg: '', time: '', hasUnread: false };
+      this.openChat(conv);
+    }
+  }
 
   loadConversations() {
     this.loading.set(true);
@@ -152,6 +163,11 @@ export class MessagesComponent implements OnInit {
     this.threadMessages.set([]);
     this.threadLoading.set(true);
     const myId = this.auth.user()?.id;
+    if (c.hasUnread) {
+      this.api.markThreadRead(c.otherId).subscribe({ error: () => {} });
+      this.notif.decrementMessages();
+      this.convs.update(cs => cs.map(x => x.otherId === c.otherId ? { ...x, hasUnread: false } : x));
+    }
     this.api.getThread(c.otherId).subscribe({
       next: msgs => {
         this.threadMessages.set(msgs.map(m => ({

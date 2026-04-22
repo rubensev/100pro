@@ -50,10 +50,6 @@ export class ApiService {
   updatePromo(id: string, data: Partial<Promo>) { return this.http.put<Promo>(`${API}/promos/${id}`, data); }
   deletePromo(id: string) { return this.http.delete(`${API}/promos/${id}`); }
 
-  // Bookings
-  getBookings() { return this.http.get<Booking[]>(`${API}/bookings`); }
-  createBooking(data: any) { return this.http.post<Booking>(`${API}/bookings`, data); }
-
   // User profile
   getMe() { return this.http.get<any>(`${API}/users/me`); }
   updateMe(data: { name?: string; email?: string }) { return this.http.patch<any>(`${API}/users/me`, data); }
@@ -80,4 +76,13 @@ export class ApiService {
   getConversations() { return this.http.get<Message[]>(`${API}/messages`); }
   getThread(otherId: string) { return this.http.get<Message[]>(`${API}/messages/${otherId}`); }
   sendMessage(receiverId: string, text: string) { return this.http.post<Message>(`${API}/messages`, { receiverId, text }); }
+  getUnreadCount() { return this.http.get<{ count: number }>(`${API}/messages/unread-count`); }
+  markThreadRead(otherId: string) { return this.http.patch(`${API}/messages/${otherId}/read`, {}); }
+
+  // Bookings
+  getBookings() { return this.http.get<Booking[]>(`${API}/bookings`); }
+  getIncomingBookings() { return this.http.get<any[]>(`${API}/bookings/incoming`); }
+  getUpcomingCount() { return this.http.get<{ count: number }>(`${API}/bookings/upcoming-count`); }
+  createBooking(data: any) { return this.http.post<Booking>(`${API}/bookings`, data); }
+  cancelBooking(id: string) { return this.http.patch<Booking>(`${API}/bookings/${id}/cancel`, {}); }
 }

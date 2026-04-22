@@ -62,6 +62,12 @@ export const T: Record<string, Record<Lang, string>> = {
   'schedule.status.cancelled': { en: 'Cancelled',  pt: 'Cancelado',   fr: 'Annulé' },
   'schedule.empty.title':      { en: 'No bookings', pt: 'Nenhum agendamento', fr: 'Aucune réservation' },
   'schedule.empty.sub':        { en: 'Explore professionals and book your first service', pt: 'Explore profissionais e agende seu primeiro serviço', fr: 'Explorez les professionnels et réservez votre premier service' },
+  'schedule.cancel':           { en: 'Cancel',       pt: 'Cancelar',         fr: 'Annuler' },
+  'schedule.tab.mine':         { en: 'My bookings',  pt: 'Meus agendamentos', fr: 'Mes réservations' },
+  'schedule.tab.incoming':     { en: 'Incoming',     pt: 'Recebidos',        fr: 'Reçus' },
+  'schedule.section.upcoming': { en: 'Upcoming',     pt: 'Próximos',         fr: 'À venir' },
+  'schedule.section.past':     { en: 'Past',         pt: 'Passados',         fr: 'Passés' },
+  'schedule.incoming.empty':   { en: 'No incoming bookings yet', pt: 'Nenhum agendamento recebido ainda', fr: 'Aucune réservation reçue' },
 
   // Messages
   'messages.title':        { en: 'Messages',     pt: 'Mensagens',     fr: 'Messages' },

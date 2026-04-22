@@ -38,4 +38,12 @@ export class MessagesService {
     const msg = this.repo.create({ senderId, receiverId, text });
     return this.repo.save(msg);
   }
+
+  getUnreadCount(userId: string) {
+    return this.repo.count({ where: { receiverId: userId, read: false } });
+  }
+
+  markThreadRead(userId: string, otherId: string) {
+    return this.repo.update({ receiverId: userId, senderId: otherId, read: false }, { read: true });
+  }
 }
