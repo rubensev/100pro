@@ -140,6 +140,10 @@ export const T: Record<string, Record<Lang, string>> = {
   'provider.post.likes':    { en: 'likes',                 pt: 'curtidas',                fr: "j'aime" },
   'provider.post.comments': { en: 'comments',              pt: 'comentários',             fr: 'commentaires' },
   'provider.post.placeholder': { en: 'What do you want to share, {name}?', pt: 'O que você quer compartilhar, {name}?', fr: 'Que voulez-vous partager, {name} ?' },
+  'provider.post.add_image':  { en: 'Add image',              pt: 'Adicionar imagem',        fr: 'Ajouter une image' },
+  'provider.post.youtube':    { en: 'YouTube URL (optional)', pt: 'URL do YouTube (opcional)', fr: 'URL YouTube (optionnel)' },
+  'provider.post.or':         { en: 'or',                     pt: 'ou',                      fr: 'ou' },
+  'provider.post.uploading':  { en: 'Uploading',              pt: 'Enviando',                fr: 'Envoi en cours' },
 
   // Booking modal
   'booking.step.service': { en: 'Service',  pt: 'Serviço',   fr: 'Service' },

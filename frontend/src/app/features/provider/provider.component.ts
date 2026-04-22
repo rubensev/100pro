@@ -2,11 +2,14 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterModule } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
 import { CATEGORIES, Service, Promo, ProviderProfile, getInitialsColor } from '../../shared/models';
 import { TranslationService } from '../../i18n/translation.service';
+
+const API_BASE = 'http://localhost:3000';
 
 const HOURS = ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -270,8 +273,40 @@ function buildSlots() {
                       (focus)="$any($event.target).style.borderColor='var(--p)'" (blur)="$any($event.target).style.borderColor='var(--bo)'"></textarea>
           </div>
           @if (showPostForm) {
+            <!-- Media row -->
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+              <!-- Image upload -->
+              <label style="display:flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px dashed var(--bo);border-radius:8px;cursor:pointer;font-size:12px;color:var(--t2);transition:var(--tr)"
+                     (mouseenter)="$any($event.currentTarget).style.borderColor='var(--p)'" (mouseleave)="$any($event.currentTarget).style.borderColor='var(--bo)'">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+                </svg>
+                {{ postImageFile ? postImageFile.name.slice(0,20) : i18n.t('provider.post.add_image') }}
+                <input type="file" accept="image/*" style="display:none" (change)="onPostImageChange($event)" />
+              </label>
+
+              @if (postImageFile) {
+                <button (click)="postImageFile = null; postImagePreview = null"
+                        style="padding:4px 8px;border-radius:6px;border:none;background:var(--bg2);color:var(--t3);cursor:pointer;font-size:11px">×</button>
+              }
+
+              <!-- Or divider -->
+              @if (!postImageFile) {
+                <span style="font-size:11px;color:var(--t3)">{{ i18n.t('provider.post.or') }}</span>
+                <!-- YouTube URL -->
+                <input [(ngModel)]="postVideoUrl" [placeholder]="i18n.t('provider.post.youtube')"
+                       style="flex:1;min-width:180px;border:1.5px solid var(--bo);border-radius:8px;padding:7px 12px;font-size:12px;background:var(--bg);outline:none;color:var(--t)" />
+              }
+            </div>
+
+            <!-- Image preview -->
+            @if (postImagePreview) {
+              <div style="margin-bottom:10px;border-radius:8px;overflow:hidden;max-height:200px">
+                <img [src]="postImagePreview" style="width:100%;object-fit:cover;display:block" />
+              </div>
+            }
+
             <div style="display:flex;gap:10px;margin-bottom:10px">
-              <div class="field" style="flex:1;margin-bottom:0"><label>{{ i18n.t('provider.post.caption') }}</label><input type="text" [(ngModel)]="postImgLabel" /></div>
               <div class="field" style="width:140px;margin-bottom:0"><label>{{ i18n.t('provider.post.category') }}</label>
                 <select [(ngModel)]="postCat">
                   @for (c of cats; track c.id) { <option [value]="c.id">{{ c.icon }} {{ i18n.t('cat.' + c.id) }}</option> }
@@ -280,19 +315,31 @@ function buildSlots() {
             </div>
           }
           @if (postError()) { <div style="color:var(--re);font-size:12px;margin-bottom:6px">{{ postError() }}</div> }
-          <div style="display:flex;gap:8px;justify-content:flex-end">
+          <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center">
+            @if (postUploading()) { <span style="font-size:12px;color:var(--t3)">{{ i18n.t('provider.post.uploading') }}…</span> }
             @if (showPostForm) { <button class="btn btn-g" (click)="clearPost()">{{ i18n.t('common.cancel') }}</button> }
-            <button class="btn btn-p" (click)="publishPost()" [style.opacity]="postText.trim() ? '1' : '0.5'">{{ i18n.t('provider.post.publish') }}</button>
+            <button class="btn btn-p" (click)="publishPost()" [style.opacity]="postText.trim() && !postUploading() ? '1' : '0.5'">{{ i18n.t('provider.post.publish') }}</button>
           </div>
         </div>
         <div style="font-weight:700;font-size:15px;margin-bottom:10px">{{ i18n.t('provider.post.my') }} ({{ myPosts().length }})</div>
         @for (p of myPosts(); track p.id) {
-          <div class="card" style="padding:14px 16px;margin-bottom:8px">
-            <p style="font-size:13px;line-height:1.6;color:var(--t);margin-bottom:10px">{{ p.text }}</p>
-            <div style="display:flex;gap:10px">
-              <span style="font-size:12px;color:var(--t3)">❤️ {{ p.likesCount }} {{ i18n.t('provider.post.likes') }}</span>
-              <span style="font-size:12px;color:var(--t3)">💬 {{ p.comments?.length || 0 }} {{ i18n.t('provider.post.comments') }}</span>
-              <span style="font-size:12px;color:var(--t3)">{{ p.createdAt }}</span>
+          <div class="card" style="margin-bottom:8px;overflow:hidden">
+            @if (p.imageUrl) {
+              <img [src]="API_BASE + p.imageUrl" style="width:100%;max-height:240px;object-fit:cover;display:block" />
+            }
+            @if (!p.imageUrl && p.videoUrl) {
+              <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden">
+                <iframe [src]="safeEmbed(p.videoUrl)" frameborder="0" allowfullscreen
+                        style="position:absolute;top:0;left:0;width:100%;height:100%"></iframe>
+              </div>
+            }
+            <div style="padding:14px 16px">
+              <p style="font-size:13px;line-height:1.6;color:var(--t);margin-bottom:10px">{{ p.text }}</p>
+              <div style="display:flex;gap:10px">
+                <span style="font-size:12px;color:var(--t3)">❤️ {{ p.likesCount }} {{ i18n.t('provider.post.likes') }}</span>
+                <span style="font-size:12px;color:var(--t3)">💬 {{ p.comments?.length || 0 }} {{ i18n.t('provider.post.comments') }}</span>
+                <span style="font-size:12px;color:var(--t3)">{{ formatPostDate(p.createdAt) }}</span>
+              </div>
             </div>
           </div>
         }
@@ -311,6 +358,7 @@ export class ProviderComponent implements OnInit {
   auth = inject(AuthService);
   router = inject(Router);
   i18n = inject(TranslationService);
+  sanitizer = inject(DomSanitizer);
 
   tabs = [
     { id: 'profile',   key: 'provider.tab.profile',   icon: '👤' },
@@ -342,9 +390,15 @@ export class ProviderComponent implements OnInit {
   myPosts = signal<any[]>([]);
   postText = '';
   postImgLabel = '';
+  postVideoUrl = '';
   postCat = 'reform';
+  postImageFile: File | null = null;
+  postImagePreview: string | null = null;
   showPostForm = false;
   postError = signal('');
+  postUploading = signal(false);
+
+  API_BASE = API_BASE;
 
   get initials() { return this.auth.user()?.avatarInitials || this.auth.user()?.name?.slice(0, 2).toUpperCase() || 'VC'; }
   get firstName() { return this.auth.user()?.name?.split(' ')[0] || 'Você'; }
@@ -438,16 +492,61 @@ export class ProviderComponent implements OnInit {
     });
   }
 
+  onPostImageChange(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.postImageFile = file;
+    this.postVideoUrl = '';
+    const reader = new FileReader();
+    reader.onload = e => this.postImagePreview = e.target?.result as string;
+    reader.readAsDataURL(file);
+    this.showPostForm = true;
+  }
+
   publishPost() {
     if (!this.postText.trim()) return;
     this.postError.set('');
-    const data = { type: 'provider' as const, text: this.postText, imageLabel: this.postImgLabel || undefined, category: this.postCat };
+    const data = { type: 'provider' as const, text: this.postText, category: this.postCat };
+    this.postUploading.set(true);
     this.api.createPost(data).subscribe({
-      next: p => { this.myPosts.update(ps => [p, ...ps]); this.clearPost(); },
-      error: () => this.postError.set('Erro ao publicar post.'),
+      next: post => {
+        const afterMedia = (finalPost: any) => {
+          this.myPosts.update(ps => [finalPost, ...ps]);
+          this.clearPost();
+          this.postUploading.set(false);
+        };
+        if (this.postImageFile) {
+          this.api.uploadPostImage(post.id, this.postImageFile).subscribe({
+            next: updated => afterMedia(updated),
+            error: () => { afterMedia(post); this.postError.set('Post publicado mas imagem falhou.'); },
+          });
+        } else if (this.postVideoUrl.trim()) {
+          this.api.setPostVideo(post.id, this.postVideoUrl.trim()).subscribe({
+            next: updated => afterMedia(updated),
+            error: () => { afterMedia(post); this.postError.set('Post publicado mas vídeo falhou.'); },
+          });
+        } else {
+          afterMedia(post);
+        }
+      },
+      error: () => { this.postError.set('Erro ao publicar post.'); this.postUploading.set(false); },
     });
-    this.clearPost();
   }
 
-  clearPost() { this.postText = ''; this.postImgLabel = ''; this.postCat = 'reform'; this.showPostForm = false; }
+  safeEmbed(url: string): SafeResourceUrl {
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    const embedUrl = match ? `https://www.youtube.com/embed/${match[1]}` : url;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+  }
+
+  formatPostDate(createdAt: string) {
+    const d = new Date(createdAt);
+    if (isNaN(d.getTime())) return createdAt;
+    const diff = Date.now() - d.getTime();
+    if (diff < 3600000) return Math.max(1, Math.floor(diff / 60000)) + 'min';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + 'h';
+    return Math.floor(diff / 86400000) + 'd';
+  }
+
+  clearPost() { this.postText = ''; this.postImgLabel = ''; this.postVideoUrl = ''; this.postCat = 'reform'; this.postImageFile = null; this.postImagePreview = null; this.showPostForm = false; }
 }

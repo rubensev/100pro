@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
@@ -9,6 +10,8 @@ import { StarsComponent } from '../../shared/components/stars.component';
 import { BookingModalComponent } from './booking-modal.component';
 import { Post, Promo, CATEGORIES, getInitialsColor, Service } from '../../shared/models';
 import { TranslationService } from '../../i18n/translation.service';
+
+const API_BASE = 'http://localhost:3000';
 
 @Component({
   selector: 'app-home',
@@ -133,8 +136,28 @@ import { TranslationService } from '../../i18n/translation.service';
                   </button>
                 </div>
 
-                <!-- Image placeholder for provider posts -->
-                @if (post.type === 'provider' && post.imageLabel) {
+                <!-- Media: real image -->
+                @if (post.imageUrl) {
+                  <div style="position:relative;overflow:hidden;max-height:360px">
+                    <img [src]="API_BASE + post.imageUrl" style="width:100%;object-fit:cover;display:block" />
+                    @if (post.category) {
+                      <div style="position:absolute;top:10px;left:10px;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);color:white;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600">
+                        {{ catIcon(post.category) }} {{ catName(post.category) }}
+                      </div>
+                    }
+                  </div>
+                }
+
+                <!-- Media: YouTube embed -->
+                @if (!post.imageUrl && post.videoUrl) {
+                  <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden">
+                    <iframe [src]="safeEmbed(post.videoUrl)" frameborder="0" allowfullscreen
+                            style="position:absolute;top:0;left:0;width:100%;height:100%"></iframe>
+                  </div>
+                }
+
+                <!-- Media: legacy placeholder -->
+                @if (!post.imageUrl && !post.videoUrl && post.type === 'provider' && post.imageLabel) {
                   <div [style.background]="post.imageColor || 'var(--bg2)'" style="height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;position:relative">
                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="opacity:0.4">
                       <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
@@ -223,6 +246,9 @@ export class HomeComponent implements OnInit {
   auth = inject(AuthService);
   router = inject(Router);
   i18n = inject(TranslationService);
+  sanitizer = inject(DomSanitizer);
+
+  API_BASE = API_BASE;
 
   cats = CATEGORIES;
   posts = signal<Post[]>([]);
@@ -257,6 +283,12 @@ export class HomeComponent implements OnInit {
   catIcon(id: string) { return CATEGORIES.find(c => c.id === id)?.icon || ''; }
   catName(id: string) { return this.i18n.t('cat.' + id); }
   color(initials: string) { return getInitialsColor(initials); }
+
+  safeEmbed(url: string): SafeResourceUrl {
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    const embedUrl = match ? `https://www.youtube.com/embed/${match[1]}` : url;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+  }
 
   promoColor(p: Promo) { return getInitialsColor(p.provider?.user?.avatarInitials || ''); }
   promoOriginal(p: Promo) { return p.service?.price || 0; }

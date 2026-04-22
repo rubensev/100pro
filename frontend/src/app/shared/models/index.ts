@@ -64,6 +64,8 @@ export interface Post {
   text: string;
   imageLabel?: string;
   imageColor?: string;
+  imageUrl?: string;
+  videoUrl?: string;
   category: string;
   likesCount: number;
   comments?: Comment[];

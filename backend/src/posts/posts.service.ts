@@ -36,6 +36,13 @@ export class PostsService {
     return this.commentRepo.save(comment);
   }
 
+  async updateMedia(postId: string, userId: string, data: { imageUrl?: string; videoUrl?: string }) {
+    const post = await this.postRepo.findOne({ where: { id: postId, authorId: userId } });
+    if (!post) return null;
+    Object.assign(post, data);
+    return this.postRepo.save(post);
+  }
+
   findByAuthor(userId: string) {
     return this.postRepo.find({
       where: { authorId: userId },

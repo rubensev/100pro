@@ -27,6 +27,12 @@ export class Post {
   imageColor: string;
 
   @Column({ nullable: true })
+  imageUrl: string;
+
+  @Column({ nullable: true })
+  videoUrl: string;
+
+  @Column({ nullable: true })
   category: string;
 
   @Column({ default: 0 })

@@ -16,6 +16,12 @@ export class ApiService {
   }
   getMyPosts() { return this.http.get<Post[]>(`${API}/posts/mine`); }
   createPost(data: Partial<Post>) { return this.http.post<Post>(`${API}/posts`, data); }
+  uploadPostImage(id: string, file: File) {
+    const fd = new FormData();
+    fd.append('image', file);
+    return this.http.post<Post>(`${API}/posts/${id}/image`, fd);
+  }
+  setPostVideo(id: string, videoUrl: string) { return this.http.patch<Post>(`${API}/posts/${id}/video`, { videoUrl }); }
   likePost(id: string) { return this.http.post<Post>(`${API}/posts/${id}/like`, {}); }
   addComment(postId: string, text: string) { return this.http.post<Comment>(`${API}/posts/${postId}/comments`, { text }); }
 
