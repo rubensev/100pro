@@ -5,6 +5,7 @@ import { LogoComponent } from '../../shared/components/logo.component';
 import { AvatarComponent } from '../../shared/components/avatar.component';
 import { AuthService } from '../../core/services/auth.service';
 import { TranslationService } from '../../i18n/translation.service';
+import { ThemeService } from '../../core/services/theme.service';
 
 const NAV = [
   { id: 'home',     key: 'nav.home',     path: '/home',     icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' },
@@ -49,16 +50,32 @@ const NAV = [
           }
 
           <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px">
-            <!-- Language switcher -->
-            <div style="display:flex;gap:2px;padding:6px 8px;background:var(--bg);border-radius:10px;border:1px solid var(--bo)">
-              @for (l of langs; track l.code) {
-                <button (click)="i18n.setLang(l.code)"
-                        [style.background]="i18n.lang() === l.code ? 'var(--p)' : 'transparent'"
-                        [style.color]="i18n.lang() === l.code ? 'white' : 'var(--t2)'"
-                        style="flex:1;padding:5px 4px;border-radius:7px;border:none;font-size:11px;font-weight:700;cursor:pointer;transition:var(--tr)">
-                  {{ l.label }}
-                </button>
-              }
+            <!-- Language + dark mode row -->
+            <div style="display:flex;gap:6px;align-items:center">
+              <div style="flex:1;display:flex;gap:2px;padding:6px 8px;background:var(--bg);border-radius:10px;border:1px solid var(--bo)">
+                @for (l of langs; track l.code) {
+                  <button (click)="i18n.setLang(l.code)"
+                          [style.background]="i18n.lang() === l.code ? 'var(--p)' : 'transparent'"
+                          [style.color]="i18n.lang() === l.code ? 'white' : 'var(--t2)'"
+                          style="flex:1;padding:5px 4px;border-radius:7px;border:none;font-size:11px;font-weight:700;cursor:pointer;transition:var(--tr)">
+                    {{ l.label }}
+                  </button>
+                }
+              </div>
+              <button (click)="theme.toggle()"
+                      [style.background]="theme.dark() ? 'var(--px)' : 'var(--bg)'"
+                      [style.color]="theme.dark() ? 'var(--p)' : 'var(--t2)'"
+                      style="width:36px;height:36px;border-radius:10px;border:1px solid var(--bo);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--tr);flex-shrink:0">
+                @if (theme.dark()) {
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                  </svg>
+                } @else {
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  </svg>
+                }
+              </button>
             </div>
 
             @if (auth.isLoggedIn()) {
@@ -87,16 +104,32 @@ const NAV = [
             border-bottom:1px solid var(--bo);padding:10px 14px;
             display:flex;align-items:center;justify-content:space-between;gap:8px">
             <app-logo size="sm" />
-            <!-- Mobile language switcher -->
-            <div style="display:flex;gap:1px;background:var(--bg);border-radius:8px;border:1px solid var(--bo);padding:2px">
-              @for (l of langs; track l.code) {
-                <button (click)="i18n.setLang(l.code)"
-                        [style.background]="i18n.lang() === l.code ? 'var(--p)' : 'transparent'"
-                        [style.color]="i18n.lang() === l.code ? 'white' : 'var(--t2)'"
-                        style="padding:3px 7px;border-radius:6px;border:none;font-size:10px;font-weight:700;cursor:pointer;transition:var(--tr)">
-                  {{ l.label }}
-                </button>
-              }
+            <!-- Mobile lang + dark toggle -->
+            <div style="display:flex;gap:4px;align-items:center">
+              <div style="display:flex;gap:1px;background:var(--bg);border-radius:8px;border:1px solid var(--bo);padding:2px">
+                @for (l of langs; track l.code) {
+                  <button (click)="i18n.setLang(l.code)"
+                          [style.background]="i18n.lang() === l.code ? 'var(--p)' : 'transparent'"
+                          [style.color]="i18n.lang() === l.code ? 'white' : 'var(--t2)'"
+                          style="padding:3px 7px;border-radius:6px;border:none;font-size:10px;font-weight:700;cursor:pointer;transition:var(--tr)">
+                    {{ l.label }}
+                  </button>
+                }
+              </div>
+              <button (click)="theme.toggle()"
+                      [style.background]="theme.dark() ? 'var(--px)' : 'var(--bg)'"
+                      [style.color]="theme.dark() ? 'var(--p)' : 'var(--t2)'"
+                      style="width:30px;height:30px;border-radius:8px;border:1px solid var(--bo);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--tr)">
+                @if (theme.dark()) {
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                  </svg>
+                } @else {
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  </svg>
+                }
+              </button>
             </div>
             @if (auth.isLoggedIn()) {
               <app-avatar [initials]="userInitials" color="linear-gradient(135deg,var(--p),var(--ac))" [size]="30" />
@@ -136,6 +169,7 @@ const NAV = [
 export class ShellComponent {
   auth = inject(AuthService);
   i18n = inject(TranslationService);
+  theme = inject(ThemeService);
   router = inject(Router);
   mobile = signal(window.innerWidth < 768);
 

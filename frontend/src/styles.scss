@@ -24,6 +24,26 @@
   --tr: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+[data-theme="dark"] {
+  --p:   oklch(0.57 0.20 250);
+  --pl:  oklch(0.66 0.18 250);
+  --px:  oklch(0.22 0.06 250);
+  --ac:  oklch(0.63 0.18 165);
+  --ax:  oklch(0.22 0.05 165);
+  --bg:  oklch(0.13 0.012 250);
+  --bg2: oklch(0.17 0.013 250);
+  --ca:  oklch(0.20 0.014 250);
+  --bo:  oklch(0.28 0.012 250);
+  --t:   oklch(0.94 0.005 250);
+  --t2:  oklch(0.68 0.008 250);
+  --t3:  oklch(0.50 0.006 250);
+  --sh:  0 2px 12px rgba(0,0,0,0.35);
+  --shm: 0 4px 24px rgba(0,0,0,0.50);
+
+  .btn-danger { background: oklch(0.23 0.07 25) !important; }
+  .badge-promo { background: oklch(0.23 0.07 25) !important; }
+}
+
 html, body { height: 100%; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--t); }
 button, input, textarea, select { font-family: inherit; }
 button { cursor: pointer; border: none; background: none; }
