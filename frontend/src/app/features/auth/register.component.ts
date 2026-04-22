@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { LogoComponent } from '../../shared/components/logo.component';
+import { TranslationService } from '../../i18n/translation.service';
 
 @Component({
   selector: 'app-register',
@@ -15,8 +16,8 @@ import { LogoComponent } from '../../shared/components/logo.component';
       <div class="card pop" style="width:100%;max-width:400px;padding:32px">
         <div style="text-align:center;margin-bottom:28px">
           <div style="display:flex;justify-content:center;margin-bottom:14px"><app-logo size="lg" /></div>
-          <div style="font-size:22px;font-weight:800;color:var(--t)">Crie sua conta</div>
-          <div style="font-size:13px;color:var(--t3);margin-top:4px">Junte-se à rede 100Pro</div>
+          <div style="font-size:22px;font-weight:800;color:var(--t)">{{ i18n.t('auth.register.title') }}</div>
+          <div style="font-size:13px;color:var(--t3);margin-top:4px">{{ i18n.t('auth.register.sub') }}</div>
         </div>
 
         @if (error()) {
@@ -28,26 +29,26 @@ import { LogoComponent } from '../../shared/components/logo.component';
 
         <form (ngSubmit)="submit()">
           <div class="field">
-            <label>Nome completo</label>
-            <input type="text" [(ngModel)]="name" name="name" placeholder="Seu nome" required />
+            <label>{{ i18n.t('auth.name') }}</label>
+            <input type="text" [(ngModel)]="name" name="name" [placeholder]="i18n.t('auth.name.placeholder')" required />
           </div>
           <div class="field">
-            <label>Email</label>
+            <label>{{ i18n.t('auth.email') }}</label>
             <input type="email" [(ngModel)]="email" name="email" placeholder="seu@email.com" required />
           </div>
           <div class="field">
-            <label>Senha</label>
-            <input type="password" [(ngModel)]="password" name="password" placeholder="Mínimo 6 caracteres" required minlength="6" />
+            <label>{{ i18n.t('auth.password') }}</label>
+            <input type="password" [(ngModel)]="password" name="password" [placeholder]="i18n.t('auth.password.placeholder')" required minlength="6" />
           </div>
           <button type="submit" class="btn btn-p" style="width:100%;padding:11px;font-size:14px;margin-top:4px"
             [disabled]="loading()">
-            {{ loading() ? 'Cadastrando...' : 'Criar conta' }}
+            {{ loading() ? i18n.t('auth.register.loading') : i18n.t('auth.register.btn') }}
           </button>
         </form>
 
         <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--t2)">
-          Já tem conta?
-          <a routerLink="/auth/login" style="color:var(--p);font-weight:600;text-decoration:none"> Entre aqui</a>
+          {{ i18n.t('auth.register.has_account') }}
+          <a routerLink="/auth/login" style="color:var(--p);font-weight:600;text-decoration:none"> {{ i18n.t('auth.register.signin') }}</a>
         </div>
       </div>
     </div>
@@ -56,6 +57,7 @@ import { LogoComponent } from '../../shared/components/logo.component';
 export class RegisterComponent {
   auth = inject(AuthService);
   router = inject(Router);
+  i18n = inject(TranslationService);
   name = '';
   email = '';
   password = '';
@@ -68,7 +70,7 @@ export class RegisterComponent {
     this.auth.register(this.email, this.password, this.name).subscribe({
       next: () => this.router.navigate(['/home']),
       error: (e) => {
-        this.error.set(e.error?.message || 'Erro ao criar conta');
+        this.error.set(e.error?.message || this.i18n.t('auth.register_error'));
         this.loading.set(false);
       },
     });

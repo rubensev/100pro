@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { LogoComponent } from '../../shared/components/logo.component';
+import { TranslationService } from '../../i18n/translation.service';
 
 @Component({
   selector: 'app-login',
@@ -15,8 +16,8 @@ import { LogoComponent } from '../../shared/components/logo.component';
       <div class="card pop" style="width:100%;max-width:400px;padding:32px">
         <div style="text-align:center;margin-bottom:28px">
           <div style="display:flex;justify-content:center;margin-bottom:14px"><app-logo size="lg" /></div>
-          <div style="font-size:22px;font-weight:800;color:var(--t)">Bem-vindo de volta</div>
-          <div style="font-size:13px;color:var(--t3);margin-top:4px">Entre na sua conta 100Pro</div>
+          <div style="font-size:22px;font-weight:800;color:var(--t)">{{ i18n.t('auth.login.title') }}</div>
+          <div style="font-size:13px;color:var(--t3);margin-top:4px">{{ i18n.t('auth.login.sub') }}</div>
         </div>
 
         @if (error()) {
@@ -28,27 +29,27 @@ import { LogoComponent } from '../../shared/components/logo.component';
 
         <form (ngSubmit)="submit()" #f="ngForm">
           <div class="field">
-            <label>Email</label>
+            <label>{{ i18n.t('auth.email') }}</label>
             <input type="email" [(ngModel)]="email" name="email" placeholder="seu@email.com" required />
           </div>
           <div class="field">
-            <label>Senha</label>
+            <label>{{ i18n.t('auth.password') }}</label>
             <input type="password" [(ngModel)]="password" name="password" placeholder="••••••••" required />
           </div>
           <button type="submit" class="btn btn-p" style="width:100%;padding:11px;font-size:14px;margin-top:4px"
             [disabled]="loading()">
-            {{ loading() ? 'Entrando...' : 'Entrar' }}
+            {{ loading() ? i18n.t('auth.login.loading') : i18n.t('auth.login.btn') }}
           </button>
         </form>
 
         <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--t2)">
-          Não tem conta?
-          <a routerLink="/auth/register" style="color:var(--p);font-weight:600;text-decoration:none"> Cadastre-se</a>
+          {{ i18n.t('auth.login.no_account') }}
+          <a routerLink="/auth/register" style="color:var(--p);font-weight:600;text-decoration:none"> {{ i18n.t('auth.login.register') }}</a>
         </div>
 
         <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--bo);text-align:center">
           <a routerLink="/home" style="font-size:12px;color:var(--t3);text-decoration:none">
-            Continuar sem login →
+            {{ i18n.t('auth.login.guest') }}
           </a>
         </div>
       </div>
@@ -58,6 +59,7 @@ import { LogoComponent } from '../../shared/components/logo.component';
 export class LoginComponent {
   auth = inject(AuthService);
   router = inject(Router);
+  i18n = inject(TranslationService);
   email = '';
   password = '';
   loading = signal(false);
@@ -69,7 +71,7 @@ export class LoginComponent {
     this.auth.login(this.email, this.password).subscribe({
       next: () => this.router.navigate(['/home']),
       error: (e) => {
-        this.error.set(e.error?.message || 'Credenciais inválidas');
+        this.error.set(e.error?.message || this.i18n.t('auth.invalid_creds'));
         this.loading.set(false);
       },
     });

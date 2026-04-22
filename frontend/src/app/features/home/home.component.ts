@@ -8,6 +8,7 @@ import { AvatarComponent } from '../../shared/components/avatar.component';
 import { StarsComponent } from '../../shared/components/stars.component';
 import { BookingModalComponent } from './booking-modal.component';
 import { Post, Promo, CATEGORIES, getInitialsColor, Service } from '../../shared/models';
+import { TranslationService } from '../../i18n/translation.service';
 
 @Component({
   selector: 'app-home',
@@ -21,11 +22,11 @@ import { Post, Promo, CATEGORIES, getInitialsColor, Service } from '../../shared
            [style.border]="focused() ? '1.5px solid var(--p)' : '1.5px solid var(--bo)'"
            [style.box-shadow]="focused() ? '0 0 0 4px oklch(0.42 0.20 250 / 0.09)' : 'var(--sh)'">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input [(ngModel)]="query" placeholder="Buscar serviços, profissionais, categorias..."
+        <input [(ngModel)]="query" [placeholder]="i18n.t('home.search.placeholder')"
                (focus)="focused.set(true)" (blur)="focused.set(false)"
                style="flex:1;border:none;outline:none;background:transparent;font-size:14px;color:var(--t)" />
         @if (query) { <button (click)="query=''" style="color:var(--t3);font-size:18px;line-height:1">×</button> }
-        <button class="btn btn-p" style="padding:6px 14px;font-size:12px">Buscar</button>
+        <button class="btn btn-p" style="padding:6px 14px;font-size:12px">{{ i18n.t('home.search.btn') }}</button>
       </div>
 
       <!-- Categories -->
@@ -36,7 +37,7 @@ import { Post, Promo, CATEGORIES, getInitialsColor, Service } from '../../shared
                   [style.color]="selCat === c.id ? 'white' : 'var(--t2)'"
                   [style.border]="selCat === c.id ? '1px solid var(--p)' : '1px solid var(--bo)'"
                   style="flex-shrink:0;padding:7px 13px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;transition:var(--tr);display:flex;align-items:center;gap:4px">
-            <span>{{ c.icon }}</span> {{ c.label }}
+            <span>{{ c.icon }}</span> {{ i18n.t('cat.' + c.id) }}
           </button>
         }
       </div>
@@ -45,7 +46,7 @@ import { Post, Promo, CATEGORIES, getInitialsColor, Service } from '../../shared
       @if (promos().length > 0) {
         <div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-            <div style="font-weight:800;font-size:15px">🏷 Promoções em destaque</div>
+            <div style="font-weight:800;font-size:15px">🏷 {{ i18n.t('home.promos.title') }}</div>
             <span class="badge badge-promo">HOT</span>
           </div>
           <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px">
@@ -59,7 +60,7 @@ import { Post, Promo, CATEGORIES, getInitialsColor, Service } from '../../shared
                     <app-avatar [initials]="p.provider?.user?.avatarInitials || ''" [color]="promoColor(p)" [size]="32" [border]="false" />
                     <div>
                       <div style="font-weight:700;font-size:12px">{{ p.provider?.user?.name }}</div>
-                      <div style="font-size:10px;color:var(--t3)">até {{ promoEndsAt(p) }}</div>
+                      <div style="font-size:10px;color:var(--t3)">{{ i18n.t('home.promos.until') }} {{ promoEndsAt(p) }}</div>
                     </div>
                     <span class="badge badge-promo" style="margin-left:auto;font-size:12px;font-weight:800">-{{ p.discountPct }}%</span>
                   </div>
@@ -70,7 +71,7 @@ import { Post, Promo, CATEGORIES, getInitialsColor, Service } from '../../shared
                   </div>
                   <button class="btn btn-p" style="width:100%;padding:7px;font-size:12px"
                     (click)="requireAuth(() => openPromoBooking(p))">
-                    Agendar promoção
+                    {{ i18n.t('home.promos.book') }}
                   </button>
                 </div>
               </div>
@@ -83,7 +84,7 @@ import { Post, Promo, CATEGORIES, getInitialsColor, Service } from '../../shared
       @if (loading()) {
         <div style="text-align:center;padding:40px;color:var(--t3)">
           <div style="font-size:24px;margin-bottom:8px">⏳</div>
-          <div style="font-size:13px">Carregando feed...</div>
+          <div style="font-size:13px">{{ i18n.t('home.loading') }}</div>
         </div>
       }
 
@@ -91,13 +92,13 @@ import { Post, Promo, CATEGORIES, getInitialsColor, Service } from '../../shared
       @if (!loading()) {
         <div>
           <div style="font-weight:800;font-size:15px;margin-bottom:10px">
-            {{ selCat === 'all' ? 'Feed de serviços' : catLabel }} · {{ filteredPosts().length }} posts
+            {{ selCat === 'all' ? i18n.t('home.feed.title') : catLabel }} · {{ filteredPosts().length }} {{ i18n.t('home.feed.posts') }}
           </div>
           @if (filteredPosts().length === 0) {
             <div class="card" style="padding:48px;text-align:center;color:var(--t3)">
               <div style="font-size:40px;margin-bottom:12px">📭</div>
-              <div style="font-weight:600;font-size:16px">Nenhum post ainda</div>
-              <div style="font-size:13px;margin-top:6px">Seja o primeiro a publicar um serviço!</div>
+              <div style="font-weight:600;font-size:16px">{{ i18n.t('home.empty.title') }}</div>
+              <div style="font-size:13px;margin-top:6px">{{ i18n.t('home.empty.sub') }}</div>
             </div>
           }
           <div style="display:flex;flex-direction:column;gap:14px">
@@ -118,7 +119,7 @@ import { Post, Promo, CATEGORIES, getInitialsColor, Service } from '../../shared
                           <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
                         </div>
                       }
-                      <span class="badge" [class]="post.type === 'provider' ? 'badge-p' : 'badge-g'" style="font-size:10px">{{ post.type === 'provider' ? 'Prestador' : 'Cliente' }}</span>
+                      <span class="badge" [class]="post.type === 'provider' ? 'badge-p' : 'badge-g'" style="font-size:10px">{{ post.type === 'provider' ? i18n.t('home.badge.provider') : i18n.t('home.badge.client') }}</span>
                     </div>
                     <div style="font-size:11px;color:var(--t3);margin-top:1px">{{ post.author?.name }} · {{ formatTime(post.createdAt) }}</div>
                     @if (post.type === 'client') { <app-stars [rating]="5" [size]="12" style="display:block;margin-top:3px" /> }
@@ -168,7 +169,7 @@ import { Post, Promo, CATEGORIES, getInitialsColor, Service } from '../../shared
                   @if (post.type === 'provider') {
                     <button class="btn btn-p" style="padding:6px 14px;font-size:12px"
                       (click)="requireAuth(() => openBookingForPost(post))">
-                      Agendar
+                      {{ i18n.t('home.book') }}
                     </button>
                   }
                 </div>
@@ -191,7 +192,7 @@ import { Post, Promo, CATEGORIES, getInitialsColor, Service } from '../../shared
                     @if (auth.isLoggedIn()) {
                       <div style="display:flex;gap:8px;margin-top:2px">
                         <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--ac));display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:white;flex-shrink:0">{{ myInitials }}</div>
-                        <input [(ngModel)]="$any(post)['_newComment']" placeholder="Escreva um comentário..."
+                        <input [(ngModel)]="$any(post)['_newComment']" [placeholder]="i18n.t('home.comment.placeholder')"
                                (keydown.enter)="addComment(post)"
                                style="flex:1;padding:6px 12px;border-radius:99px;border:1px solid var(--bo);font-size:12px;background:var(--bg);outline:none;color:var(--t)" />
                         <button class="btn btn-p" style="padding:6px 12px;font-size:12px" (click)="addComment(post)">→</button>
@@ -221,6 +222,7 @@ export class HomeComponent implements OnInit {
   api = inject(ApiService);
   auth = inject(AuthService);
   router = inject(Router);
+  i18n = inject(TranslationService);
 
   cats = CATEGORIES;
   posts = signal<Post[]>([]);
@@ -251,9 +253,9 @@ export class HomeComponent implements OnInit {
     )
   );
 
-  get catLabel() { return CATEGORIES.find(c => c.id === this.selCat)?.label || ''; }
+  get catLabel() { return this.i18n.t('cat.' + this.selCat); }
   catIcon(id: string) { return CATEGORIES.find(c => c.id === id)?.icon || ''; }
-  catName(id: string) { return CATEGORIES.find(c => c.id === id)?.label || ''; }
+  catName(id: string) { return this.i18n.t('cat.' + id); }
   color(initials: string) { return getInitialsColor(initials); }
 
   promoColor(p: Promo) { return getInitialsColor(p.provider?.user?.avatarInitials || ''); }

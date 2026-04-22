@@ -7,6 +7,7 @@ import { AvatarComponent } from '../../shared/components/avatar.component';
 import { StarsComponent } from '../../shared/components/stars.component';
 import { BookingModalComponent } from '../home/booking-modal.component';
 import { ProviderProfile, CATEGORIES, getInitialsColor, Service } from '../../shared/models';
+import { TranslationService } from '../../i18n/translation.service';
 
 @Component({
   selector: 'app-explore',
@@ -22,7 +23,7 @@ import { ProviderProfile, CATEGORIES, getInitialsColor, Service } from '../../sh
                   [style.color]="selCat === c.id ? 'white' : 'var(--t2)'"
                   [style.border]="selCat === c.id ? '1px solid var(--p)' : '1px solid var(--bo)'"
                   style="flex-shrink:0;padding:7px 13px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;transition:var(--tr)">
-            {{ c.icon }} {{ c.label }}
+            {{ c.icon }} {{ i18n.t('cat.' + c.id) }}
           </button>
         }
       </div>
@@ -31,7 +32,7 @@ import { ProviderProfile, CATEGORIES, getInitialsColor, Service } from '../../sh
       @if (loading()) {
         <div style="text-align:center;padding:40px;color:var(--t3)">
           <div style="font-size:24px;margin-bottom:8px">⏳</div>
-          <div style="font-size:13px">Carregando profissionais...</div>
+          <div style="font-size:13px">{{ i18n.t('explore.loading') }}</div>
         </div>
       }
 
@@ -40,8 +41,8 @@ import { ProviderProfile, CATEGORIES, getInitialsColor, Service } from '../../sh
         @if (filtered().length === 0) {
           <div class="card" style="padding:48px;text-align:center;color:var(--t3)">
             <div style="font-size:40px;margin-bottom:12px">👥</div>
-            <div style="font-weight:600;font-size:16px">Nenhum profissional encontrado</div>
-            <div style="font-size:13px;margin-top:6px">Cadastre-se como prestador para aparecer aqui</div>
+            <div style="font-weight:600;font-size:16px">{{ i18n.t('explore.empty.title') }}</div>
+            <div style="font-size:13px;margin-top:6px">{{ i18n.t('explore.empty.sub') }}</div>
           </div>
         }
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px">
@@ -75,15 +76,15 @@ import { ProviderProfile, CATEGORIES, getInitialsColor, Service } from '../../sh
                 <div style="display:flex;align-items:center;gap:5px;margin:5px 0 8px">
                   <app-stars [rating]="p.rating" [size]="11" />
                   <span style="font-size:11px;font-weight:700">{{ p.rating }}</span>
-                  <span style="font-size:10px;color:var(--t3)">({{ p.reviewsCount }})</span>
+                  <span style="font-size:10px;color:var(--t3)">({{ p.reviewsCount }} {{ i18n.t('explore.reviews') }})</span>
                 </div>
                 <div style="display:flex;gap:6px;margin-bottom:10px">
                   @if (minPrice(p)) { <span class="badge badge-p">R$ {{ minPrice(p) }}/h</span> }
-                  <span class="badge badge-g">{{ p.jobsCount }} jobs</span>
+                  <span class="badge badge-g">{{ p.jobsCount }} {{ i18n.t('explore.jobs') }}</span>
                 </div>
                 <button class="btn btn-p" style="width:100%;padding:8px;font-size:13px"
                   (click)="requireAuth(() => book(p))">
-                  Agendar agora
+                  {{ i18n.t('explore.book') }}
                 </button>
               </div>
             </div>
@@ -107,6 +108,7 @@ export class ExploreComponent implements OnInit {
   api = inject(ApiService);
   auth = inject(AuthService);
   router = inject(Router);
+  i18n = inject(TranslationService);
 
   cats = CATEGORIES;
   selCat = 'all';

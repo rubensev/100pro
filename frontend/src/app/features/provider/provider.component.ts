@@ -6,9 +6,10 @@ import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
 import { CATEGORIES, Service, Promo, ProviderProfile, getInitialsColor } from '../../shared/models';
+import { TranslationService } from '../../i18n/translation.service';
 
 const HOURS = ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
-const DAYS = ['Seg','Ter','Qua','Qui','Sex','Sáb'];
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat'];
 
 function buildSlots() {
   const s: Record<string, Record<string, boolean>> = {};
@@ -29,14 +30,14 @@ function buildSlots() {
         <app-avatar [initials]="initials" color="rgba(255,255,255,0.25)" [size]="52" [border]="false" />
         <div>
           <div style="font-weight:800;font-size:18px">{{ profile().name }}</div>
-          <div style="opacity:0.8;font-size:13px">{{ profile().role || 'Prestador de serviços' }}</div>
+          <div style="opacity:0.8;font-size:13px">{{ profile().role || i18n.t('provider.mode') }}</div>
           <div style="display:flex;gap:12px;margin-top:5px">
             <span style="font-size:12px;opacity:0.9">⭐ {{ profile().rating || '—' }}</span>
-            <span style="font-size:12px;opacity:0.9">💬 {{ profile().reviewsCount || 0 }} reviews</span>
-            <span style="font-size:12px;opacity:0.9">✅ {{ profile().jobsCount || 0 }} jobs</span>
+            <span style="font-size:12px;opacity:0.9">💬 {{ profile().reviewsCount || 0 }} {{ i18n.t('provider.reviews') }}</span>
+            <span style="font-size:12px;opacity:0.9">✅ {{ profile().jobsCount || 0 }} {{ i18n.t('provider.jobs') }}</span>
           </div>
         </div>
-        <div style="margin-left:auto;background:rgba(255,255,255,0.18);padding:6px 14px;border-radius:99px;font-size:12px;font-weight:600">Modo Prestador</div>
+        <div style="margin-left:auto;background:rgba(255,255,255,0.18);padding:6px 14px;border-radius:99px;font-size:12px;font-weight:600">{{ i18n.t('provider.mode') }}</div>
       </div>
 
       <!-- Tab bar -->
@@ -46,7 +47,7 @@ function buildSlots() {
                   [style.background]="tab === t.id ? 'var(--p)' : 'transparent'"
                   [style.color]="tab === t.id ? 'white' : 'var(--t2)'"
                   style="flex:0 0 auto;padding:8px 16px;border-radius:var(--rs);border:none;font-weight:600;font-size:13px;cursor:pointer;transition:var(--tr);display:flex;align-items:center;gap:6px;white-space:nowrap">
-            {{ t.icon }} {{ t.label }}
+            {{ t.icon }} {{ i18n.t(t.key) }}
           </button>
         }
       </div>
@@ -54,23 +55,23 @@ function buildSlots() {
       <!-- PROFILE TAB -->
       @if (tab === 'profile') {
         <div class="card" style="padding:20px">
-          <div style="font-weight:800;font-size:16px;margin-bottom:16px">Editar perfil</div>
+          <div style="font-weight:800;font-size:16px;margin-bottom:16px">{{ i18n.t('provider.profile.edit') }}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div class="field" style="grid-column:1/-1"><label>Nome completo</label><input type="text" [(ngModel)]="pf.name" /></div>
-            <div class="field"><label>Especialidade / Cargo</label><input type="text" [(ngModel)]="pf.role" /></div>
-            <div class="field"><label>Categoria principal</label>
+            <div class="field" style="grid-column:1/-1"><label>{{ i18n.t('provider.profile.name') }}</label><input type="text" [(ngModel)]="pf.name" /></div>
+            <div class="field"><label>{{ i18n.t('provider.profile.role') }}</label><input type="text" [(ngModel)]="pf.role" /></div>
+            <div class="field"><label>{{ i18n.t('provider.profile.category') }}</label>
               <select [(ngModel)]="pf.category">
-                @for (c of cats; track c.id) { <option [value]="c.id">{{ c.icon }} {{ c.label }}</option> }
+                @for (c of cats; track c.id) { <option [value]="c.id">{{ c.icon }} {{ i18n.t('cat.' + c.id) }}</option> }
               </select>
             </div>
-            <div class="field"><label>Telefone / WhatsApp</label><input type="text" [(ngModel)]="pf.phone" /></div>
-            <div class="field"><label>Cidade</label><input type="text" [(ngModel)]="pf.city" /></div>
-            <div class="field" style="grid-column:1/-1"><label>Bio / Sobre você</label><textarea [(ngModel)]="pf.bio" style="min-height:90px"></textarea></div>
+            <div class="field"><label>{{ i18n.t('provider.profile.phone') }}</label><input type="text" [(ngModel)]="pf.phone" /></div>
+            <div class="field"><label>{{ i18n.t('provider.profile.city') }}</label><input type="text" [(ngModel)]="pf.city" /></div>
+            <div class="field" style="grid-column:1/-1"><label>{{ i18n.t('provider.profile.bio') }}</label><textarea [(ngModel)]="pf.bio" style="min-height:90px"></textarea></div>
           </div>
           @if (savePfError()) { <div style="color:var(--re);font-size:12px;margin-top:6px">{{ savePfError() }}</div> }
           <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
-            <button class="btn btn-g" (click)="resetPf()">Cancelar</button>
-            <button class="btn btn-p" (click)="saveProfile()">{{ savedPf() ? '✓ Salvo!' : 'Salvar alterações' }}</button>
+            <button class="btn btn-g" (click)="resetPf()">{{ i18n.t('common.cancel') }}</button>
+            <button class="btn btn-p" (click)="saveProfile()">{{ savedPf() ? i18n.t('provider.profile.saved') : i18n.t('provider.profile.save') }}</button>
           </div>
         </div>
       }
@@ -79,29 +80,29 @@ function buildSlots() {
       @if (tab === 'services') {
         @if (svcForm()) {
           <div class="card" style="padding:20px">
-            <div style="font-weight:800;font-size:16px;margin-bottom:16px">{{ svcForm()!.id ? 'Editar serviço' : 'Novo serviço' }}</div>
+            <div style="font-weight:800;font-size:16px;margin-bottom:16px">{{ svcForm()!.id ? i18n.t('provider.svc.edit_title') : i18n.t('provider.svc.new_title') }}</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div class="field" style="grid-column:1/-1"><label>Nome do serviço *</label><input type="text" [(ngModel)]="svcForm()!.name" placeholder="Ex: Projeto Residencial" /></div>
-              <div class="field"><label>Preço (R$) *</label><input type="number" [(ngModel)]="svcForm()!.price" placeholder="0" /></div>
-              <div class="field"><label>Duração (minutos)</label><input type="number" [(ngModel)]="svcForm()!.duration" placeholder="60" /></div>
-              <div class="field"><label>Categoria</label>
+              <div class="field" style="grid-column:1/-1"><label>{{ i18n.t('provider.svc.name') }}</label><input type="text" [(ngModel)]="svcForm()!.name" placeholder="Ex: Projeto Residencial" /></div>
+              <div class="field"><label>{{ i18n.t('provider.svc.price') }}</label><input type="number" [(ngModel)]="svcForm()!.price" placeholder="0" /></div>
+              <div class="field"><label>{{ i18n.t('provider.svc.duration') }}</label><input type="number" [(ngModel)]="svcForm()!.duration" placeholder="60" /></div>
+              <div class="field"><label>{{ i18n.t('provider.svc.category') }}</label>
                 <select [(ngModel)]="svcForm()!.category">
-                  @for (c of cats; track c.id) { <option [value]="c.id">{{ c.icon }} {{ c.label }}</option> }
+                  @for (c of cats; track c.id) { <option [value]="c.id">{{ c.icon }} {{ i18n.t('cat.' + c.id) }}</option> }
                 </select>
               </div>
-              <div class="field" style="grid-column:1/-1"><label>Descrição</label><textarea [(ngModel)]="svcForm()!.description" placeholder="Descreva o serviço..."></textarea></div>
+              <div class="field" style="grid-column:1/-1"><label>{{ i18n.t('provider.svc.desc') }}</label><textarea [(ngModel)]="svcForm()!.description" [placeholder]="i18n.t('provider.svc.desc') + '...'"></textarea></div>
             </div>
             @if (svcError()) { <div style="color:var(--re);font-size:12px;margin-top:6px">{{ svcError() }}</div> }
             <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
-              <button class="btn btn-g" (click)="svcForm.set(null);svcError.set('')">Cancelar</button>
-              <button class="btn btn-p" (click)="saveService()">Salvar serviço</button>
+              <button class="btn btn-g" (click)="svcForm.set(null);svcError.set('')">{{ i18n.t('common.cancel') }}</button>
+              <button class="btn btn-p" (click)="saveService()">{{ i18n.t('provider.svc.save') }}</button>
             </div>
           </div>
         } @else {
           <div style="display:flex;flex-direction:column;gap:10px">
             <div style="display:flex;justify-content:space-between;align-items:center">
-              <div><div style="font-weight:700;font-size:15px">Meus Serviços</div><div style="font-size:12px;color:var(--t3)">{{ services().length }} serviços cadastrados</div></div>
-              <button class="btn btn-p" (click)="svcForm.set({ name:'', price:0, duration:60, category:'reform', description:'' })">+ Novo serviço</button>
+              <div><div style="font-weight:700;font-size:15px">{{ i18n.t('provider.svc.title') }}</div><div style="font-size:12px;color:var(--t3)">{{ services().length }} {{ i18n.t('provider.svc.count') }}</div></div>
+              <button class="btn btn-p" (click)="svcForm.set({ name:'', price:0, duration:60, category:'reform', description:'' })">{{ i18n.t('provider.svc.new') }}</button>
             </div>
             @for (s of services(); track s.id) {
               <div class="card" style="padding:14px 16px;display:flex;gap:12px;align-items:center">
@@ -115,16 +116,16 @@ function buildSlots() {
                   </div>
                 </div>
                 <div style="display:flex;gap:6px">
-                  <button class="btn btn-g" style="padding:6px 12px;font-size:12px" (click)="svcForm.set({...s})">Editar</button>
-                  <button class="btn btn-danger" style="padding:6px 12px;font-size:12px" (click)="deleteService(s.id!)">Excluir</button>
+                  <button class="btn btn-g" style="padding:6px 12px;font-size:12px" (click)="svcForm.set({...s})">{{ i18n.t('common.edit') }}</button>
+                  <button class="btn btn-danger" style="padding:6px 12px;font-size:12px" (click)="deleteService(s.id!)">{{ i18n.t('common.delete') }}</button>
                 </div>
               </div>
             }
             @if (services().length === 0) {
               <div class="card" style="padding:40px;text-align:center;color:var(--t3)">
                 <div style="font-size:32px;margin-bottom:8px">🛠</div>
-                <div style="font-weight:600">Nenhum serviço cadastrado</div>
-                <div style="font-size:13px;margin-top:4px">Adicione seus serviços para aparecer no feed</div>
+                <div style="font-weight:600">{{ i18n.t('provider.svc.empty') }}</div>
+                <div style="font-size:13px;margin-top:4px">{{ i18n.t('provider.svc.empty_sub') }}</div>
               </div>
             }
           </div>
@@ -134,12 +135,12 @@ function buildSlots() {
       <!-- AGENDA TAB -->
       @if (tab === 'agenda') {
         <div class="card" style="padding:20px;overflow-x:auto">
-          <div style="font-weight:700;font-size:15px;margin-bottom:4px">Disponibilidade semanal</div>
-          <div style="font-size:12px;color:var(--t3);margin-bottom:16px">Clique nos horários para ativar/desativar sua disponibilidade</div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:4px">{{ i18n.t('provider.agenda.title') }}</div>
+          <div style="font-size:12px;color:var(--t3);margin-bottom:16px">{{ i18n.t('provider.agenda.sub') }}</div>
           <div style="display:grid;gap:3px;min-width:500px" [style.grid-template-columns]="'60px repeat(' + weekDays.length + ',1fr)'">
             <div></div>
             @for (d of weekDays; track d) {
-              <div style="text-align:center;font-weight:700;font-size:11px;color:var(--t2);padding:4px 0;background:var(--bg2);border-radius:6px">{{ d }}</div>
+              <div style="text-align:center;font-weight:700;font-size:11px;color:var(--t2);padding:4px 0;background:var(--bg2);border-radius:6px">{{ i18n.t('day.' + d) }}</div>
             }
             @for (h of hours; track h) {
               <div style="font-size:10px;color:var(--t3);padding-right:4px;display:flex;align-items:center;justify-content:flex-end">{{ h }}</div>
@@ -156,8 +157,8 @@ function buildSlots() {
             }
           </div>
           <div style="margin-top:14px;display:flex;gap:12px;font-size:12px;color:var(--t2)">
-            <div style="display:flex;gap:5px;align-items:center"><div style="width:14px;height:14px;border-radius:4px;background:var(--p)"></div> Disponível</div>
-            <div style="display:flex;gap:5px;align-items:center"><div style="width:14px;height:14px;border-radius:4px;background:var(--bg2);border:1px solid var(--bo)"></div> Indisponível</div>
+            <div style="display:flex;gap:5px;align-items:center"><div style="width:14px;height:14px;border-radius:4px;background:var(--p)"></div> {{ i18n.t('provider.agenda.available') }}</div>
+            <div style="display:flex;gap:5px;align-items:center"><div style="width:14px;height:14px;border-radius:4px;background:var(--bg2);border:1px solid var(--bo)"></div> {{ i18n.t('provider.agenda.unavailable') }}</div>
           </div>
         </div>
       }
@@ -166,21 +167,21 @@ function buildSlots() {
       @if (tab === 'promos') {
         @if (promoForm()) {
           <div class="card" style="padding:20px">
-            <div style="font-weight:800;font-size:16px;margin-bottom:16px">{{ promoForm()!.id ? 'Editar promoção' : 'Nova promoção' }}</div>
+            <div style="font-weight:800;font-size:16px;margin-bottom:16px">{{ promoForm()!.id ? i18n.t('provider.promo.edit_title') : i18n.t('provider.promo.new_title') }}</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div class="field" style="grid-column:1/-1"><label>Título da promoção *</label><input type="text" [(ngModel)]="promoForm()!.title" placeholder="Ex: Promoção de Verão" /></div>
-              <div class="field" style="grid-column:1/-1"><label>Serviço *</label>
+              <div class="field" style="grid-column:1/-1"><label>{{ i18n.t('provider.promo.label') }}</label><input type="text" [(ngModel)]="promoForm()!.title" /></div>
+              <div class="field" style="grid-column:1/-1"><label>{{ i18n.t('provider.promo.service') }}</label>
                 <select [(ngModel)]="promoForm()!.serviceId">
-                  <option value="">Selecione um serviço</option>
+                  <option value="">{{ i18n.t('provider.promo.select_svc') }}</option>
                   @for (s of services(); track s.id) { <option [value]="s.id">{{ s.name }} — R$ {{ s.price }}</option> }
                 </select>
               </div>
-              <div class="field"><label>Desconto (%) *</label><input type="number" min="1" max="99" [(ngModel)]="promoForm()!.discountPct" placeholder="Ex: 20" /></div>
-              <div class="field"><label>Validade até</label><input type="date" [(ngModel)]="promoForm()!.endsAt" /></div>
-              <div class="field" style="grid-column:1/-1"><label>Descrição</label><textarea [(ngModel)]="promoForm()!.description" placeholder="Descreva sua promoção..."></textarea></div>
+              <div class="field"><label>{{ i18n.t('provider.promo.discount') }}</label><input type="number" min="1" max="99" [(ngModel)]="promoForm()!.discountPct" /></div>
+              <div class="field"><label>{{ i18n.t('provider.promo.valid') }}</label><input type="date" [(ngModel)]="promoForm()!.endsAt" /></div>
+              <div class="field" style="grid-column:1/-1"><label>{{ i18n.t('provider.promo.desc') }}</label><textarea [(ngModel)]="promoForm()!.description"></textarea></div>
               @if (promoForm()!.serviceId && promoForm()!.discountPct) {
                 <div style="grid-column:1/-1;background:var(--px);border-radius:var(--rs);padding:10px 14px">
-                  <div style="font-size:12px;color:var(--t2)">Preview do preço:</div>
+                  <div style="font-size:12px;color:var(--t2)">{{ i18n.t('provider.promo.preview') }}</div>
                   @if (promoPreview()) {
                     <div style="display:flex;gap:10px;align-items:center;margin-top:4px">
                       <span style="font-size:13px;text-decoration:line-through;color:var(--t3)">R$ {{ promoPreview()!.original }}</span>
@@ -193,15 +194,15 @@ function buildSlots() {
             </div>
             @if (promoError()) { <div style="color:var(--re);font-size:12px;margin-top:6px">{{ promoError() }}</div> }
             <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
-              <button class="btn btn-g" (click)="promoForm.set(null);promoError.set('')">Cancelar</button>
-              <button class="btn btn-p" (click)="savePromo()">Publicar promoção</button>
+              <button class="btn btn-g" (click)="promoForm.set(null);promoError.set('')">{{ i18n.t('common.cancel') }}</button>
+              <button class="btn btn-p" (click)="savePromo()">{{ i18n.t('provider.promo.publish') }}</button>
             </div>
           </div>
         } @else {
           <div style="display:flex;flex-direction:column;gap:10px">
             <div style="display:flex;justify-content:space-between;align-items:center">
-              <div><div style="font-weight:700;font-size:15px">Minhas Promoções</div><div style="font-size:12px;color:var(--t3)">{{ promos().filter(p => p.active).length }} ativas</div></div>
-              <button class="btn btn-p" (click)="promoForm.set({ title:'', serviceId:'', discountPct:0, description:'', active:true })">+ Nova promoção</button>
+              <div><div style="font-weight:700;font-size:15px">{{ i18n.t('provider.promo.title') }}</div><div style="font-size:12px;color:var(--t3)">{{ promos().filter(p => p.active).length }} {{ i18n.t('provider.promo.active') }}</div></div>
+              <button class="btn btn-p" (click)="promoForm.set({ title:'', serviceId:'', discountPct:0, description:'', active:true })">{{ i18n.t('provider.promo.new') }}</button>
             </div>
             @for (p of promos(); track p.id) {
               <div class="card" style="padding:14px 16px;display:flex;gap:12px;align-items:center;transition:var(--tr)"
@@ -210,13 +211,13 @@ function buildSlots() {
                 <div style="flex:1">
                   <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
                     <span style="font-weight:700;font-size:14px">{{ p.title }}</span>
-                    <span class="badge" [class]="p.active ? 'badge-promo' : 'badge-g'">{{ p.active ? '-' + p.discountPct + '% ATIVA' : 'INATIVA' }}</span>
+                    <span class="badge" [class]="p.active ? 'badge-promo' : 'badge-g'">{{ p.active ? '-' + p.discountPct + '% ON' : 'OFF' }}</span>
                   </div>
-                  @if (p.endsAt) { <div style="font-size:11px;color:var(--t3)">Válido até {{ p.endsAt }}</div> }
+                  @if (p.endsAt) { <div style="font-size:11px;color:var(--t3)">{{ i18n.t('provider.promo.valid') }} {{ p.endsAt }}</div> }
                 </div>
                 <div style="display:flex;gap:6px">
-                  <button class="btn btn-g" style="padding:6px 12px;font-size:12px" (click)="togglePromo(p)">{{ p.active ? 'Pausar' : 'Ativar' }}</button>
-                  <button class="btn btn-g" style="padding:6px 12px;font-size:12px" (click)="promoForm.set({...p})">Editar</button>
+                  <button class="btn btn-g" style="padding:6px 12px;font-size:12px" (click)="togglePromo(p)">{{ p.active ? i18n.t('provider.promo.pause') : i18n.t('provider.promo.activate') }}</button>
+                  <button class="btn btn-g" style="padding:6px 12px;font-size:12px" (click)="promoForm.set({...p})">{{ i18n.t('common.edit') }}</button>
                   <button class="btn btn-danger" style="padding:6px 12px;font-size:12px" (click)="deletePromo(p.id!)">×</button>
                 </div>
               </div>
@@ -224,8 +225,8 @@ function buildSlots() {
             @if (promos().length === 0) {
               <div class="card" style="padding:40px;text-align:center;color:var(--t3)">
                 <div style="font-size:32px;margin-bottom:8px">🏷</div>
-                <div style="font-weight:600">Nenhuma promoção ainda</div>
-                <div style="font-size:13px;margin-top:4px">Crie promoções para atrair mais clientes</div>
+                <div style="font-weight:600">{{ i18n.t('provider.promo.empty') }}</div>
+                <div style="font-size:13px;margin-top:4px">{{ i18n.t('provider.promo.empty_sub') }}</div>
               </div>
             }
           </div>
@@ -237,34 +238,34 @@ function buildSlots() {
         <div class="card" style="padding:16px;margin-bottom:6px">
           <div style="display:flex;gap:10px;margin-bottom:12px">
             <app-avatar [initials]="initials" [color]="color" [size]="38" />
-            <textarea [(ngModel)]="postText" [placeholder]="'O que você quer compartilhar, ' + firstName + '?'"
+            <textarea [(ngModel)]="postText" [placeholder]="i18n.t('provider.post.placeholder', { name: firstName })"
                       (input)="showPostForm = !!postText.trim()"
                       style="flex:1;border:1.5px solid var(--bo);border-radius:10px;padding:9px 12px;font-size:14px;background:var(--bg);outline:none;resize:none;min-height:72px;transition:var(--tr);color:var(--t)"
                       (focus)="$any($event.target).style.borderColor='var(--p)'" (blur)="$any($event.target).style.borderColor='var(--bo)'"></textarea>
           </div>
           @if (showPostForm) {
             <div style="display:flex;gap:10px;margin-bottom:10px">
-              <div class="field" style="flex:1;margin-bottom:0"><label>Legenda da imagem (opcional)</label><input type="text" [(ngModel)]="postImgLabel" placeholder="Ex: Projeto finalizado em SP" /></div>
-              <div class="field" style="width:140px;margin-bottom:0"><label>Categoria</label>
+              <div class="field" style="flex:1;margin-bottom:0"><label>{{ i18n.t('provider.post.caption') }}</label><input type="text" [(ngModel)]="postImgLabel" /></div>
+              <div class="field" style="width:140px;margin-bottom:0"><label>{{ i18n.t('provider.post.category') }}</label>
                 <select [(ngModel)]="postCat">
-                  @for (c of cats; track c.id) { <option [value]="c.id">{{ c.icon }} {{ c.label }}</option> }
+                  @for (c of cats; track c.id) { <option [value]="c.id">{{ c.icon }} {{ i18n.t('cat.' + c.id) }}</option> }
                 </select>
               </div>
             </div>
           }
           @if (postError()) { <div style="color:var(--re);font-size:12px;margin-bottom:6px">{{ postError() }}</div> }
           <div style="display:flex;gap:8px;justify-content:flex-end">
-            @if (showPostForm) { <button class="btn btn-g" (click)="clearPost()">Cancelar</button> }
-            <button class="btn btn-p" (click)="publishPost()" [style.opacity]="postText.trim() ? '1' : '0.5'">Publicar</button>
+            @if (showPostForm) { <button class="btn btn-g" (click)="clearPost()">{{ i18n.t('common.cancel') }}</button> }
+            <button class="btn btn-p" (click)="publishPost()" [style.opacity]="postText.trim() ? '1' : '0.5'">{{ i18n.t('provider.post.publish') }}</button>
           </div>
         </div>
-        <div style="font-weight:700;font-size:15px;margin-bottom:10px">Minhas postagens ({{ myPosts().length }})</div>
+        <div style="font-weight:700;font-size:15px;margin-bottom:10px">{{ i18n.t('provider.post.my') }} ({{ myPosts().length }})</div>
         @for (p of myPosts(); track p.id) {
           <div class="card" style="padding:14px 16px;margin-bottom:8px">
             <p style="font-size:13px;line-height:1.6;color:var(--t);margin-bottom:10px">{{ p.text }}</p>
             <div style="display:flex;gap:10px">
-              <span style="font-size:12px;color:var(--t3)">❤️ {{ p.likesCount }} curtidas</span>
-              <span style="font-size:12px;color:var(--t3)">💬 {{ p.comments?.length || 0 }} comentários</span>
+              <span style="font-size:12px;color:var(--t3)">❤️ {{ p.likesCount }} {{ i18n.t('provider.post.likes') }}</span>
+              <span style="font-size:12px;color:var(--t3)">💬 {{ p.comments?.length || 0 }} {{ i18n.t('provider.post.comments') }}</span>
               <span style="font-size:12px;color:var(--t3)">{{ p.createdAt }}</span>
             </div>
           </div>
@@ -272,7 +273,7 @@ function buildSlots() {
         @if (myPosts().length === 0) {
           <div class="card" style="padding:40px;text-align:center;color:var(--t3)">
             <div style="font-size:32px;margin-bottom:8px">📝</div>
-            <div style="font-weight:600">Nenhuma postagem ainda</div>
+            <div style="font-weight:600">{{ i18n.t('provider.post.empty') }}</div>
           </div>
         }
       }
@@ -283,13 +284,14 @@ export class ProviderComponent implements OnInit {
   api = inject(ApiService);
   auth = inject(AuthService);
   router = inject(Router);
+  i18n = inject(TranslationService);
 
   tabs = [
-    { id: 'profile', label: 'Perfil', icon: '👤' },
-    { id: 'services', label: 'Serviços', icon: '🛠' },
-    { id: 'agenda', label: 'Agenda', icon: '📅' },
-    { id: 'promos', label: 'Promoções', icon: '🏷' },
-    { id: 'posts', label: 'Postagens', icon: '📝' },
+    { id: 'profile',   key: 'provider.tab.profile',   icon: '👤' },
+    { id: 'services',  key: 'provider.tab.services',  icon: '🛠' },
+    { id: 'agenda',    key: 'provider.tab.agenda',    icon: '📅' },
+    { id: 'promos',    key: 'provider.tab.promos',    icon: '🏷' },
+    { id: 'posts',     key: 'provider.tab.posts',     icon: '📝' },
   ];
   cats = CATEGORIES.filter(c => c.id !== 'all');
   tab = 'profile';

@@ -5,6 +5,7 @@ import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
 import { getInitialsColor } from '../../shared/models';
+import { TranslationService } from '../../i18n/translation.service';
 
 interface Conversation {
   otherId: string;
@@ -28,20 +29,20 @@ interface ThreadMsg {
   imports: [CommonModule, FormsModule, AvatarComponent],
   template: `
     <div style="display:flex;flex-direction:column;gap:10px">
-      <div style="font-weight:800;font-size:20px">Mensagens</div>
+      <div style="font-weight:800;font-size:20px">{{ i18n.t('messages.title') }}</div>
 
       @if (loading()) {
         <div style="text-align:center;padding:40px;color:var(--t3)">
           <div style="font-size:24px;margin-bottom:8px">⏳</div>
-          <div style="font-size:13px">Carregando conversas...</div>
+          <div style="font-size:13px">{{ i18n.t('messages.loading') }}</div>
         </div>
       }
 
       @if (!loading() && convs().length === 0) {
         <div class="card" style="padding:48px;text-align:center;color:var(--t3)">
           <div style="font-size:40px;margin-bottom:12px">💬</div>
-          <div style="font-weight:600;font-size:16px">Nenhuma conversa ainda</div>
-          <div style="font-size:13px;margin-top:6px">Suas mensagens com prestadores aparecerão aqui</div>
+          <div style="font-weight:600;font-size:16px">{{ i18n.t('messages.empty.title') }}</div>
+          <div style="font-size:13px;margin-top:6px">{{ i18n.t('messages.empty.sub') }}</div>
         </div>
       }
 
@@ -84,10 +85,10 @@ interface ThreadMsg {
           </div>
           <div style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px">
             @if (threadLoading()) {
-              <div style="text-align:center;color:var(--t3);font-size:13px;padding:20px">Carregando...</div>
+              <div style="text-align:center;color:var(--t3);font-size:13px;padding:20px">{{ i18n.t('messages.loading.thread') }}</div>
             }
             @if (!threadLoading() && threadMessages().length === 0) {
-              <div style="text-align:center;color:var(--t3);font-size:13px;padding:20px">Início da conversa</div>
+              <div style="text-align:center;color:var(--t3);font-size:13px;padding:20px">{{ i18n.t('messages.start') }}</div>
             }
             @for (m of threadMessages(); track m.id) {
               <div [style.align-self]="m.mine ? 'flex-end' : 'flex-start'" style="max-width:75%">
@@ -98,7 +99,7 @@ interface ThreadMsg {
             }
           </div>
           <div style="padding:12px 14px;border-top:1px solid var(--bo);display:flex;gap:8px">
-            <input [(ngModel)]="newMsg" placeholder="Digite uma mensagem..."
+            <input [(ngModel)]="newMsg" [placeholder]="i18n.t('messages.placeholder')"
                    (keydown.enter)="send()"
                    style="flex:1;padding:9px 14px;border-radius:99px;border:1.5px solid var(--bo);font-size:13px;background:var(--bg);outline:none;color:var(--t)" />
             <button class="btn btn-p" style="padding:9px 16px" (click)="send()">→</button>
@@ -111,6 +112,7 @@ interface ThreadMsg {
 export class MessagesComponent implements OnInit {
   api = inject(ApiService);
   auth = inject(AuthService);
+  i18n = inject(TranslationService);
 
   convs = signal<Conversation[]>([]);
   loading = signal(true);

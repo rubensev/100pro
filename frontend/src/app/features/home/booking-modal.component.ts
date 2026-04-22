@@ -4,6 +4,7 @@ import { AvatarComponent } from '../../shared/components/avatar.component';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Service, Promo } from '../../shared/models';
+import { TranslationService } from '../../i18n/translation.service';
 
 @Component({
   selector: 'app-booking-modal',
@@ -28,7 +29,7 @@ import { Service, Promo } from '../../shared/models';
             <div style="flex:1;text-align:center">
               <div style="height:3px;border-radius:99px;margin-bottom:4px;transition:var(--tr)"
                    [style.background]="i <= step() ? 'var(--p)' : 'var(--bo)'"></div>
-              <span style="font-size:10px;font-weight:600" [style.color]="i <= step() ? 'var(--p)' : 'var(--t3)'">{{ s }}</span>
+              <span style="font-size:10px;font-weight:600" [style.color]="i <= step() ? 'var(--p)' : 'var(--t3)'">{{ i18n.t(s) }}</span>
             </div>
           }
         </div>
@@ -36,7 +37,7 @@ import { Service, Promo } from '../../shared/models';
         <div style="padding:14px 20px 20px;min-height:260px">
           <!-- Step 0: Pick service -->
           @if (step() === 0) {
-            <p style="font-size:12px;color:var(--t2);margin-bottom:10px">Escolha o serviço:</p>
+            <p style="font-size:12px;color:var(--t2);margin-bottom:10px">{{ i18n.t('booking.pick.service') }}</p>
             <div style="display:flex;flex-direction:column;gap:8px">
               @for (svc of services; track svc.id) {
                 <div (click)="pickService(svc)"
@@ -45,7 +46,7 @@ import { Service, Promo } from '../../shared/models';
                      style="padding:11px 14px;border-radius:var(--rs);cursor:pointer;transition:var(--tr);display:flex;align-items:center;gap:10px">
                   <div style="flex:1">
                     <div style="font-weight:700;font-size:13px">{{ svc.name }}</div>
-                    <div style="font-size:11px;color:var(--t3);margin-top:1px">{{ svc.duration }} min</div>
+                    <div style="font-size:11px;color:var(--t3);margin-top:1px">{{ svc.duration }} {{ i18n.t('booking.min') }}</div>
                   </div>
                   <div style="text-align:right">
                     <div style="font-weight:700;font-size:14px;color:var(--p)">R$ {{ svc.price }}</div>
@@ -57,7 +58,7 @@ import { Service, Promo } from '../../shared/models';
 
           <!-- Step 1: Pick date/time -->
           @if (step() === 1) {
-            <p style="font-size:12px;color:var(--t2);margin-bottom:10px">Escolha o dia:</p>
+            <p style="font-size:12px;color:var(--t2);margin-bottom:10px">{{ i18n.t('booking.pick.day') }}</p>
             <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px">
               @for (d of days; track d.full) {
                 <button (click)="selDay.set(d)"
@@ -70,7 +71,7 @@ import { Service, Promo } from '../../shared/models';
               }
             </div>
             @if (selDay()?.full) {
-              <p style="font-size:12px;color:var(--t2);margin-bottom:8px">Escolha o horário:</p>
+              <p style="font-size:12px;color:var(--t2);margin-bottom:8px">{{ i18n.t('booking.pick.time') }}</p>
               <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
                 @for (t of times; track t) {
                   <button (click)="pickTime(t)"
@@ -89,17 +90,17 @@ import { Service, Promo } from '../../shared/models';
           @if (step() === 2) {
             <div style="text-align:center;padding:10px 0">
               <div style="font-size:40px;margin-bottom:12px">🎉</div>
-              <div style="font-weight:800;font-size:18px;margin-bottom:4px">Agendamento confirmado!</div>
+              <div style="font-weight:800;font-size:18px;margin-bottom:4px">{{ i18n.t('booking.confirmed') }}</div>
               <div style="font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:16px">
                 <strong>{{ selSvc()?.name }}</strong><br>
-                com <strong>{{ providerName }}</strong><br>
-                dia <strong>{{ selDay()?.day }} de {{ selDay()?.month }}</strong> às <strong>{{ selTime() }}</strong>
+                {{ i18n.t('booking.with') }} <strong>{{ providerName }}</strong><br>
+                {{ i18n.t('booking.on') }} <strong>{{ selDay()?.day }} {{ selDay()?.month }}</strong> {{ i18n.t('booking.at') }} <strong>{{ selTime() }}</strong>
               </div>
               <div style="background:var(--px);border-radius:var(--rs);padding:10px 16px;display:inline-flex;gap:8px;align-items:center">
                 <span style="font-size:13px;font-weight:700;color:var(--p)">R$ {{ selSvc()?.price }}</span>
               </div>
               <div style="margin-top:16px">
-                <button class="btn btn-p" style="width:100%" (click)="close.emit()">Ir para Agendamentos</button>
+                <button class="btn btn-p" style="width:100%" (click)="close.emit()">{{ i18n.t('booking.go') }}</button>
               </div>
             </div>
           }
@@ -107,7 +108,7 @@ import { Service, Promo } from '../../shared/models';
 
         @if (step() > 0 && step() < 2) {
           <div style="padding:0 20px 16px;display:flex;gap:8px">
-            <button class="btn btn-g" (click)="step.set(step() - 1)">← Voltar</button>
+            <button class="btn btn-g" (click)="step.set(step() - 1)">{{ i18n.t('booking.back') }}</button>
           </div>
         }
       </div>
@@ -124,13 +125,14 @@ export class BookingModalComponent {
 
   api = inject(ApiService);
   auth = inject(AuthService);
+  i18n = inject(TranslationService);
 
   step = signal(0);
   selSvc = signal<Service | null>(null);
   selDay = signal<{ day: number; month: string; full: string } | null>(null);
   selTime = signal<string | null>(null);
 
-  steps = ['Serviço', 'Horário', 'Confirmar'];
+  steps = ['booking.step.service', 'booking.step.time', 'booking.step.confirm'];
   days = Array.from({ length: 14 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() + i);
     return { day: d.getDate(), month: d.toLocaleString('pt-BR', { month: 'short' }).toUpperCase(), full: d.toISOString().split('T')[0] };
