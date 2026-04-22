@@ -70,6 +70,39 @@ function buildSlots() {
 
       <!-- PROFILE TAB -->
       @if (tab === 'profile') {
+        <!-- Cover photo card -->
+        <div class="card" style="overflow:hidden">
+          <!-- Cover banner -->
+          <div style="height:130px;position:relative;overflow:hidden"
+               [style.background]="profile().coverUrl ? 'var(--bg2)' : 'linear-gradient(135deg,' + color + '66,' + color + '22)'">
+            @if (profile().coverUrl) {
+              <img [src]="API_BASE + profile().coverUrl" style="width:100%;height:100%;object-fit:cover;display:block" />
+            }
+            @if (coverUploading()) {
+              <div style="position:absolute;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center">
+                <span style="color:white;font-size:13px;font-weight:600">{{ i18n.t('provider.cover.uploading') }}…</span>
+              </div>
+            }
+            <!-- Upload overlay button -->
+            <label style="position:absolute;bottom:10px;right:10px;display:flex;align-items:center;gap:6px;
+                          background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);color:white;
+                          padding:6px 14px;border-radius:99px;font-size:12px;font-weight:600;
+                          cursor:pointer;transition:var(--tr)"
+                   (mouseenter)="$any($event.currentTarget).style.background='rgba(0,0,0,0.7)'"
+                   (mouseleave)="$any($event.currentTarget).style.background='rgba(0,0,0,0.5)'">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              {{ profile().coverUrl ? i18n.t('provider.cover.change') : i18n.t('provider.cover.upload') }}
+              <input type="file" accept="image/*" style="display:none" (change)="onCoverChange($event)" />
+            </label>
+          </div>
+          @if (coverError()) {
+            <div style="padding:8px 16px;font-size:12px;color:var(--re)">{{ coverError() }}</div>
+          }
+          <div style="padding:10px 16px;font-size:12px;color:var(--t3)">{{ i18n.t('provider.cover.hint') }}</div>
+        </div>
+
         <div class="card" style="padding:20px">
           <div style="font-weight:800;font-size:16px;margin-bottom:16px">{{ i18n.t('provider.profile.edit') }}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -387,6 +420,9 @@ export class ProviderComponent implements OnInit {
 
   slots = signal<Record<string, Record<string, boolean>>>(buildSlots());
 
+  coverUploading = signal(false);
+  coverError = signal('');
+
   myPosts = signal<any[]>([]);
   postText = '';
   postImgLabel = '';
@@ -489,6 +525,23 @@ export class ProviderComponent implements OnInit {
     this.api.deletePromo(id).subscribe({
       next: () => this.promos.update(ps => ps.filter(p => p.id !== id)),
       error: () => {},
+    });
+  }
+
+  onCoverChange(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.coverError.set('');
+    this.coverUploading.set(true);
+    this.api.uploadProviderCover(file).subscribe({
+      next: ({ coverUrl }) => {
+        this.profile.update(p => ({ ...p, coverUrl }));
+        this.coverUploading.set(false);
+      },
+      error: () => {
+        this.coverError.set(this.i18n.t('provider.cover.error'));
+        this.coverUploading.set(false);
+      },
     });
   }
 

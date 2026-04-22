@@ -83,6 +83,13 @@ export const T: Record<string, Record<Lang, string>> = {
   'provider.tab.promos':   { en: 'Promotions',  pt: 'Promoções',    fr: 'Promotions' },
   'provider.tab.posts':    { en: 'Posts',       pt: 'Postagens',    fr: 'Publications' },
   'provider.view.public':  { en: 'View public page', pt: 'Ver página pública', fr: 'Voir la page publique' },
+  // cover photo
+  'provider.cover.upload':    { en: 'Upload cover',      pt: 'Enviar capa',         fr: 'Ajouter une couverture' },
+  'provider.cover.change':    { en: 'Change cover',      pt: 'Alterar capa',        fr: 'Changer la couverture' },
+  'provider.cover.uploading': { en: 'Uploading',         pt: 'Enviando',            fr: 'Envoi en cours' },
+  'provider.cover.hint':      { en: 'Recommended: 1200×400px, max 10MB (JPG/PNG/WebP)', pt: 'Recomendado: 1200×400px, máx 10MB (JPG/PNG/WebP)', fr: 'Recommandé : 1200×400px, max 10Mo (JPG/PNG/WebP)' },
+  'provider.cover.error':     { en: 'Failed to upload cover. Try again.', pt: 'Falha ao enviar capa. Tente novamente.', fr: 'Échec du téléchargement. Réessayez.' },
+
   // profile tab
   'provider.profile.edit':     { en: 'Edit profile',   pt: 'Editar perfil',     fr: 'Modifier le profil' },
   'provider.profile.name':     { en: 'Full name',       pt: 'Nome completo',     fr: 'Nom complet' },
