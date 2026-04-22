@@ -7,7 +7,7 @@ import { TranslationService } from '../../i18n/translation.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
 import { StarsComponent } from '../../shared/components/stars.component';
 import { BookingModalComponent } from '../home/booking-modal.component';
-import { ProviderProfile, getInitialsColor, Service } from '../../shared/models';
+import { ProviderProfile, getInitialsColor, Service, Store } from '../../shared/models';
 
 const API_BASE = 'http://localhost:3000';
 
@@ -146,6 +146,29 @@ const API_BASE = 'http://localhost:3000';
         </div>
       }
 
+      <!-- Stores -->
+      @if (stores().length) {
+        <div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:10px">🏪 {{ i18n.t('pubprofile.stores') }}</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            @for (store of stores(); track store.id) {
+              <div class="card" style="overflow:hidden">
+                @if (store.coverUrl) {
+                  <img [src]="API_BASE + store.coverUrl" style="width:100%;height:120px;object-fit:cover;display:block" />
+                } @else {
+                  <div style="height:70px;background:linear-gradient(135deg,var(--p)33,var(--ac)22)"></div>
+                }
+                <div style="padding:12px 16px">
+                  <div style="font-weight:700;font-size:15px">{{ store.name }}</div>
+                  @if (store.description) { <div style="font-size:13px;color:var(--t2);margin-top:4px;line-height:1.5">{{ store.description }}</div> }
+                  @if (store.category) { <span class="badge badge-g" style="margin-top:8px;display:inline-block">{{ store.category }}</span> }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
       <!-- Active promos -->
       @if (activePromos(p).length) {
         <div>
@@ -220,13 +243,18 @@ export class PublicProfileComponent implements OnInit {
 
   API_BASE = API_BASE;
   profile = signal<ProviderProfile | null>(null);
+  stores = signal<Store[]>([]);
   loading = signal(true);
   bookingTarget = signal<{ name: string; role: string; initials: string; id: string; services: Service[] } | null>(null);
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;
     this.api.getPublicProfile(id).subscribe({
-      next: p => { this.profile.set(p); this.loading.set(false); },
+      next: p => {
+        this.profile.set(p);
+        this.loading.set(false);
+        this.api.getStoresByProvider(p.id).subscribe({ next: s => this.stores.set(s), error: () => {} });
+      },
       error: () => this.loading.set(false),
     });
   }

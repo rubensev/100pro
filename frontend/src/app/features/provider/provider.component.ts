@@ -6,7 +6,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
-import { CATEGORIES, Service, Promo, ProviderProfile, getInitialsColor } from '../../shared/models';
+import { CATEGORIES, Service, Promo, Store, ProviderProfile, getInitialsColor } from '../../shared/models';
 import { TranslationService } from '../../i18n/translation.service';
 
 const API_BASE = 'http://localhost:3000';
@@ -188,6 +188,99 @@ function buildSlots() {
                 <div style="font-size:32px;margin-bottom:8px">🛠</div>
                 <div style="font-weight:600">{{ i18n.t('provider.svc.empty') }}</div>
                 <div style="font-size:13px;margin-top:4px">{{ i18n.t('provider.svc.empty_sub') }}</div>
+              </div>
+            }
+          </div>
+        }
+      }
+
+      <!-- STORES TAB -->
+      @if (tab === 'stores') {
+        @if (storeForm()) {
+          <div class="card" style="padding:20px">
+            <div style="font-weight:800;font-size:16px;margin-bottom:16px">{{ storeForm()!.id ? i18n.t('provider.store.edit_title') : i18n.t('provider.store.new_title') }}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="field" style="grid-column:1/-1"><label>{{ i18n.t('provider.store.name') }}</label><input type="text" [(ngModel)]="storeForm()!.name" [placeholder]="i18n.t('provider.store.name_ph')" /></div>
+              <div class="field" style="grid-column:1/-1"><label>{{ i18n.t('provider.store.desc') }}</label><textarea [(ngModel)]="storeForm()!.description" style="min-height:72px"></textarea></div>
+              <div class="field"><label>{{ i18n.t('provider.store.category') }}</label>
+                <select [(ngModel)]="storeForm()!.category">
+                  @for (c of cats; track c.id) { <option [value]="c.id">{{ c.icon }} {{ i18n.t('cat.' + c.id) }}</option> }
+                </select>
+              </div>
+              <div class="field" style="display:flex;align-items:center;gap:10px;padding-top:22px">
+                <input type="checkbox" [(ngModel)]="storeForm()!.active" style="width:16px;height:16px" />
+                <label style="margin-bottom:0;font-size:13px">{{ i18n.t('provider.store.active') }}</label>
+              </div>
+            </div>
+            @if (storeError()) { <div style="color:var(--re);font-size:12px;margin-top:6px">{{ storeError() }}</div> }
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+              <button class="btn btn-g" (click)="storeForm.set(null);storeError.set('')">{{ i18n.t('common.cancel') }}</button>
+              <button class="btn btn-p" (click)="saveStore()">{{ i18n.t('provider.store.save') }}</button>
+            </div>
+          </div>
+        } @else {
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <!-- Plan info banner -->
+            <div style="background:linear-gradient(135deg,var(--px),var(--ax));border:1.5px solid var(--p);
+                border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:12px">
+              <div style="font-size:28px">🏪</div>
+              <div style="flex:1">
+                <div style="font-weight:700;font-size:13px;color:var(--t)">{{ i18n.t('provider.store.plan_info') }}</div>
+                <div style="font-size:12px;color:var(--t2);margin-top:2px">{{ storePlanLabel() }}</div>
+              </div>
+              @if ((auth.user()?.plan || 'free') === 'free') {
+                <a routerLink="/pricing" class="btn btn-p" style="font-size:12px;white-space:nowrap;text-decoration:none">{{ i18n.t('pricing.upgrade.cta') }}</a>
+              }
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><div style="font-weight:700;font-size:15px">{{ i18n.t('provider.store.title') }}</div><div style="font-size:12px;color:var(--t3)">{{ stores().length }} {{ i18n.t('provider.store.count') }}</div></div>
+              @if ((auth.user()?.plan || 'free') !== 'free') {
+                <button class="btn btn-p" (click)="storeForm.set({ name:'', description:'', category:'reform', active:true })">{{ i18n.t('provider.store.new') }}</button>
+              }
+            </div>
+
+            @for (s of stores(); track s.id) {
+              <div class="card" style="overflow:hidden;border:1.5px solid var(--bo)">
+                <!-- Store cover -->
+                <div style="height:110px;position:relative;overflow:hidden"
+                     [style.background]="s.coverUrl ? 'var(--bg2)' : 'linear-gradient(135deg,' + color + '44,' + color + '11)'">
+                  @if (s.coverUrl) {
+                    <img [src]="API_BASE + s.coverUrl" style="width:100%;height:100%;object-fit:cover;display:block" />
+                  }
+                  @if (storeCoverUploading() === s.id) {
+                    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center">
+                      <span style="color:white;font-size:12px;font-weight:600">{{ i18n.t('provider.cover.uploading') }}…</span>
+                    </div>
+                  }
+                  <label style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);
+                         color:white;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer">
+                    {{ i18n.t('provider.cover.change') }}
+                    <input type="file" accept="image/*" style="display:none" (change)="onStoreCoverChange($event, s.id)" />
+                  </label>
+                  @if (!s.active) {
+                    <div style="position:absolute;top:8px;left:8px;background:var(--t3);color:white;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600">{{ i18n.t('provider.store.inactive') }}</div>
+                  }
+                </div>
+                <div style="padding:12px 16px;display:flex;gap:12px;align-items:flex-start">
+                  <div style="flex:1">
+                    <div style="font-weight:700;font-size:15px">{{ s.name }}</div>
+                    @if (s.description) { <div style="font-size:12px;color:var(--t2);margin-top:3px;line-height:1.5">{{ s.description }}</div> }
+                    @if (s.category) { <span class="badge badge-g" style="margin-top:6px;display:inline-block">{{ catIcon(s.category) }} {{ catName(s.category) }}</span> }
+                  </div>
+                  <div style="display:flex;gap:6px;flex-shrink:0">
+                    <button class="btn btn-g" style="padding:6px 12px;font-size:12px" (click)="storeForm.set({...s})">{{ i18n.t('common.edit') }}</button>
+                    <button class="btn btn-danger" style="padding:6px 12px;font-size:12px" (click)="deleteStore(s.id)">{{ i18n.t('common.delete') }}</button>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (stores().length === 0) {
+              <div class="card" style="padding:40px;text-align:center;color:var(--t3)">
+                <div style="font-size:36px;margin-bottom:10px">🏪</div>
+                <div style="font-weight:600;font-size:15px">{{ i18n.t('provider.store.empty') }}</div>
+                <div style="font-size:13px;margin-top:6px">{{ i18n.t('provider.store.empty_sub') }}</div>
               </div>
             }
           </div>
@@ -396,6 +489,7 @@ export class ProviderComponent implements OnInit {
   tabs = [
     { id: 'profile',   key: 'provider.tab.profile',   icon: '👤' },
     { id: 'services',  key: 'provider.tab.services',  icon: '🛠' },
+    { id: 'stores',    key: 'provider.tab.stores',    icon: '🏪' },
     { id: 'agenda',    key: 'provider.tab.agenda',    icon: '📅' },
     { id: 'promos',    key: 'provider.tab.promos',    icon: '🏷' },
     { id: 'posts',     key: 'provider.tab.posts',     icon: '📝' },
@@ -423,6 +517,11 @@ export class ProviderComponent implements OnInit {
   coverUploading = signal(false);
   coverError = signal('');
 
+  stores = signal<Store[]>([]);
+  storeForm = signal<Partial<Store> | null>(null);
+  storeError = signal('');
+  storeCoverUploading = signal<string | null>(null);
+
   myPosts = signal<any[]>([]);
   postText = '';
   postImgLabel = '';
@@ -443,6 +542,13 @@ export class ProviderComponent implements OnInit {
   catIcon(id?: string) { return CATEGORIES.find(c => c.id === id)?.icon || ''; }
   catName(id?: string) { return CATEGORIES.find(c => c.id === id)?.label || ''; }
 
+  storePlanLabel() {
+    const plan = this.auth.user()?.plan || 'free';
+    if (plan === 'master') return this.i18n.t('provider.store.limit_master');
+    if (plan === 'pro') return this.i18n.t('provider.store.limit_pro');
+    return this.i18n.t('provider.store.limit_free');
+  }
+
   promoPreview() {
     const f = this.promoForm();
     if (!f?.serviceId || !f?.discountPct) return null;
@@ -455,6 +561,7 @@ export class ProviderComponent implements OnInit {
     this.api.getMyProfile().subscribe({ next: p => { if (p) { this.profile.set({ ...p, name: p.user?.name || this.auth.user()?.name || '' }); this.pf = { ...this.profile() }; } }, error: () => {} });
     this.api.getMyServices().subscribe({ next: s => this.services.set(s), error: () => {} });
     this.api.getMyPromos().subscribe({ next: p => this.promos.set(p), error: () => {} });
+    this.api.getMyStores().subscribe({ next: s => this.stores.set(s), error: () => {} });
     this.api.getMyPosts().subscribe({ next: p => this.myPosts.set(p), error: () => {} });
   }
 
@@ -525,6 +632,40 @@ export class ProviderComponent implements OnInit {
     this.api.deletePromo(id).subscribe({
       next: () => this.promos.update(ps => ps.filter(p => p.id !== id)),
       error: () => {},
+    });
+  }
+
+  saveStore() {
+    const f = this.storeForm();
+    if (!f || !f.name?.trim()) return;
+    this.storeError.set('');
+    if (f.id) {
+      this.api.updateStore(f.id, f).subscribe({
+        next: s => { this.stores.update(ss => ss.map(x => x.id === s.id ? s : x)); this.storeForm.set(null); },
+        error: (e) => this.storeError.set(e.error?.message || 'Erro ao salvar loja.'),
+      });
+    } else {
+      this.api.createStore(f).subscribe({
+        next: s => { this.stores.update(ss => [...ss, s]); this.storeForm.set(null); },
+        error: (e) => this.storeError.set(e.error?.message || 'Erro ao criar loja. Verifique seu plano.'),
+      });
+    }
+  }
+
+  deleteStore(id: string) {
+    this.api.deleteStore(id).subscribe({
+      next: () => this.stores.update(ss => ss.filter(s => s.id !== id)),
+      error: () => {},
+    });
+  }
+
+  onStoreCoverChange(event: Event, storeId: string) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.storeCoverUploading.set(storeId);
+    this.api.uploadStoreCover(storeId, file).subscribe({
+      next: updated => { this.stores.update(ss => ss.map(s => s.id === storeId ? updated : s)); this.storeCoverUploading.set(null); },
+      error: () => this.storeCoverUploading.set(null),
     });
   }
 

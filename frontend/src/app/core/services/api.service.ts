@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Post, ProviderProfile, Service, Promo, Booking, Message } from '../../shared/models';
+import { Post, ProviderProfile, Service, Promo, Booking, Message, Store } from '../../shared/models';
 
 const API = 'http://localhost:3000/api';
 
@@ -62,6 +62,18 @@ export class ApiService {
     const fd = new FormData();
     fd.append('avatar', file);
     return this.http.post<any>(`${API}/users/me/avatar`, fd);
+  }
+
+  // Stores
+  getMyStores() { return this.http.get<Store[]>(`${API}/stores/mine`); }
+  getStoresByProvider(providerId: string) { return this.http.get<Store[]>(`${API}/stores/provider/${providerId}`); }
+  createStore(data: Partial<Store>) { return this.http.post<Store>(`${API}/stores`, data); }
+  updateStore(id: string, data: Partial<Store>) { return this.http.put<Store>(`${API}/stores/${id}`, data); }
+  deleteStore(id: string) { return this.http.delete(`${API}/stores/${id}`); }
+  uploadStoreCover(id: string, file: File) {
+    const fd = new FormData();
+    fd.append('cover', file);
+    return this.http.post<Store>(`${API}/stores/${id}/cover`, fd);
   }
 
   // Messages
