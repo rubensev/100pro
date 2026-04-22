@@ -13,6 +13,7 @@ const NAV = [
   { id: 'schedule', key: 'nav.schedule', path: '/schedule', icon: 'M3 4h18v18H3z M16 2v4 M8 2v4 M3 10h18', requireAuth: true },
   { id: 'messages', key: 'nav.messages', path: '/messages', icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', requireAuth: true },
   { id: 'provider', key: 'nav.provider', path: '/provider', icon: 'M2 7h20v14H2z M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16', badgePro: true, requireAuth: true },
+  { id: 'pricing', key: 'nav.pricing', path: '/pricing', icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' },
 ];
 
 @Component({

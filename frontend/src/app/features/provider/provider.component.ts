@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
@@ -20,7 +20,7 @@ function buildSlots() {
 @Component({
   selector: 'app-provider',
   standalone: true,
-  imports: [CommonModule, FormsModule, AvatarComponent],
+  imports: [CommonModule, FormsModule, AvatarComponent, RouterLink],
   template: `
     <div style="display:flex;flex-direction:column;gap:14px">
 
@@ -100,6 +100,19 @@ function buildSlots() {
           </div>
         } @else {
           <div style="display:flex;flex-direction:column;gap:10px">
+            <!-- Upgrade nudge -->
+            <div style="background:linear-gradient(135deg,var(--px),var(--ax));border:1.5px solid var(--p);
+              border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:12px">
+              <div style="font-size:28px">🚀</div>
+              <div style="flex:1">
+                <div style="font-weight:700;font-size:13px;color:var(--t)">{{ i18n.t('pricing.upgrade.title') }}</div>
+                <div style="font-size:12px;color:var(--t2);margin-top:2px">{{ i18n.t('pricing.upgrade.sub') }}</div>
+              </div>
+              <a routerLink="/pricing" class="btn btn-p" style="font-size:12px;white-space:nowrap;text-decoration:none">
+                {{ i18n.t('pricing.upgrade.cta') }}
+              </a>
+            </div>
+
             <div style="display:flex;justify-content:space-between;align-items:center">
               <div><div style="font-weight:700;font-size:15px">{{ i18n.t('provider.svc.title') }}</div><div style="font-size:12px;color:var(--t3)">{{ services().length }} {{ i18n.t('provider.svc.count') }}</div></div>
               <button class="btn btn-p" (click)="svcForm.set({ name:'', price:0, duration:60, category:'reform', description:'' })">{{ i18n.t('provider.svc.new') }}</button>
