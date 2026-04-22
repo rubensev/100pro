@@ -54,7 +54,7 @@ export class UsersController {
     },
     limits: { fileSize: 5 * 1024 * 1024 },
   }))
-  async uploadAvatar(@Request() req, @UploadedFile() file: Express.Multer.File) {
+  async uploadAvatar(@Request() req, @UploadedFile() file: any) {
     const avatarUrl = `/uploads/avatars/${file.filename}`;
     await this.users.update(req.user.id, { avatarUrl });
     const user = await this.users.findById(req.user.id);
