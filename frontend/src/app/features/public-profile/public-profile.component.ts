@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { TranslationService } from '../../i18n/translation.service';
@@ -14,7 +14,7 @@ const API_BASE = 'http://localhost:3000';
 @Component({
   selector: 'app-public-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, AvatarComponent, StarsComponent, BookingModalComponent],
+  imports: [CommonModule, AvatarComponent, StarsComponent, BookingModalComponent],
   template: `
     @if (loading()) {
       <div style="text-align:center;padding:60px;color:var(--t3)">

@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
@@ -12,7 +12,7 @@ import { TranslationService } from '../../i18n/translation.service';
 @Component({
   selector: 'app-explore',
   standalone: true,
-  imports: [CommonModule, AvatarComponent, StarsComponent, BookingModalComponent],
+  imports: [CommonModule, RouterLink, AvatarComponent, StarsComponent, BookingModalComponent],
   template: `
     <div style="display:flex;flex-direction:column;gap:14px">
       <!-- Category filter -->
