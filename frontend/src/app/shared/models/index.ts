@@ -83,6 +83,17 @@ export interface Comment {
   createdAt: string;
 }
 
+export interface Review {
+  id: string;
+  clientId: string;
+  providerId: string;
+  bookingId?: string;
+  rating: number;
+  text?: string;
+  client?: User;
+  createdAt: string;
+}
+
 export interface Store {
   id: string;
   providerId: string;

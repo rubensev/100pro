@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Post, ProviderProfile, Service, Promo, Booking, Message, Store } from '../../shared/models';
+import { Post, ProviderProfile, Service, Promo, Booking, Message, Store, Review } from '../../shared/models';
 
 const API = 'http://localhost:3000/api';
 
@@ -25,8 +25,18 @@ export class ApiService {
   likePost(id: string) { return this.http.post<Post>(`${API}/posts/${id}/like`, {}); }
   addComment(postId: string, text: string) { return this.http.post<Comment>(`${API}/posts/${postId}/comments`, { text }); }
 
+  // Reviews
+  getReviews(providerId: string) { return this.http.get<Review[]>(`${API}/reviews/provider/${providerId}`); }
+  createReview(data: { providerId: string; bookingId?: string; rating: number; text?: string }) { return this.http.post<Review>(`${API}/reviews`, data); }
+
   // Providers
-  getProviders() { return this.http.get<ProviderProfile[]>(`${API}/providers`); }
+  getProviders(params?: { q?: string; city?: string; minRating?: number }) {
+    const p: Record<string, string> = {};
+    if (params?.q) p['q'] = params.q;
+    if (params?.city) p['city'] = params.city;
+    if (params?.minRating) p['minRating'] = String(params.minRating);
+    return this.http.get<ProviderProfile[]>(`${API}/providers`, { params: p });
+  }
   getMyProfile() { return this.http.get<ProviderProfile>(`${API}/providers/me`); }
   getProviderByUserId(userId: string) { return this.http.get<ProviderProfile>(`${API}/providers/user/${userId}`); }
   getPublicProfile(id: string) { return this.http.get<ProviderProfile>(`${API}/providers/${id}/public`); }

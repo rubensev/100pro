@@ -53,6 +53,11 @@ export const T: Record<string, Record<Lang, string>> = {
   'explore.profile':    { en: 'Profile',   pt: 'Perfil',          fr: 'Profil' },
   'explore.jobs':       { en: 'jobs',      pt: 'jobs',           fr: 'projets' },
   'explore.reviews':    { en: 'reviews',   pt: 'avaliações',     fr: 'avis' },
+  'explore.search.placeholder': { en: 'Search by name, specialty...', pt: 'Buscar por nome, especialidade...', fr: 'Rechercher par nom, spécialité...' },
+  'explore.filter.city':        { en: 'City',          pt: 'Cidade',         fr: 'Ville' },
+  'explore.filter.any_rating':  { en: 'Any rating',    pt: 'Qualquer nota',  fr: 'Toute note' },
+  'explore.filter.clear':       { en: 'Clear filters', pt: 'Limpar filtros', fr: 'Effacer les filtres' },
+  'explore.filter.results':     { en: 'results',       pt: 'resultados',     fr: 'résultats' },
 
   // Schedule
   'schedule.title':            { en: 'My Bookings',  pt: 'Meus Agendamentos', fr: 'Mes Rendez-vous' },
@@ -68,6 +73,8 @@ export const T: Record<string, Record<Lang, string>> = {
   'schedule.section.upcoming': { en: 'Upcoming',     pt: 'Próximos',         fr: 'À venir' },
   'schedule.section.past':     { en: 'Past',         pt: 'Passados',         fr: 'Passés' },
   'schedule.incoming.empty':   { en: 'No incoming bookings yet', pt: 'Nenhum agendamento recebido ainda', fr: 'Aucune réservation reçue' },
+  'schedule.review':           { en: 'Leave review',  pt: 'Avaliar',          fr: 'Laisser un avis' },
+  'schedule.reviewed':         { en: 'Reviewed',      pt: 'Avaliado',         fr: 'Évalué' },
 
   // Messages
   'messages.title':        { en: 'Messages',     pt: 'Mensagens',     fr: 'Messages' },
@@ -272,12 +279,19 @@ export const T: Record<string, Record<Lang, string>> = {
   'profile.plan.saved':     { en: 'Plan updated!', pt: 'Plano atualizado!', fr: 'Plan mis à jour !' },
   'profile.danger':         { en: 'Account',      pt: 'Conta',         fr: 'Compte' },
 
+  // Reviews
+  'review.title':       { en: 'Leave a review',      pt: 'Deixar avaliação',      fr: 'Laisser un avis' },
+  'review.comment':     { en: 'Comment (optional)',  pt: 'Comentário (opcional)', fr: 'Commentaire (optionnel)' },
+  'review.placeholder': { en: 'Share your experience...', pt: 'Conte sua experiência...', fr: 'Partagez votre expérience...' },
+  'review.submit':      { en: 'Submit review',       pt: 'Enviar avaliação',      fr: "Soumettre l'avis" },
+
   // Public profile
   'pubprofile.notfound':  { en: 'Provider not found',    pt: 'Prestador não encontrado', fr: 'Prestataire introuvable' },
   'pubprofile.verified':  { en: 'Verified',              pt: 'Verificado',               fr: 'Vérifié' },
   'pubprofile.about':     { en: 'About',                 pt: 'Sobre',                    fr: 'À propos' },
   'pubprofile.services':  { en: 'Services',              pt: 'Serviços',                 fr: 'Services' },
   'pubprofile.stores':    { en: 'Stores',                 pt: 'Lojas',                    fr: 'Boutiques' },
+  'pubprofile.reviews':   { en: 'Reviews',               pt: 'Avaliações',               fr: 'Avis' },
   'pubprofile.promos':    { en: 'Active promotions',     pt: 'Promoções ativas',         fr: 'Promotions actives' },
   'pubprofile.posts':     { en: 'Recent posts',          pt: 'Postagens recentes',       fr: 'Publications récentes' },
   'pubprofile.book':      { en: 'Book now',              pt: 'Agendar agora',            fr: 'Réserver' },

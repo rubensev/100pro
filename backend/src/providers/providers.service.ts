@@ -13,8 +13,14 @@ export class ProvidersService {
     private posts: PostsService,
   ) {}
 
-  findAll() {
-    return this.repo.find({ relations: ['user', 'services'] });
+  findAll(q?: string, city?: string, minRating?: number) {
+    const qb = this.repo.createQueryBuilder('p')
+      .leftJoinAndSelect('p.user', 'user')
+      .leftJoinAndSelect('p.services', 'services');
+    if (q) qb.andWhere('(LOWER(user.name) LIKE :q OR LOWER(p.role) LIKE :q)', { q: `%${q.toLowerCase()}%` });
+    if (city) qb.andWhere('LOWER(p.city) LIKE :city', { city: `%${city.toLowerCase()}%` });
+    if (minRating) qb.andWhere('p.rating >= :minRating', { minRating });
+    return qb.getMany();
   }
 
   findByUser(userId: string) {

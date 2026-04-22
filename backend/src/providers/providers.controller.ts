@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Post, Body, UseGuards, Param, UseInterceptors, UploadedFile, Request, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Put, Post, Body, UseGuards, Param, Query, UseInterceptors, UploadedFile, Request, NotFoundException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -15,8 +15,8 @@ export class ProvidersController {
   ) {}
 
   @Get()
-  findAll() {
-    return this.svc.findAll();
+  findAll(@Query('q') q?: string, @Query('city') city?: string, @Query('minRating') minRating?: string) {
+    return this.svc.findAll(q, city, minRating ? parseFloat(minRating) : undefined);
   }
 
   @Get('me')

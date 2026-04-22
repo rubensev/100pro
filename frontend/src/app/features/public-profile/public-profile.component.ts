@@ -7,7 +7,7 @@ import { TranslationService } from '../../i18n/translation.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
 import { StarsComponent } from '../../shared/components/stars.component';
 import { BookingModalComponent } from '../home/booking-modal.component';
-import { ProviderProfile, getInitialsColor, Service, Store } from '../../shared/models';
+import { ProviderProfile, getInitialsColor, Service, Store, Review } from '../../shared/models';
 
 const API_BASE = 'http://localhost:3000';
 
@@ -194,6 +194,33 @@ const API_BASE = 'http://localhost:3000';
         </div>
       }
 
+      <!-- Reviews -->
+      @if (reviews().length) {
+        <div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:10px">⭐ {{ i18n.t('pubprofile.reviews') }} ({{ reviews().length }})</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            @for (r of reviews(); track r.id) {
+              <div class="card" style="padding:14px 16px">
+                <div style="display:flex;gap:10px;align-items:flex-start">
+                  <app-avatar [initials]="r.client?.avatarInitials || '?'" [color]="initColor2(r.client?.avatarInitials || '')" [size]="36" />
+                  <div style="flex:1">
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+                      <span style="font-weight:700;font-size:13px">{{ r.client?.name || 'Anonymous' }}</span>
+                      <div style="display:flex;align-items:center;gap:4px">
+                        <app-stars [rating]="r.rating" [size]="12" />
+                        <span style="font-size:12px;font-weight:700">{{ r.rating }}.0</span>
+                      </div>
+                    </div>
+                    @if (r.text) { <p style="font-size:13px;color:var(--t);margin-top:6px;line-height:1.6">{{ r.text }}</p> }
+                    <div style="font-size:11px;color:var(--t3);margin-top:4px">{{ formatTime(r.createdAt) }}</div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
       <!-- Posts -->
       @if (p.posts?.length) {
         <div>
@@ -244,6 +271,7 @@ export class PublicProfileComponent implements OnInit {
   API_BASE = API_BASE;
   profile = signal<ProviderProfile | null>(null);
   stores = signal<Store[]>([]);
+  reviews = signal<Review[]>([]);
   loading = signal(true);
   bookingTarget = signal<{ name: string; role: string; initials: string; id: string; services: Service[] } | null>(null);
 
@@ -254,12 +282,14 @@ export class PublicProfileComponent implements OnInit {
         this.profile.set(p);
         this.loading.set(false);
         this.api.getStoresByProvider(p.id).subscribe({ next: s => this.stores.set(s), error: () => {} });
+        this.api.getReviews(p.id).subscribe({ next: r => this.reviews.set(r), error: () => {} });
       },
       error: () => this.loading.set(false),
     });
   }
 
   initColor(p: ProviderProfile) { return getInitialsColor(p.user?.avatarInitials || ''); }
+  initColor2(initials: string) { return getInitialsColor(initials); }
   activePromos(p: ProviderProfile) { return p.promos?.filter(pr => pr.active) ?? []; }
   stats(p: ProviderProfile) {
     return [

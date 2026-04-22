@@ -1,15 +1,17 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Booking, getInitialsColor } from '../../shared/models';
 import { TranslationService } from '../../i18n/translation.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
+import { StarsComponent } from '../../shared/components/stars.component';
 
 @Component({
   selector: 'app-schedule',
   standalone: true,
-  imports: [CommonModule, AvatarComponent],
+  imports: [CommonModule, FormsModule, AvatarComponent, StarsComponent],
   template: `
     <div style="display:flex;flex-direction:column;gap:12px">
       <div style="font-weight:800;font-size:20px">{{ i18n.t('schedule.title') }}</div>
@@ -71,7 +73,8 @@ import { AvatarComponent } from '../../shared/components/avatar.component';
             {{ i18n.t('schedule.section.past') }}
           </div>
           @for (ev of past(); track ev.id) {
-            <div class="card" style="padding:13px 16px;display:flex;gap:14px;align-items:center;opacity:0.7"
+            <div class="card" style="padding:13px 16px;display:flex;gap:14px;align-items:center"
+                 [style.opacity]="ev.status === 'cancelled' ? '0.6' : '1'"
                  [style.border-left]="'4px solid ' + (ev.status === 'completed' ? 'var(--ac)' : 'var(--bo)')">
               <div style="text-align:center;min-width:38px">
                 <div style="font-weight:800;font-size:22px;line-height:1">{{ day(ev.date) }}</div>
@@ -81,9 +84,19 @@ import { AvatarComponent } from '../../shared/components/avatar.component';
                 <div style="font-weight:700;font-size:14px">{{ ev.service?.name }}</div>
                 <div style="font-size:12px;color:var(--t2);margin-top:1px">{{ ev.provider?.user?.name }} · {{ ev.time }}</div>
               </div>
-              <span class="badge badge-g" style="font-size:11px">
-                {{ ev.status === 'completed' ? i18n.t('schedule.status.completed') : i18n.t('schedule.status.cancelled') }}
-              </span>
+              <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+                <span class="badge badge-g" style="font-size:11px">
+                  {{ ev.status === 'completed' ? i18n.t('schedule.status.completed') : i18n.t('schedule.status.cancelled') }}
+                </span>
+                @if (ev.status === 'completed' && !reviewed()[ev.id]) {
+                  <button class="btn btn-g" style="font-size:11px;padding:4px 10px" (click)="openReview(ev)">
+                    ⭐ {{ i18n.t('schedule.review') }}
+                  </button>
+                }
+                @if (reviewed()[ev.id]) {
+                  <span style="font-size:11px;color:var(--ac)">✓ {{ i18n.t('schedule.reviewed') }}</span>
+                }
+              </div>
             </div>
           }
         }
@@ -120,6 +133,38 @@ import { AvatarComponent } from '../../shared/components/avatar.component';
         }
       }
     </div>
+
+    <!-- Review modal -->
+    @if (reviewTarget()) {
+      <div class="overlay" (click)="reviewTarget.set(null)">
+        <div class="pop card" style="width:100%;max-width:420px;padding:24px" (click)="$event.stopPropagation()">
+          <div style="font-weight:800;font-size:17px;margin-bottom:4px">{{ i18n.t('review.title') }}</div>
+          <div style="font-size:13px;color:var(--t2);margin-bottom:18px">{{ reviewTarget()!.provider?.user?.name }} · {{ reviewTarget()!.service?.name }}</div>
+
+          <!-- Star selector -->
+          <div style="display:flex;gap:6px;margin-bottom:16px;justify-content:center">
+            @for (s of [1,2,3,4,5]; track s) {
+              <button (click)="reviewRating = s" style="background:none;border:none;cursor:pointer;font-size:32px;transition:transform 0.1s"
+                      [style.transform]="s <= reviewRating ? 'scale(1.15)' : 'scale(1)'">
+                {{ s <= reviewRating ? '⭐' : '☆' }}
+              </button>
+            }
+          </div>
+
+          <div class="field" style="margin-bottom:16px">
+            <label>{{ i18n.t('review.comment') }}</label>
+            <textarea [(ngModel)]="reviewText" [placeholder]="i18n.t('review.placeholder')" style="min-height:80px"></textarea>
+          </div>
+
+          @if (reviewError()) { <div style="color:var(--re);font-size:12px;margin-bottom:8px">{{ reviewError() }}</div> }
+
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn btn-g" (click)="reviewTarget.set(null)">{{ i18n.t('common.cancel') }}</button>
+            <button class="btn btn-p" (click)="submitReview()" [style.opacity]="reviewRating > 0 ? '1' : '0.5'">{{ i18n.t('review.submit') }}</button>
+          </div>
+        </div>
+      </div>
+    }
   `,
 })
 export class ScheduleComponent implements OnInit {
@@ -132,6 +177,12 @@ export class ScheduleComponent implements OnInit {
   loading = signal(true);
   tab = 'mine';
   incomingLoaded = false;
+
+  reviewed = signal<Record<string, boolean>>({});
+  reviewTarget = signal<Booking | null>(null);
+  reviewRating = 0;
+  reviewText = '';
+  reviewError = signal('');
 
   ngOnInit() {
     this.api.getBookings().subscribe({
@@ -160,6 +211,26 @@ export class ScheduleComponent implements OnInit {
     const today = new Date().toISOString().split('T')[0];
     return this.incoming().filter(b => b.status === 'confirmed' && b.date >= today).sort((a: any, b: any) => a.date.localeCompare(b.date));
   });
+
+  openReview(booking: Booking) {
+    this.reviewTarget.set(booking);
+    this.reviewRating = 0;
+    this.reviewText = '';
+    this.reviewError.set('');
+  }
+
+  submitReview() {
+    const b = this.reviewTarget();
+    if (!b || this.reviewRating < 1) return;
+    this.reviewError.set('');
+    this.api.createReview({ providerId: b.providerId, bookingId: b.id, rating: this.reviewRating, text: this.reviewText.trim() || undefined }).subscribe({
+      next: () => {
+        this.reviewed.update(r => ({ ...r, [b.id]: true }));
+        this.reviewTarget.set(null);
+      },
+      error: (e) => this.reviewError.set(e.error?.message || 'Erro ao enviar avaliação.'),
+    });
+  }
 
   cancel(booking: Booking) {
     this.api.cancelBooking(booking.id).subscribe({
