@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
-import { AuthService } from '../../core/services/auth.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
 import { StarsComponent } from '../../shared/components/stars.component';
 import { BookingModalComponent } from '../home/booking-modal.component';
@@ -127,7 +126,7 @@ import { TranslationService } from '../../i18n/translation.service';
                     {{ i18n.t('explore.profile') }}
                   </a>
                   <button class="btn btn-p" style="flex:1;padding:8px;font-size:12px"
-                    (click)="requireAuth(() => book(p))">
+                    (click)="book(p)">
                     {{ i18n.t('explore.book') }}
                   </button>
                 </div>
@@ -151,7 +150,6 @@ import { TranslationService } from '../../i18n/translation.service';
 })
 export class ExploreComponent implements OnInit {
   api = inject(ApiService);
-  auth = inject(AuthService);
   i18n = inject(TranslationService);
 
   cats = CATEGORIES;
@@ -197,10 +195,7 @@ export class ExploreComponent implements OnInit {
   minPrice(p: ProviderProfile) { return p.services?.length ? Math.min(...p.services.map(s => s.price)) : null; }
   toggleFav(id: string) { this.favs.update(f => ({ ...f, [id]: !f[id] })); }
 
-  requireAuth(fn: () => void) {
-    if (this.auth.isLoggedIn()) fn();
-    else this.auth.promptLogin();
-  }
+
 
   book(p: ProviderProfile) {
     this.bookingTarget.set({ name: p.user?.name || '', role: p.role || '', initials: p.user?.avatarInitials || '', id: p.id, services: p.services || [] });

@@ -1,15 +1,16 @@
 import { Component, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AvatarComponent } from '../../shared/components/avatar.component';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Service, Promo } from '../../shared/models';
+import { Service } from '../../shared/models';
 import { TranslationService } from '../../i18n/translation.service';
 
 @Component({
   selector: 'app-booking-modal',
   standalone: true,
-  imports: [CommonModule, AvatarComponent],
+  imports: [CommonModule, FormsModule, AvatarComponent],
   template: `
     <div class="overlay" (click)="close.emit()">
       <div class="pop card" style="width:100%;max-width:460px;overflow:hidden" (click)="$event.stopPropagation()">
@@ -25,7 +26,7 @@ import { TranslationService } from '../../i18n/translation.service';
 
         <!-- Steps -->
         <div style="display:flex;padding:12px 20px 0;gap:6px">
-          @for (s of steps; track s; let i = $index) {
+          @for (s of steps(); track s; let i = $index) {
             <div style="flex:1;text-align:center">
               <div style="height:3px;border-radius:99px;margin-bottom:4px;transition:var(--tr)"
                    [style.background]="i <= step() ? 'var(--p)' : 'var(--bo)'"></div>
@@ -86,8 +87,29 @@ import { TranslationService } from '../../i18n/translation.service';
             }
           }
 
-          <!-- Step 2: Confirm -->
-          @if (step() === 2) {
+          <!-- Step 2 (guest only): Contact info -->
+          @if (step() === 2 && !auth.isLoggedIn()) {
+            <p style="font-size:13px;font-weight:700;margin-bottom:4px">{{ i18n.t('booking.guest.title') }}</p>
+            <p style="font-size:12px;color:var(--t2);margin-bottom:16px">{{ i18n.t('booking.guest.sub') }}</p>
+            <div class="field" style="margin-bottom:12px">
+              <label>{{ i18n.t('booking.guest.name') }} *</label>
+              <input [(ngModel)]="guestName" [placeholder]="i18n.t('booking.guest.name_ph')"
+                     style="border-color: nameError() ? 'var(--re)' : ''" />
+              @if (nameError()) { <div style="color:var(--re);font-size:11px;margin-top:4px">{{ nameError() }}</div> }
+            </div>
+            <div class="field" style="margin-bottom:16px">
+              <label>{{ i18n.t('booking.guest.contact') }} *</label>
+              <input [(ngModel)]="guestContact" [placeholder]="i18n.t('booking.guest.contact_ph')"
+                     style="border-color: contactError() ? 'var(--re)' : ''" />
+              @if (contactError()) { <div style="color:var(--re);font-size:11px;margin-top:4px">{{ contactError() }}</div> }
+            </div>
+            <button class="btn btn-p" style="width:100%;padding:12px" (click)="submitGuest()">
+              {{ i18n.t('booking.guest.confirm') }}
+            </button>
+          }
+
+          <!-- Confirm step -->
+          @if (step() === confirmStep()) {
             <div style="text-align:center;padding:10px 0">
               <div style="font-size:40px;margin-bottom:12px">🎉</div>
               <div style="font-weight:800;font-size:18px;margin-bottom:4px">{{ i18n.t('booking.confirmed') }}</div>
@@ -99,6 +121,11 @@ import { TranslationService } from '../../i18n/translation.service';
               <div style="background:var(--px);border-radius:var(--rs);padding:10px 16px;display:inline-flex;gap:8px;align-items:center">
                 <span style="font-size:13px;font-weight:700;color:var(--p)">R$ {{ selSvc()?.price }}</span>
               </div>
+              @if (!auth.isLoggedIn()) {
+                <div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:var(--rs);font-size:12px;color:var(--t2)">
+                  {{ i18n.t('booking.guest.receipt') }}
+                </div>
+              }
               <div style="margin-top:16px">
                 <button class="btn btn-p" style="width:100%" (click)="close.emit()">{{ i18n.t('booking.go') }}</button>
               </div>
@@ -106,7 +133,7 @@ import { TranslationService } from '../../i18n/translation.service';
           }
         </div>
 
-        @if (step() > 0 && step() < 2) {
+        @if (step() > 0 && step() < confirmStep()) {
           <div style="padding:0 20px 16px;display:flex;gap:8px">
             <button class="btn btn-g" (click)="step.set(step() - 1)">{{ i18n.t('booking.back') }}</button>
           </div>
@@ -132,7 +159,18 @@ export class BookingModalComponent {
   selDay = signal<{ day: number; month: string; full: string } | null>(null);
   selTime = signal<string | null>(null);
 
-  steps = ['booking.step.service', 'booking.step.time', 'booking.step.confirm'];
+  guestName = '';
+  guestContact = '';
+  nameError = signal('');
+  contactError = signal('');
+
+  steps = computed(() => this.auth.isLoggedIn()
+    ? ['booking.step.service', 'booking.step.time', 'booking.step.confirm']
+    : ['booking.step.service', 'booking.step.time', 'booking.step.contact', 'booking.step.confirm']
+  );
+
+  confirmStep = computed(() => this.auth.isLoggedIn() ? 2 : 3);
+
   days = Array.from({ length: 14 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() + i);
     return { day: d.getDate(), month: d.toLocaleString('pt-BR', { month: 'short' }).toUpperCase(), full: d.toISOString().split('T')[0] };
@@ -146,15 +184,31 @@ export class BookingModalComponent {
 
   pickTime(t: string) {
     this.selTime.set(t);
-    this.step.set(2);
     if (this.auth.isLoggedIn()) {
-      this.api.createBooking({
-        providerId: this.providerId,
-        serviceId: this.selSvc()?.id,
-        date: this.selDay()?.full,
-        time: t,
-        finalPrice: this.selSvc()?.price,
-      }).subscribe();
+      this.submitBooking();
+      this.step.set(this.confirmStep());
+    } else {
+      this.step.set(2);
     }
+  }
+
+  submitGuest() {
+    this.nameError.set('');
+    this.contactError.set('');
+    if (!this.guestName.trim()) { this.nameError.set(this.i18n.t('booking.guest.name_required')); return; }
+    if (!this.guestContact.trim()) { this.contactError.set(this.i18n.t('booking.guest.contact_required')); return; }
+    this.submitBooking();
+    this.step.set(this.confirmStep());
+  }
+
+  private submitBooking() {
+    this.api.createBooking({
+      providerId: this.providerId,
+      serviceId: this.selSvc()?.id,
+      date: this.selDay()?.full,
+      time: this.selTime(),
+      finalPrice: this.selSvc()?.price,
+      ...(!this.auth.isLoggedIn() ? { guestName: this.guestName.trim(), guestContact: this.guestContact.trim() } : {}),
+    }).subscribe();
   }
 }

@@ -8,12 +8,18 @@ export class Booking {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn()
   client: User;
 
-  @Column()
+  @Column({ nullable: true })
   clientId: string;
+
+  @Column({ nullable: true })
+  guestName: string;
+
+  @Column({ nullable: true })
+  guestContact: string;
 
   @ManyToOne(() => ProviderProfile, { onDelete: 'CASCADE' })
   @JoinColumn()

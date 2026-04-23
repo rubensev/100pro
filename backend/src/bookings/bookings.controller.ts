@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Patch, Body, Param, UseGuards } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 import { CurrentUser } from '../common/current-user.decorator';
 
 @Controller('bookings')
@@ -33,8 +34,8 @@ export class BookingsController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
-  create(@CurrentUser() user: { id: string }, @Body() body: any) {
-    return this.svc.create(user.id, body);
+  @UseGuards(OptionalJwtAuthGuard)
+  create(@CurrentUser() user: { id: string } | null, @Body() body: any) {
+    return this.svc.create({ ...body, clientId: user?.id || undefined });
   }
 }

@@ -72,7 +72,7 @@ const API_BASE = 'http://localhost:3000';
                     <span style="font-size:16px;font-weight:800;color:var(--re)">R$ {{ promoFinal(p) }}</span>
                   </div>
                   <button class="btn btn-p" style="width:100%;padding:7px;font-size:12px"
-                    (click)="requireAuth(() => openPromoBooking(p))">
+                    (click)="openPromoBooking(p)">
                     {{ i18n.t('home.promos.book') }}
                   </button>
                 </div>
@@ -190,7 +190,7 @@ const API_BASE = 'http://localhost:3000';
                   <div style="flex:1"></div>
                   @if (post.type === 'provider') {
                     <button class="btn btn-p" style="padding:6px 14px;font-size:12px"
-                      (click)="requireAuth(() => openBookingForPost(post))">
+                      (click)="openBookingForPost(post)">
                       {{ i18n.t('home.book') }}
                     </button>
                   }
@@ -327,10 +327,7 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  requireAuth(fn: () => void) {
-    if (this.auth.isLoggedIn()) fn();
-    else this.auth.promptLogin();
-  }
+
 
   openBookingForPost(post: Post) {
     this.api.getProviderByUserId(post.authorId).subscribe({

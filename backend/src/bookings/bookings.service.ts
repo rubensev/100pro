@@ -15,8 +15,8 @@ export class BookingsService {
     });
   }
 
-  create(clientId: string, data: { providerId: string; serviceId: string; date: string; time: string; finalPrice: number }) {
-    const booking = this.repo.create({ ...data, clientId });
+  create(data: { clientId?: string; guestName?: string; guestContact?: string; providerId: string; serviceId: string; date: string; time: string; finalPrice: number }) {
+    const booking = this.repo.create(data);
     return this.repo.save(booking);
   }
 
