@@ -6,7 +6,7 @@ import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationsService } from '../../core/services/notifications.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
-import { getInitialsColor } from '../../shared/models';
+import { getInitialsColor, ProviderProfile } from '../../shared/models';
 import { TranslationService } from '../../i18n/translation.service';
 
 interface Conversation {
@@ -31,7 +31,54 @@ interface ThreadMsg {
   imports: [CommonModule, FormsModule, AvatarComponent],
   template: `
     <div style="display:flex;flex-direction:column;gap:10px">
-      <div style="font-weight:800;font-size:20px">{{ i18n.t('messages.title') }}</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-weight:800;font-size:20px;flex:1">{{ i18n.t('messages.title') }}</div>
+        <button (click)="toggleSearch()"
+          [style.background]="showSearch() ? 'var(--p)' : 'var(--ca)'"
+          [style.color]="showSearch() ? 'white' : 'var(--t2)'"
+          style="width:36px;height:36px;border-radius:50%;border:1px solid var(--bo);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--tr)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Search new conversation -->
+      @if (showSearch()) {
+        <div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
+          <div style="font-weight:700;font-size:13px">{{ i18n.t('messages.new.title') }}</div>
+          <div style="display:flex;gap:8px;align-items:center;border:1.5px solid var(--p);border-radius:var(--rs);padding:8px 12px;background:var(--bg)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input [(ngModel)]="searchQ" (ngModelChange)="onSearchChange()"
+                   [placeholder]="i18n.t('messages.new.search_ph')"
+                   style="flex:1;border:none;outline:none;background:transparent;font-size:13px;color:var(--t)" />
+            @if (searchQ) {
+              <button (click)="searchQ='';searchResults.set([])" style="background:none;border:none;cursor:pointer;color:var(--t3);font-size:16px;line-height:1">×</button>
+            }
+          </div>
+          @if (searching()) {
+            <div style="text-align:center;font-size:12px;color:var(--t3);padding:8px">{{ i18n.t('messages.new.searching') }}</div>
+          }
+          @if (!searching() && searchQ && searchResults().length === 0) {
+            <div style="text-align:center;font-size:12px;color:var(--t3);padding:8px">{{ i18n.t('messages.new.no_results') }}</div>
+          }
+          @for (p of searchResults(); track p.id) {
+            <div (click)="startChat(p)"
+                 style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--rs);background:var(--bg);cursor:pointer;border:1px solid var(--bo);transition:var(--tr)"
+                 (mouseenter)="$any($event.currentTarget).style.borderColor='var(--p)'"
+                 (mouseleave)="$any($event.currentTarget).style.borderColor='var(--bo)'">
+              <app-avatar [initials]="p.user?.avatarInitials || ''" [color]="color(p.user?.avatarInitials || '')" [size]="38" />
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:700;font-size:13px">{{ p.user?.name }}</div>
+                <div style="font-size:11px;color:var(--t2)">{{ p.role }} @if (p.city) { · {{ p.city }} }</div>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--p)" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+          }
+        </div>
+      }
 
       @if (loading()) {
         <div style="text-align:center;padding:40px;color:var(--t3)">
@@ -40,11 +87,14 @@ interface ThreadMsg {
         </div>
       }
 
-      @if (!loading() && convs().length === 0) {
+      @if (!loading() && convs().length === 0 && !showSearch()) {
         <div class="card" style="padding:48px;text-align:center;color:var(--t3)">
           <div style="font-size:40px;margin-bottom:12px">💬</div>
           <div style="font-weight:600;font-size:16px">{{ i18n.t('messages.empty.title') }}</div>
           <div style="font-size:13px;margin-top:6px">{{ i18n.t('messages.empty.sub') }}</div>
+          <button (click)="toggleSearch()" class="btn btn-p" style="margin-top:16px">
+            {{ i18n.t('messages.new.cta') }}
+          </button>
         </div>
       }
 
@@ -125,6 +175,12 @@ export class MessagesComponent implements OnInit {
   threadLoading = signal(false);
   newMsg = '';
 
+  showSearch = signal(false);
+  searchQ = '';
+  searching = signal(false);
+  searchResults = signal<ProviderProfile[]>([]);
+  private searchDebounce: ReturnType<typeof setTimeout> | null = null;
+
   ngOnInit() {
     this.loadConversations();
     const p = this.route.snapshot.queryParams;
@@ -132,6 +188,38 @@ export class MessagesComponent implements OnInit {
       const conv: Conversation = { otherId: p['with'], name: p['name'] || 'User', initials: p['initials'] || '??', lastMsg: '', time: '', hasUnread: false };
       this.openChat(conv);
     }
+  }
+
+  toggleSearch() {
+    this.showSearch.update(v => !v);
+    if (!this.showSearch()) { this.searchQ = ''; this.searchResults.set([]); }
+  }
+
+  onSearchChange() {
+    if (this.searchDebounce) clearTimeout(this.searchDebounce);
+    if (!this.searchQ.trim()) { this.searchResults.set([]); return; }
+    this.searching.set(true);
+    this.searchDebounce = setTimeout(() => {
+      this.api.getProviders({ q: this.searchQ.trim() }).subscribe({
+        next: ps => { this.searchResults.set(ps); this.searching.set(false); },
+        error: () => this.searching.set(false),
+      });
+    }, 300);
+  }
+
+  startChat(p: ProviderProfile) {
+    const conv: Conversation = {
+      otherId: p.userId,
+      name: p.user?.name || '',
+      initials: p.user?.avatarInitials || p.user?.name?.slice(0, 2).toUpperCase() || '??',
+      lastMsg: '',
+      time: '',
+      hasUnread: false,
+    };
+    this.showSearch.set(false);
+    this.searchQ = '';
+    this.searchResults.set([]);
+    this.openChat(conv);
   }
 
   loadConversations() {

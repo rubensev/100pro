@@ -44,6 +44,8 @@ export const T: Record<string, Record<Lang, string>> = {
   'home.badge.client':       { en: 'Client',         pt: 'Cliente',        fr: 'Client' },
   'home.book':               { en: 'Book',           pt: 'Agendar',        fr: 'Réserver' },
   'home.comment.placeholder':{ en: 'Write a comment...', pt: 'Escreva um comentário...', fr: 'Écrire un commentaire...' },
+  'home.post.placeholder':   { en: "What's new? Share your work...", pt: 'O que há de novo? Compartilhe seu trabalho...', fr: 'Quoi de neuf ? Partagez votre travail...' },
+  'home.post.add_photo':     { en: 'Add photo', pt: 'Adicionar foto', fr: 'Ajouter une photo' },
 
   // Explore
   'explore.loading':    { en: 'Loading professionals...', pt: 'Carregando profissionais...', fr: 'Chargement des professionnels...' },
@@ -84,6 +86,11 @@ export const T: Record<string, Record<Lang, string>> = {
   'messages.start':        { en: 'Start of conversation', pt: 'Início da conversa', fr: 'Début de la conversation' },
   'messages.loading.thread': { en: 'Loading...', pt: 'Carregando...', fr: 'Chargement...' },
   'messages.placeholder':  { en: 'Type a message...', pt: 'Digite uma mensagem...', fr: 'Tapez un message...' },
+  'messages.new.title':    { en: 'New conversation',      pt: 'Nova conversa',          fr: 'Nouvelle conversation' },
+  'messages.new.search_ph':{ en: 'Search providers by name...', pt: 'Buscar prestadores pelo nome...', fr: 'Rechercher des prestataires...' },
+  'messages.new.searching':{ en: 'Searching...',          pt: 'Buscando...',             fr: 'Recherche...' },
+  'messages.new.no_results':{ en: 'No providers found',  pt: 'Nenhum prestador encontrado', fr: 'Aucun prestataire trouvé' },
+  'messages.new.cta':      { en: 'Start a conversation', pt: 'Iniciar uma conversa',    fr: 'Démarrer une conversation' },
 
   // Provider — header
   'provider.mode':     { en: 'Provider Mode', pt: 'Modo Prestador', fr: 'Mode Prestataire' },

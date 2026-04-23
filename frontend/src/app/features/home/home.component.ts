@@ -92,6 +92,60 @@ const API_BASE = 'http://localhost:3000';
 
       <!-- Feed -->
       @if (!loading()) {
+        <!-- Quick post creation for providers -->
+        @if (auth.isLoggedIn() && auth.user()?.isProvider) {
+          <div class="card" style="overflow:hidden">
+            @if (!showPostForm()) {
+              <button (click)="showPostForm.set(true)"
+                style="width:100%;padding:13px 16px;display:flex;align-items:center;gap:12px;background:transparent;border:none;cursor:pointer;text-align:left">
+                <app-avatar [initials]="myInitials" color="linear-gradient(135deg,var(--p),var(--ac))" [size]="36" />
+                <span style="flex:1;font-size:13px;color:var(--t3);background:var(--bg);border-radius:99px;padding:9px 16px;border:1px solid var(--bo)">
+                  {{ i18n.t('home.post.placeholder') }}
+                </span>
+                <span style="font-size:11px;font-weight:700;color:var(--p)">+ {{ i18n.t('home.post.add_photo') }}</span>
+              </button>
+            }
+            @if (showPostForm()) {
+              <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;gap:10px;align-items:flex-start">
+                  <app-avatar [initials]="myInitials" color="linear-gradient(135deg,var(--p),var(--ac))" [size]="36" />
+                  <textarea [(ngModel)]="postText" [placeholder]="i18n.t('home.post.placeholder')"
+                    style="flex:1;border:none;outline:none;background:transparent;font-size:14px;color:var(--t);resize:none;min-height:72px;line-height:1.5">
+                  </textarea>
+                </div>
+                @if (postImagePreview) {
+                  <div style="position:relative;border-radius:var(--rs);overflow:hidden;max-height:220px">
+                    <img [src]="postImagePreview" style="width:100%;object-fit:cover;display:block" />
+                    <button (click)="postImageFile=null;postImagePreview=null"
+                      style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.55);color:white;border:none;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">×</button>
+                  </div>
+                }
+                <div style="display:flex;align-items:center;gap:8px;padding-top:6px;border-top:1px solid var(--bo)">
+                  <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--t2);padding:6px 10px;border-radius:99px;background:var(--bg);border:1px solid var(--bo);transition:var(--tr)"
+                         (mouseenter)="$any($event.currentTarget).style.borderColor='var(--p)'"
+                         (mouseleave)="$any($event.currentTarget).style.borderColor='var(--bo)'">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    {{ i18n.t('home.post.add_photo') }}
+                    <input type="file" accept="image/*" (change)="onPostImageChange($event)" style="display:none" />
+                  </label>
+                  <select [(ngModel)]="postCat"
+                    style="padding:6px 10px;border-radius:99px;border:1px solid var(--bo);font-size:12px;background:var(--bg);color:var(--t);outline:none">
+                    @for (c of cats; track c.id) {
+                      @if (c.id !== 'all') { <option [value]="c.id">{{ c.icon }} {{ i18n.t('cat.' + c.id) }}</option> }
+                    }
+                  </select>
+                  <div style="flex:1"></div>
+                  <button (click)="showPostForm.set(false);postImageFile=null;postImagePreview=null" class="btn btn-g" style="font-size:12px;padding:6px 12px">{{ i18n.t('common.cancel') }}</button>
+                  <button (click)="publishPost()" class="btn btn-p" style="font-size:12px;padding:6px 14px"
+                    [style.opacity]="postText.trim() && !postUploading() ? '1' : '0.5'">
+                    {{ postUploading() ? i18n.t('provider.post.uploading') : i18n.t('provider.post.publish') }}
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
         <div>
           <div style="font-weight:800;font-size:15px;margin-bottom:10px">
             {{ selCat === 'all' ? i18n.t('home.feed.title') : catLabel }} · {{ filteredPosts().length }} {{ i18n.t('home.feed.posts') }}
@@ -258,6 +312,13 @@ export class HomeComponent implements OnInit {
   focused = signal(false);
   bookingTarget = signal<{ name: string; role: string; initials: string; id: string; services: Service[] } | null>(null);
 
+  showPostForm = signal(false);
+  postText = '';
+  postCat = 'reform';
+  postImageFile: File | null = null;
+  postImagePreview: string | null = null;
+  postUploading = signal(false);
+
   get myInitials() { return this.auth.user()?.avatarInitials || 'VC'; }
 
   ngOnInit() {
@@ -328,6 +389,42 @@ export class HomeComponent implements OnInit {
   }
 
 
+
+  onPostImageChange(e: Event) {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.postImageFile = file;
+    const reader = new FileReader();
+    reader.onload = ev => this.postImagePreview = ev.target?.result as string;
+    reader.readAsDataURL(file);
+  }
+
+  publishPost() {
+    if (!this.postText.trim() || this.postUploading()) return;
+    this.postUploading.set(true);
+    this.api.createPost({ text: this.postText.trim(), category: this.postCat, type: 'provider' }).subscribe({
+      next: post => {
+        const finish = (p: Post) => {
+          this.posts.update(ps => [p, ...ps]);
+          this.postText = '';
+          this.postImageFile = null;
+          this.postImagePreview = null;
+          this.postCat = 'reform';
+          this.showPostForm.set(false);
+          this.postUploading.set(false);
+        };
+        if (this.postImageFile) {
+          this.api.uploadPostImage(post.id, this.postImageFile).subscribe({
+            next: updated => finish({ ...updated, author: { id: this.auth.user()!.id, email: '', name: this.auth.user()!.name, avatarInitials: this.auth.user()!.avatarInitials, isProvider: true } }),
+            error: () => finish(post),
+          });
+        } else {
+          finish({ ...post, author: { id: this.auth.user()!.id, email: '', name: this.auth.user()!.name, avatarInitials: this.auth.user()!.avatarInitials, isProvider: true } });
+        }
+      },
+      error: () => this.postUploading.set(false),
+    });
+  }
 
   openBookingForPost(post: Post) {
     this.api.getProviderByUserId(post.authorId).subscribe({
