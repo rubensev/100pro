@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AvatarComponent } from '../../shared/components/avatar.component';
@@ -73,17 +73,25 @@ import { TranslationService } from '../../i18n/translation.service';
             </div>
             @if (selDay()?.full) {
               <p style="font-size:12px;color:var(--t2);margin-bottom:8px">{{ i18n.t('booking.pick.time') }}</p>
-              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
-                @for (t of times; track t) {
-                  <button (click)="pickTime(t)"
-                          [style.border]="selTime() === t ? '1.5px solid var(--p)' : '1.5px solid var(--bo)'"
-                          [style.background]="selTime() === t ? 'var(--p)' : 'var(--bg)'"
-                          [style.color]="selTime() === t ? 'white' : 'var(--t)'"
-                          style="padding:7px;border-radius:var(--rs);font-weight:600;font-size:12px;cursor:pointer;transition:var(--tr)">
-                    {{ t }}
-                  </button>
-                }
-              </div>
+              @if (loadingSlots()) {
+                <div style="text-align:center;padding:16px;color:var(--t3);font-size:12px">...</div>
+              } @else {
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+                  @for (t of times; track t) {
+                    <button (click)="!isBooked(t) && pickTime(t)"
+                            [disabled]="isBooked(t)"
+                            [style.border]="selTime() === t ? '1.5px solid var(--p)' : '1.5px solid var(--bo)'"
+                            [style.background]="isBooked(t) ? 'var(--bg)' : selTime() === t ? 'var(--p)' : 'var(--bg)'"
+                            [style.color]="isBooked(t) ? 'var(--t3)' : selTime() === t ? 'white' : 'var(--t)'"
+                            [style.opacity]="isBooked(t) ? '0.45' : '1'"
+                            [style.cursor]="isBooked(t) ? 'not-allowed' : 'pointer'"
+                            [style.text-decoration]="isBooked(t) ? 'line-through' : 'none'"
+                            style="padding:7px;border-radius:var(--rs);font-weight:600;font-size:12px;transition:var(--tr)">
+                      {{ t }}
+                    </button>
+                  }
+                </div>
+              }
             }
           }
 
@@ -158,11 +166,28 @@ export class BookingModalComponent {
   selSvc = signal<Service | null>(null);
   selDay = signal<{ day: number; month: string; full: string } | null>(null);
   selTime = signal<string | null>(null);
+  bookedSlots = signal<string[]>([]);
+  loadingSlots = signal(false);
 
   guestName = '';
   guestContact = '';
   nameError = signal('');
   contactError = signal('');
+
+  constructor() {
+    effect(() => {
+      const day = this.selDay();
+      if (!day) return;
+      this.bookedSlots.set([]);
+      this.loadingSlots.set(true);
+      this.api.getBookedSlots(this.providerId, day.full).subscribe({
+        next: ({ slots }) => { this.bookedSlots.set(slots); this.loadingSlots.set(false); },
+        error: () => this.loadingSlots.set(false),
+      });
+    });
+  }
+
+  isBooked(t: string) { return this.bookedSlots().includes(t); }
 
   steps = computed(() => this.auth.isLoggedIn()
     ? ['booking.step.service', 'booking.step.time', 'booking.step.confirm']

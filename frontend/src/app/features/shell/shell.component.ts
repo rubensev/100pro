@@ -13,7 +13,7 @@ const NAV = [
   { id: 'explore',  key: 'nav.explore',  path: '/explore',  icon: 'M21 21l-4.35-4.35 M11 11m-8 0a8 8 0 1 0 16 0a8 8 0 0 0 -16 0' },
   { id: 'schedule', key: 'nav.schedule', path: '/schedule', icon: 'M3 4h18v18H3z M16 2v4 M8 2v4 M3 10h18', requireAuth: true },
   { id: 'messages', key: 'nav.messages', path: '/messages', icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', requireAuth: true },
-  { id: 'provider', key: 'nav.provider', path: '/provider', icon: 'M2 7h20v14H2z M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16', requireAuth: true },
+  { id: 'provider', key: 'nav.provider', path: '/provider', icon: 'M2 7h20v14H2z M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16', requireAuth: true, requireProvider: true },
   { id: 'pricing', key: 'nav.pricing', path: '/pricing', icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' },
 ];
 
@@ -48,15 +48,17 @@ const NAV = [
                 @if (item.id === 'messages' && notif.unreadMessages() > 0) {
                   <div style="position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:var(--re);border:1.5px solid var(--ca)"></div>
                 }
-                @if (item.id === 'schedule' && notif.upcomingBookings() > 0) {
-                  <div style="position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:var(--p);border:1.5px solid var(--ca)"></div>
+                @if (item.id === 'schedule' && (notif.upcomingBookings() > 0 || notif.incomingBookings() > 0)) {
+                  <div style="position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:var(--ac);border:1.5px solid var(--ca)"></div>
                 }
               </div>
               {{ i18n.t(item.key) }}
               @if (item.id === 'messages' && notif.unreadMessages() > 0) {
                 <span style="margin-left:auto;background:var(--re);color:white;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;min-width:20px;text-align:center">{{ notif.unreadMessages() }}</span>
               }
-              @if (item.id === 'schedule' && notif.upcomingBookings() > 0) {
+              @if (item.id === 'schedule' && notif.incomingBookings() > 0) {
+                <span style="margin-left:auto;background:var(--ac);color:white;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;min-width:20px;text-align:center">{{ notif.incomingBookings() }}</span>
+              } @else if (item.id === 'schedule' && notif.upcomingBookings() > 0) {
                 <span style="margin-left:auto;background:var(--p);color:white;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;min-width:20px;text-align:center">{{ notif.upcomingBookings() }}</span>
               }
             </a>
@@ -188,8 +190,8 @@ const NAV = [
                 @if (item.id === 'messages' && notif.unreadMessages() > 0) {
                   <div style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:var(--re);border:1.5px solid var(--ca)"></div>
                 }
-                @if (item.id === 'schedule' && notif.upcomingBookings() > 0) {
-                  <div style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:var(--p);border:1.5px solid var(--ca)"></div>
+                @if (item.id === 'schedule' && (notif.upcomingBookings() > 0 || notif.incomingBookings() > 0)) {
+                  <div style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:var(--ac);border:1.5px solid var(--ca)"></div>
                 }
               </div>
               {{ i18n.t(item.key) }}
@@ -262,7 +264,11 @@ export class ShellComponent implements OnInit, OnDestroy {
   ];
 
   get visibleNav() {
-    return NAV.filter(n => !n.requireAuth || this.auth.isLoggedIn());
+    return NAV.filter(n => {
+      if (n.requireAuth && !this.auth.isLoggedIn()) return false;
+      if ((n as any).requireProvider && !this.auth.user()?.isProvider) return false;
+      return true;
+    });
   }
 
   get userInitials() {

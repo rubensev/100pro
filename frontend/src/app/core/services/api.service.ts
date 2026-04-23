@@ -95,6 +95,8 @@ export class ApiService {
   getBookings() { return this.http.get<Booking[]>(`${API}/bookings`); }
   getIncomingBookings() { return this.http.get<any[]>(`${API}/bookings/incoming`); }
   getUpcomingCount() { return this.http.get<{ count: number }>(`${API}/bookings/upcoming-count`); }
+  getIncomingCount() { return this.http.get<{ count: number }>(`${API}/bookings/incoming-count`); }
+  getBookedSlots(providerId: string, date: string) { return this.http.get<{ slots: string[] }>(`${API}/bookings/booked-slots`, { params: { providerId, date } }); }
   createBooking(data: any) { return this.http.post<Booking>(`${API}/bookings`, data); }
   cancelBooking(id: string) { return this.http.patch<Booking>(`${API}/bookings/${id}/cancel`, {}); }
 }

@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -126,7 +126,7 @@ interface ThreadMsg {
 
     <!-- Chat thread modal -->
     @if (activeChat()) {
-      <div class="overlay" (click)="activeChat.set(null)">
+      <div class="overlay" (click)="closeChat()">
         <div class="pop card" style="width:100%;max-width:460px;height:80vh;display:flex;flex-direction:column;overflow:hidden" (click)="$event.stopPropagation()">
           <div style="padding:14px 16px;border-bottom:1px solid var(--bo);display:flex;align-items:center;gap:10px">
             <app-avatar [initials]="activeChat()!.initials" [color]="color(activeChat()!.initials)" [size]="36" />
@@ -161,7 +161,7 @@ interface ThreadMsg {
     }
   `,
 })
-export class MessagesComponent implements OnInit {
+export class MessagesComponent implements OnInit, OnDestroy {
   api = inject(ApiService);
   auth = inject(AuthService);
   i18n = inject(TranslationService);
@@ -180,14 +180,22 @@ export class MessagesComponent implements OnInit {
   searching = signal(false);
   searchResults = signal<ProviderProfile[]>([]);
   private searchDebounce: ReturnType<typeof setTimeout> | null = null;
+  private threadPoll: ReturnType<typeof setInterval> | null = null;
+  private convPoll: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit() {
     this.loadConversations();
+    this.convPoll = setInterval(() => this.silentRefreshConvs(), 15000);
     const p = this.route.snapshot.queryParams;
     if (p['with']) {
       const conv: Conversation = { otherId: p['with'], name: p['name'] || 'User', initials: p['initials'] || '??', lastMsg: '', time: '', hasUnread: false };
       this.openChat(conv);
     }
+  }
+
+  ngOnDestroy() {
+    if (this.threadPoll) clearInterval(this.threadPoll);
+    if (this.convPoll) clearInterval(this.convPoll);
   }
 
   toggleSearch() {
@@ -247,26 +255,46 @@ export class MessagesComponent implements OnInit {
   color(initials: string) { return getInitialsColor(initials); }
 
   openChat(c: Conversation) {
+    if (this.threadPoll) { clearInterval(this.threadPoll); this.threadPoll = null; }
     this.activeChat.set(c);
     this.threadMessages.set([]);
     this.threadLoading.set(true);
-    const myId = this.auth.user()?.id;
     if (c.hasUnread) {
       this.api.markThreadRead(c.otherId).subscribe({ error: () => {} });
       this.notif.decrementMessages();
       this.convs.update(cs => cs.map(x => x.otherId === c.otherId ? { ...x, hasUnread: false } : x));
     }
-    this.api.getThread(c.otherId).subscribe({
+    this.loadThread(c.otherId, true);
+    this.threadPoll = setInterval(() => this.loadThread(c.otherId, false), 5000);
+  }
+
+  private loadThread(otherId: string, showLoader: boolean) {
+    const myId = this.auth.user()?.id;
+    this.api.getThread(otherId).subscribe({
       next: msgs => {
-        this.threadMessages.set(msgs.map(m => ({
-          id: m.id,
-          text: m.text,
-          mine: m.senderId === myId,
-          time: this.formatTime(m.createdAt),
-        })));
-        this.threadLoading.set(false);
+        const mapped = msgs.map(m => ({ id: m.id, text: m.text, mine: m.senderId === myId, time: this.formatTime(m.createdAt) }));
+        this.threadMessages.set(mapped);
+        if (showLoader) this.threadLoading.set(false);
       },
-      error: () => this.threadLoading.set(false),
+      error: () => { if (showLoader) this.threadLoading.set(false); },
+    });
+  }
+
+  closeChat() {
+    if (this.threadPoll) { clearInterval(this.threadPoll); this.threadPoll = null; }
+    this.activeChat.set(null);
+  }
+
+  private silentRefreshConvs() {
+    const myId = this.auth.user()?.id;
+    this.api.getConversations().subscribe({
+      next: msgs => {
+        this.convs.set(msgs.map(m => {
+          const other = m.senderId === myId ? m.receiver! : m.sender!;
+          return { otherId: other.id, name: other.name, initials: other.avatarInitials || other.name.slice(0, 2).toUpperCase(), lastMsg: m.text, time: this.formatTime(m.createdAt), hasUnread: m.receiverId === myId && !m.read };
+        }));
+      },
+      error: () => {},
     });
   }
 

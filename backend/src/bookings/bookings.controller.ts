@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
@@ -25,6 +25,19 @@ export class BookingsController {
   @UseGuards(JwtAuthGuard)
   incoming(@CurrentUser() user: { id: string }) {
     return this.svc.findIncoming(user.id);
+  }
+
+  @Get('incoming-count')
+  @UseGuards(JwtAuthGuard)
+  async incomingCount(@CurrentUser() user: { id: string }) {
+    const count = await this.svc.getIncomingCount(user.id);
+    return { count };
+  }
+
+  @Get('booked-slots')
+  async bookedSlots(@Query('providerId') providerId: string, @Query('date') date: string) {
+    const slots = await this.svc.getBookedSlots(providerId, date);
+    return { slots };
   }
 
   @Patch(':id/cancel')
