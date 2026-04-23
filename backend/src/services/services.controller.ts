@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../common/current-user.decorator';
 import { ServicesService } from './services.service';
@@ -6,6 +6,11 @@ import { ServicesService } from './services.service';
 @Controller('services')
 export class ServicesController {
   constructor(private readonly svc: ServicesService) {}
+
+  @Get('search')
+  search(@Query('q') q: string) {
+    return this.svc.searchPublic(q || '');
+  }
 
   @Get('mine')
   @UseGuards(JwtAuthGuard)

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
@@ -9,6 +9,11 @@ import { CurrentUser } from '../common/current-user.decorator';
 @Controller('stores')
 export class StoresController {
   constructor(private readonly svc: StoresService) {}
+
+  @Get('search')
+  search(@Query('q') q: string) {
+    return this.svc.searchPublic(q || '');
+  }
 
   @Get('mine')
   @UseGuards(JwtAuthGuard)

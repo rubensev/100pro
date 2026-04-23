@@ -48,6 +48,7 @@ export class ApiService {
   updateMyProfile(data: Partial<ProviderProfile>) { return this.http.put<ProviderProfile>(`${API}/providers/me`, data); }
 
   // Services
+  searchServices(q: string) { return this.http.get<Service[]>(`${API}/services/search`, { params: { q } }); }
   getMyServices() { return this.http.get<Service[]>(`${API}/services/mine`); }
   createService(data: Partial<Service>) { return this.http.post<Service>(`${API}/services`, data); }
   updateService(id: string, data: Partial<Service>) { return this.http.put<Service>(`${API}/services/${id}`, data); }
@@ -71,6 +72,7 @@ export class ApiService {
   }
 
   // Stores
+  searchStores(q: string) { return this.http.get<Store[]>(`${API}/stores/search`, { params: { q } }); }
   getMyStores() { return this.http.get<Store[]>(`${API}/stores/mine`); }
   getStoresByProvider(providerId: string) { return this.http.get<Store[]>(`${API}/stores/provider/${providerId}`); }
   createStore(data: Partial<Store>) { return this.http.post<Store>(`${API}/stores`, data); }

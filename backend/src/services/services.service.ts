@@ -11,6 +11,15 @@ export class ServicesService {
     private providers: ProvidersService,
   ) {}
 
+  searchPublic(q: string) {
+    const like = `%${q.toLowerCase()}%`;
+    return this.repo.createQueryBuilder('s')
+      .leftJoinAndSelect('s.provider', 'provider')
+      .leftJoinAndSelect('provider.user', 'user')
+      .where('LOWER(s.name) LIKE :like OR LOWER(s.description) LIKE :like OR LOWER(s.category) LIKE :like', { like })
+      .getMany();
+  }
+
   async findByProvider(userId: string) {
     const profile = await this.providers.findByUser(userId);
     if (!profile) return [];

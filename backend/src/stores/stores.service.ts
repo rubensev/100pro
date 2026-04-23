@@ -15,6 +15,15 @@ export class StoresService {
     private users: UsersService,
   ) {}
 
+  searchPublic(q: string) {
+    const like = `%${q.toLowerCase()}%`;
+    return this.repo.createQueryBuilder('s')
+      .leftJoinAndSelect('s.provider', 'provider')
+      .leftJoinAndSelect('provider.user', 'user')
+      .where('s.active = true AND (LOWER(s.name) LIKE :like OR LOWER(s.description) LIKE :like OR LOWER(s.category) LIKE :like)', { like })
+      .getMany();
+  }
+
   async findByUser(userId: string) {
     const provider = await this.providers.findByUser(userId);
     if (!provider) return [];

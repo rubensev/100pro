@@ -36,6 +36,7 @@ export interface ProviderProfile {
 export interface Service {
   id: string;
   providerId: string;
+  provider?: ProviderProfile;
   name: string;
   price: number;
   duration: number;
@@ -97,6 +98,7 @@ export interface Review {
 export interface Store {
   id: string;
   providerId: string;
+  provider?: ProviderProfile;
   name: string;
   description?: string;
   coverUrl?: string;

@@ -60,6 +60,11 @@ export const T: Record<string, Record<Lang, string>> = {
   'explore.filter.any_rating':  { en: 'Any rating',    pt: 'Qualquer nota',  fr: 'Toute note' },
   'explore.filter.clear':       { en: 'Clear filters', pt: 'Limpar filtros', fr: 'Effacer les filtres' },
   'explore.filter.results':     { en: 'results',       pt: 'resultados',     fr: 'résultats' },
+  'explore.tab.people':         { en: 'Professionals', pt: 'Profissionais',  fr: 'Professionnels' },
+  'explore.tab.services':       { en: 'Services',      pt: 'Serviços',       fr: 'Services' },
+  'explore.tab.stores':         { en: 'Stores',        pt: 'Lojas',          fr: 'Boutiques' },
+  'explore.services.empty':     { en: 'No services found', pt: 'Nenhum serviço encontrado', fr: 'Aucun service trouvé' },
+  'explore.stores.empty':       { en: 'No stores found',   pt: 'Nenhuma loja encontrada',   fr: 'Aucune boutique trouvée' },
 
   // Schedule
   'schedule.title':            { en: 'My Bookings',  pt: 'Meus Agendamentos', fr: 'Mes Rendez-vous' },

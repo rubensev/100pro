@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -26,9 +27,10 @@ const API_BASE = 'http://localhost:3000';
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
         <input [(ngModel)]="query" [placeholder]="i18n.t('home.search.placeholder')"
                (focus)="focused.set(true)" (blur)="focused.set(false)"
+               (keydown.enter)="goSearch()"
                style="flex:1;border:none;outline:none;background:transparent;font-size:14px;color:var(--t)" />
         @if (query) { <button (click)="query=''" style="color:var(--t3);font-size:18px;line-height:1">×</button> }
-        <button class="btn btn-p" style="padding:6px 14px;font-size:12px">{{ i18n.t('home.search.btn') }}</button>
+        <button class="btn btn-p" style="padding:6px 14px;font-size:12px" (click)="goSearch()">{{ i18n.t('home.search.btn') }}</button>
       </div>
 
       <!-- Categories -->
@@ -297,7 +299,7 @@ const API_BASE = 'http://localhost:3000';
 export class HomeComponent implements OnInit {
   api = inject(ApiService);
   auth = inject(AuthService);
-
+  router = inject(Router);
   i18n = inject(TranslationService);
   sanitizer = inject(DomSanitizer);
 
@@ -320,6 +322,10 @@ export class HomeComponent implements OnInit {
   postUploading = signal(false);
 
   get myInitials() { return this.auth.user()?.avatarInitials || 'VC'; }
+
+  goSearch() {
+    if (this.query.trim()) this.router.navigate(['/explore'], { queryParams: { q: this.query.trim() } });
+  }
 
   ngOnInit() {
     this.api.getPosts().subscribe({
