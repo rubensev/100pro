@@ -51,12 +51,42 @@ button { cursor: pointer; border: none; background: none; }
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-thumb { background: var(--bo); border-radius: 99px; }
 
-@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes pop { from { opacity: 0; transform: scale(0.93); } to { opacity: 1; transform: scale(1); } }
-@keyframes hpop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.45); } }
+@keyframes fadeUp    { from { opacity:0; transform:translateY(8px); }  to { opacity:1; transform:translateY(0); } }
+@keyframes pop       { from { opacity:0; transform:scale(0.93); }       to { opacity:1; transform:scale(1); } }
+@keyframes hpop      { 0%,100% { transform:scale(1); } 50% { transform:scale(1.45); } }
+@keyframes spin      { to { transform:rotate(360deg); } }
+@keyframes float     { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-10px); } }
+@keyframes slideUp   { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+@keyframes logoIn    { from { opacity:0; transform:scale(0.6) translateY(12px); } to { opacity:1; transform:scale(1) translateY(0); } }
+@keyframes splashOut { to   { opacity:0; pointer-events:none; } }
+@keyframes shimmer   { from { background-position:-200% 0; } to { background-position:200% 0; } }
+@keyframes badgeBounce { 0%,100% { transform:scale(1); } 50% { transform:scale(1.18); } }
+@keyframes glowPulse { 0%,100% { box-shadow:0 0 0 0 oklch(0.42 0.20 250 / 0.45); } 60% { box-shadow:0 0 0 10px oklch(0.42 0.20 250 / 0); } }
+@keyframes orbitLeft  { from { transform:rotate(0deg) translateX(60px) rotate(0deg); } to { transform:rotate(-360deg) translateX(60px) rotate(360deg); } }
+@keyframes orbitRight { from { transform:rotate(0deg) translateX(90px) rotate(0deg); } to { transform:rotate(360deg) translateX(90px) rotate(-360deg); } }
 
-.fu { animation: fadeUp 0.3s ease both; }
-.pop { animation: pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.fu        { animation: fadeUp  0.3s ease both; }
+.pop       { animation: pop     0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.spin      { animation: spin    1s linear infinite; }
+.float-el  { animation: float   3.5s ease-in-out infinite; }
+.slide-up  { animation: slideUp 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.logo-in   { animation: logoIn  0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* staggered list children */
+.stagger > * { animation: slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
+.stagger > *:nth-child(1) { animation-delay:.06s; }
+.stagger > *:nth-child(2) { animation-delay:.13s; }
+.stagger > *:nth-child(3) { animation-delay:.20s; }
+.stagger > *:nth-child(4) { animation-delay:.27s; }
+.stagger > *:nth-child(5) { animation-delay:.34s; }
+.stagger > *:nth-child(6) { animation-delay:.41s; }
+
+/* skeleton shimmer */
+.shimmer {
+  background: linear-gradient(90deg, var(--bo) 25%, var(--bg2) 50%, var(--bo) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
 
 .card { background: var(--ca); border-radius: var(--r); border: 1px solid var(--bo); box-shadow: var(--sh); }
 
