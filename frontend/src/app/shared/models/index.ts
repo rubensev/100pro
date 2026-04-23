@@ -36,6 +36,7 @@ export interface ProviderProfile {
 export interface Service {
   id: string;
   providerId: string;
+  storeId?: string;
   provider?: ProviderProfile;
   name: string;
   price: number;
@@ -68,6 +69,8 @@ export interface Post {
   imageUrl?: string;
   videoUrl?: string;
   category: string;
+  serviceId?: string;
+  service?: Service;
   likesCount: number;
   comments?: Comment[];
   createdAt: string;
@@ -102,8 +105,11 @@ export interface Store {
   name: string;
   description?: string;
   coverUrl?: string;
+  logoUrl?: string;
+  backgroundColor?: string;
   category?: string;
   active: boolean;
+  members?: ProviderProfile[];
   createdAt: string;
 }
 

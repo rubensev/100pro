@@ -1,4 +1,4 @@
-import { Component, inject, HostListener, signal, OnInit, OnDestroy, effect } from '@angular/core';
+import { Component, inject, HostListener, signal, computed, OnInit, OnDestroy, effect } from '@angular/core';
 import { RouterOutlet, RouterLink, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { LogoComponent } from '../../shared/components/logo.component';
@@ -31,7 +31,7 @@ const NAV = [
           display:flex;flex-direction:column;gap:2px">
           <div style="padding:0 8px 20px"><app-logo /></div>
 
-          @for (item of visibleNav; track item.id) {
+          @for (item of visibleNav(); track item.id) {
             <a [routerLink]="item.path"
                [style.background]="isActive(item.path) ? 'var(--px)' : 'transparent'"
                [style.color]="isActive(item.path) ? 'var(--p)' : 'var(--t2)'"
@@ -177,7 +177,7 @@ const NAV = [
       @if (mobile()) {
         <nav style="position:fixed;bottom:0;left:0;right:0;height:58px;z-index:50;
           background:var(--ca);border-top:1px solid var(--bo);display:flex;backdrop-filter:blur(12px)">
-          @for (item of visibleNav; track item.id) {
+          @for (item of visibleNav(); track item.id) {
             <a [routerLink]="item.path"
                [style.color]="isActive(item.path) ? 'var(--p)' : 'var(--t3)'"
                [style.fontWeight]="isActive(item.path) ? '700' : '500'"
@@ -271,13 +271,13 @@ export class ShellComponent implements OnInit, OnDestroy {
     { code: 'fr' as const, label: 'FR' },
   ];
 
-  get visibleNav() {
-    return NAV.filter(n => {
+  visibleNav = computed(() =>
+    NAV.filter(n => {
       if (n.requireAuth && !this.auth.isLoggedIn()) return false;
       if ((n as any).requireProvider && !this.auth.user()?.isProvider) return false;
       return true;
-    });
-  }
+    })
+  );
 
   get userInitials() {
     return this.auth.user()?.avatarInitials || this.auth.user()?.name?.slice(0, 2).toUpperCase() || 'VC';

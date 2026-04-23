@@ -12,6 +12,11 @@ export class ServicesController {
     return this.svc.searchPublic(q || '');
   }
 
+  @Get('store/:storeId')
+  byStore(@Param('storeId') storeId: string) {
+    return this.svc.findByStore(storeId);
+  }
+
   @Get('mine')
   @UseGuards(JwtAuthGuard)
   mine(@CurrentUser() user: { id: string }) {

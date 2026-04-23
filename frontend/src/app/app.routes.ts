@@ -19,6 +19,7 @@ export const routes: Routes = [
       { path: 'pricing', loadComponent: () => import('./features/pricing/pricing.component').then(m => m.PricingComponent) },
       { path: 'profile', canActivate: [authGuard], loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent) },
       { path: 'p/:id', loadComponent: () => import('./features/public-profile/public-profile.component').then(m => m.PublicProfileComponent) },
+      { path: 'store/:id', loadComponent: () => import('./features/store/store-page.component').then(m => m.StorePageComponent) },
     ],
   },
   { path: '**', redirectTo: 'home' },

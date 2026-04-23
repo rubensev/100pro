@@ -24,6 +24,15 @@ export class StoresService {
       .getMany();
   }
 
+  async getPublicStore(id: string) {
+    const store = await this.repo.findOne({
+      where: { id },
+      relations: ['provider', 'provider.user', 'members', 'members.user', 'members.services'],
+    });
+    if (!store) throw new NotFoundException('Store not found');
+    return store;
+  }
+
   async findByUser(userId: string) {
     const provider = await this.providers.findByUser(userId);
     if (!provider) return [];
@@ -67,10 +76,36 @@ export class StoresService {
     return this.repo.save(store);
   }
 
+  async updateLogo(id: string, userId: string, logoUrl: string) {
+    const store = await this.findOwnedStore(id, userId);
+    store.logoUrl = logoUrl;
+    return this.repo.save(store);
+  }
+
+  async addMember(storeId: string, userId: string, memberProviderId: string) {
+    const store = await this.findOwnedStore(storeId, userId);
+    const member = await this.providers.findById(memberProviderId);
+    if (!member) throw new NotFoundException('Provider not found');
+    if (!store.members) store.members = [];
+    if (!store.members.find(m => m.id === memberProviderId)) {
+      store.members.push(member);
+    }
+    return this.repo.save(store);
+  }
+
+  async removeMember(storeId: string, userId: string, memberProviderId: string) {
+    const store = await this.findOwnedStore(storeId, userId);
+    store.members = (store.members || []).filter(m => m.id !== memberProviderId);
+    return this.repo.save(store);
+  }
+
   private async findOwnedStore(id: string, userId: string) {
     const provider = await this.providers.findByUser(userId);
     if (!provider) throw new NotFoundException('Provider not found');
-    const store = await this.repo.findOne({ where: { id, providerId: provider.id } });
+    const store = await this.repo.findOne({
+      where: { id, providerId: provider.id },
+      relations: ['members'],
+    });
     if (!store) throw new NotFoundException('Store not found');
     return store;
   }

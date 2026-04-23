@@ -75,6 +75,7 @@ export class ApiService {
   searchStores(q: string) { return this.http.get<Store[]>(`${API}/stores/search`, { params: { q } }); }
   getMyStores() { return this.http.get<Store[]>(`${API}/stores/mine`); }
   getStoresByProvider(providerId: string) { return this.http.get<Store[]>(`${API}/stores/provider/${providerId}`); }
+  getPublicStore(id: string) { return this.http.get<Store>(`${API}/stores/${id}/public`); }
   createStore(data: Partial<Store>) { return this.http.post<Store>(`${API}/stores`, data); }
   updateStore(id: string, data: Partial<Store>) { return this.http.put<Store>(`${API}/stores/${id}`, data); }
   deleteStore(id: string) { return this.http.delete(`${API}/stores/${id}`); }
@@ -83,6 +84,14 @@ export class ApiService {
     fd.append('cover', file);
     return this.http.post<Store>(`${API}/stores/${id}/cover`, fd);
   }
+  uploadStoreLogo(id: string, file: File) {
+    const fd = new FormData();
+    fd.append('logo', file);
+    return this.http.post<Store>(`${API}/stores/${id}/logo`, fd);
+  }
+  addStoreMember(storeId: string, providerId: string) { return this.http.post<Store>(`${API}/stores/${storeId}/members`, { providerId }); }
+  removeStoreMember(storeId: string, providerId: string) { return this.http.delete<Store>(`${API}/stores/${storeId}/members/${providerId}`); }
+  getServicesByStore(storeId: string) { return this.http.get<Service[]>(`${API}/services/store/${storeId}`); }
 
   // Messages
   getConversations() { return this.http.get<Message[]>(`${API}/messages`); }

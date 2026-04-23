@@ -47,4 +47,12 @@ export class ServicesService {
     if (!svc || svc.providerId !== profile?.id) throw new ForbiddenException();
     return this.repo.remove(svc);
   }
+
+  findByStore(storeId: string) {
+    return this.repo.find({
+      where: { storeId },
+      relations: ['provider', 'provider.user'],
+      order: { createdAt: 'ASC' },
+    });
+  }
 }

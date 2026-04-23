@@ -14,6 +14,9 @@ export class Service {
   @Column()
   providerId: string;
 
+  @Column({ nullable: true })
+  storeId: string;
+
   @Column()
   name: string;
 

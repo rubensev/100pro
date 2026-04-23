@@ -14,6 +14,7 @@ export class PostsService {
   findAll(category?: string) {
     const qb = this.postRepo.createQueryBuilder('p')
       .leftJoinAndSelect('p.author', 'author')
+      .leftJoinAndSelect('p.service', 'service')
       .leftJoinAndSelect('p.comments', 'comments')
       .leftJoinAndSelect('comments.author', 'commentAuthor')
       .orderBy('p.createdAt', 'DESC');
@@ -46,7 +47,7 @@ export class PostsService {
   findByAuthor(userId: string) {
     return this.postRepo.find({
       where: { authorId: userId },
-      relations: ['author', 'comments', 'comments.author'],
+      relations: ['author', 'service', 'comments', 'comments.author'],
       order: { createdAt: 'DESC' },
     });
   }

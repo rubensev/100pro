@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany, CreateDateColumn } from 'typeorm';
 import { User } from '../users/user.entity';
 import { Comment } from './comment.entity';
+import { Service } from '../services/service.entity';
 
 @Entity('posts')
 export class Post {
@@ -34,6 +35,13 @@ export class Post {
 
   @Column({ nullable: true })
   category: string;
+
+  @Column({ nullable: true })
+  serviceId: string;
+
+  @ManyToOne(() => Service, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn()
+  service: Service;
 
   @Column({ default: 0 })
   likesCount: number;

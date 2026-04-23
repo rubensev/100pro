@@ -196,26 +196,149 @@ function buildSlots() {
 
       <!-- STORES TAB -->
       @if (tab === 'stores') {
-        @if (storeForm()) {
-          <div class="card" style="padding:20px">
-            <div style="font-weight:800;font-size:16px;margin-bottom:16px">{{ storeForm()!.id ? i18n.t('provider.store.edit_title') : i18n.t('provider.store.new_title') }}</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div class="field" style="grid-column:1/-1"><label>{{ i18n.t('provider.store.name') }}</label><input type="text" [(ngModel)]="storeForm()!.name" [placeholder]="i18n.t('provider.store.name_ph')" /></div>
-              <div class="field" style="grid-column:1/-1"><label>{{ i18n.t('provider.store.desc') }}</label><textarea [(ngModel)]="storeForm()!.description" style="min-height:72px"></textarea></div>
-              <div class="field"><label>{{ i18n.t('provider.store.category') }}</label>
-                <select [(ngModel)]="storeForm()!.category">
+        @if (managingStore()) {
+          <!-- STORE MANAGEMENT DETAIL VIEW -->
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <button class="btn btn-g" style="padding:6px 12px;font-size:12px" (click)="managingStore.set(null)">← Back</button>
+              <div style="font-weight:800;font-size:16px;flex:1">{{ managingStore()!.name }}</div>
+              <a [routerLink]="['/store', managingStore()!.id]" target="_blank"
+                 style="font-size:11px;color:var(--p);font-weight:600;text-decoration:none;
+                        padding:5px 12px;border:1px solid var(--p);border-radius:99px">
+                View public ↗
+              </a>
+            </div>
+
+            <!-- Cover + Logo row -->
+            <div class="card" style="overflow:hidden">
+              <div style="height:130px;position:relative;overflow:hidden"
+                   [style.background]="managingStore()!.coverUrl ? 'var(--bg2)' : (managingStore()!.backgroundColor || 'linear-gradient(135deg,var(--p),var(--ac))')">
+                @if (managingStore()!.coverUrl) {
+                  <img [src]="API_BASE + managingStore()!.coverUrl" style="width:100%;height:100%;object-fit:cover;display:block" />
+                }
+                <label style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);
+                       color:white;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer">
+                  Cover photo
+                  <input type="file" accept="image/*" style="display:none" (change)="onStoreCoverChange($event, managingStore()!.id!)" />
+                </label>
+                @if (managingStore()!.logoUrl) {
+                  <div style="position:absolute;bottom:-28px;left:16px;width:56px;height:56px;border-radius:12px;
+                              border:3px solid white;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.2)">
+                    <img [src]="API_BASE + managingStore()!.logoUrl" style="width:100%;height:100%;object-fit:cover" />
+                  </div>
+                }
+              </div>
+              <div style="padding:{{ managingStore()!.logoUrl ? '40px' : '12px' }} 16px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                <label class="btn btn-g" style="font-size:12px;cursor:pointer">
+                  {{ managingStore()!.logoUrl ? 'Change logo' : 'Upload logo' }}
+                  <input type="file" accept="image/*" style="display:none" (change)="onStoreLogoChange($event, managingStore()!.id!)" />
+                </label>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <label style="font-size:12px;font-weight:600;color:var(--t2)">Background</label>
+                  <input type="color" [value]="managingStore()!.backgroundColor || '#6366f1'"
+                         (change)="onStoreBgColor($event, managingStore()!.id!)"
+                         style="width:36px;height:28px;border-radius:6px;border:1.5px solid var(--bo);cursor:pointer;padding:2px" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Basic info edit -->
+            <div class="card" style="padding:16px">
+              <div style="font-weight:700;font-size:13px;margin-bottom:12px">Store info</div>
+              <div class="field"><label>Name</label><input type="text" [(ngModel)]="managingStore()!.name" /></div>
+              <div class="field"><label>Description</label><textarea [(ngModel)]="managingStore()!.description" style="min-height:60px"></textarea></div>
+              <div class="field"><label>Category</label>
+                <select [(ngModel)]="managingStore()!.category">
                   @for (c of cats; track c.id) { <option [value]="c.id">{{ c.icon }} {{ i18n.t('cat.' + c.id) }}</option> }
                 </select>
               </div>
-              <div class="field" style="display:flex;align-items:center;gap:10px;padding-top:22px">
-                <input type="checkbox" [(ngModel)]="storeForm()!.active" style="width:16px;height:16px" />
-                <label style="margin-bottom:0;font-size:13px">{{ i18n.t('provider.store.active') }}</label>
+              <button class="btn btn-p" style="font-size:12px" (click)="saveStore()">Save changes</button>
+            </div>
+
+            <!-- Members -->
+            <div class="card" style="padding:16px">
+              <div style="font-weight:700;font-size:13px;margin-bottom:12px">Team members</div>
+
+              <!-- Search to add -->
+              <div style="display:flex;gap:8px;margin-bottom:12px">
+                <input [(ngModel)]="memberSearch" (ngModelChange)="onMemberSearch($event)"
+                       placeholder="Search provider by name..."
+                       style="flex:1;padding:8px 12px;border:1.5px solid var(--bo);border-radius:var(--rs);font-size:13px;background:var(--bg);color:var(--t);outline:none" />
               </div>
+
+              @if (memberResults().length > 0) {
+                <div style="border:1px solid var(--bo);border-radius:var(--rs);overflow:hidden;margin-bottom:12px">
+                  @for (p of memberResults(); track p.id) {
+                    <div style="padding:10px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bo);background:var(--ca)"
+                         [style.border-bottom]="$last ? 'none' : '1px solid var(--bo)'">
+                      <app-avatar [initials]="p.user?.avatarInitials || '?'" [color]="memberColor(p)" [size]="32" />
+                      <div style="flex:1;font-size:13px;font-weight:600">{{ p.user?.name }} <span style="font-weight:400;color:var(--t3)">· {{ p.role || p.category }}</span></div>
+                      <button class="btn btn-p" style="padding:4px 12px;font-size:11px" (click)="addMember(p)">Add</button>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Current members -->
+              @if (managingStore()!.members?.length) {
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  @for (m of managingStore()!.members!; track m.id) {
+                    <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--rs);background:var(--bg);border:1px solid var(--bo)">
+                      <app-avatar [initials]="m.user?.avatarInitials || '?'" [color]="memberColor(m)" [size]="34" />
+                      <div style="flex:1;min-width:0">
+                        <div style="font-weight:600;font-size:13px">{{ m.user?.name }}</div>
+                        <div style="font-size:11px;color:var(--t3)">{{ m.role || m.category }}</div>
+                      </div>
+                      <button class="btn btn-danger" style="padding:4px 10px;font-size:11px" (click)="removeMember(m.id)">Remove</button>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div style="text-align:center;padding:16px;color:var(--t3);font-size:13px">No members yet — search above to add team</div>
+              }
+            </div>
+
+            <!-- Services at this store -->
+            <div class="card" style="padding:16px">
+              <div style="font-weight:700;font-size:13px;margin-bottom:4px">Services at this store</div>
+              <div style="font-size:12px;color:var(--t3);margin-bottom:12px">Toggle which services are available at this store</div>
+              @if (services().length === 0) {
+                <div style="text-align:center;padding:16px;color:var(--t3);font-size:13px">No services yet — add them in the Services tab</div>
+              }
+              @for (svc of services(); track svc.id) {
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--rs);
+                            margin-bottom:6px;border:1px solid var(--bo);background:var(--bg)"
+                     [style.border-color]="svc.storeId === managingStore()!.id ? 'var(--p)' : 'var(--bo)'"
+                     [style.background]="svc.storeId === managingStore()!.id ? 'var(--px)' : 'var(--bg)'">
+                  <div style="flex:1">
+                    <div style="font-weight:600;font-size:13px">{{ svc.name }}</div>
+                    <div style="font-size:11px;color:var(--t3)">R$ {{ svc.price }} · {{ svc.duration }}min</div>
+                  </div>
+                  <button (click)="toggleServiceStore(svc)"
+                          [style.background]="svc.storeId === managingStore()!.id ? 'var(--p)' : 'var(--bg2)'"
+                          [style.color]="svc.storeId === managingStore()!.id ? 'white' : 'var(--t2)'"
+                          style="padding:5px 12px;border-radius:99px;font-size:11px;font-weight:600;border:none;cursor:pointer;transition:var(--tr)">
+                    {{ svc.storeId === managingStore()!.id ? '✓ Added' : 'Add' }}
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+
+        } @else if (storeForm()) {
+          <div class="card" style="padding:20px">
+            <div style="font-weight:800;font-size:16px;margin-bottom:16px">{{ i18n.t('provider.store.new_title') }}</div>
+            <div class="field"><label>{{ i18n.t('provider.store.name') }}</label><input type="text" [(ngModel)]="storeForm()!.name" [placeholder]="i18n.t('provider.store.name_ph')" /></div>
+            <div class="field"><label>{{ i18n.t('provider.store.desc') }}</label><textarea [(ngModel)]="storeForm()!.description" style="min-height:72px"></textarea></div>
+            <div class="field"><label>{{ i18n.t('provider.store.category') }}</label>
+              <select [(ngModel)]="storeForm()!.category">
+                @for (c of cats; track c.id) { <option [value]="c.id">{{ c.icon }} {{ i18n.t('cat.' + c.id) }}</option> }
+              </select>
             </div>
             @if (storeError()) { <div style="color:var(--re);font-size:12px;margin-top:6px">{{ storeError() }}</div> }
             <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
               <button class="btn btn-g" (click)="storeForm.set(null);storeError.set('')">{{ i18n.t('common.cancel') }}</button>
-              <button class="btn btn-p" (click)="saveStore()">{{ i18n.t('provider.store.save') }}</button>
+              <button class="btn btn-p" (click)="createNewStore()">Create store</button>
             </div>
           </div>
         } @else {
@@ -241,36 +364,31 @@ function buildSlots() {
             </div>
 
             @for (s of stores(); track s.id) {
-              <div class="card" style="overflow:hidden;border:1.5px solid var(--bo)">
-                <!-- Store cover -->
-                <div style="height:110px;position:relative;overflow:hidden"
-                     [style.background]="s.coverUrl ? 'var(--bg2)' : 'linear-gradient(135deg,' + color + '44,' + color + '11)'">
+              <div class="card" style="overflow:hidden;border:1.5px solid var(--bo);cursor:pointer;transition:var(--tr)"
+                   (click)="openManageStore(s)"
+                   (mouseenter)="$any($event.currentTarget).style.borderColor='var(--p)'"
+                   (mouseleave)="$any($event.currentTarget).style.borderColor='var(--bo)'">
+                <div style="height:90px;position:relative;overflow:hidden"
+                     [style.background]="s.coverUrl ? 'var(--bg2)' : (s.backgroundColor || 'linear-gradient(135deg,var(--p),var(--ac))')">
                   @if (s.coverUrl) {
                     <img [src]="API_BASE + s.coverUrl" style="width:100%;height:100%;object-fit:cover;display:block" />
                   }
-                  @if (storeCoverUploading() === s.id) {
-                    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center">
-                      <span style="color:white;font-size:12px;font-weight:600">{{ i18n.t('provider.cover.uploading') }}…</span>
+                  @if (s.logoUrl) {
+                    <div style="position:absolute;bottom:-18px;left:12px;width:42px;height:42px;border-radius:10px;border:2px solid white;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.2)">
+                      <img [src]="API_BASE + s.logoUrl" style="width:100%;height:100%;object-fit:cover" />
                     </div>
                   }
-                  <label style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);
-                         color:white;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer">
-                    {{ i18n.t('provider.cover.change') }}
-                    <input type="file" accept="image/*" style="display:none" (change)="onStoreCoverChange($event, s.id)" />
-                  </label>
-                  @if (!s.active) {
-                    <div style="position:absolute;top:8px;left:8px;background:var(--t3);color:white;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600">{{ i18n.t('provider.store.inactive') }}</div>
-                  }
                 </div>
-                <div style="padding:12px 16px;display:flex;gap:12px;align-items:flex-start">
+                <div style="padding:{{ s.logoUrl ? '26px' : '10px' }} 14px 12px;display:flex;gap:10px;align-items:flex-start">
                   <div style="flex:1">
-                    <div style="font-weight:700;font-size:15px">{{ s.name }}</div>
-                    @if (s.description) { <div style="font-size:12px;color:var(--t2);margin-top:3px;line-height:1.5">{{ s.description }}</div> }
-                    @if (s.category) { <span class="badge badge-g" style="margin-top:6px;display:inline-block">{{ catIcon(s.category) }} {{ catName(s.category) }}</span> }
+                    <div style="font-weight:700;font-size:14px">{{ s.name }}</div>
+                    @if (s.description) { <div style="font-size:12px;color:var(--t2);margin-top:2px;line-height:1.5">{{ s.description }}</div> }
                   </div>
-                  <div style="display:flex;gap:6px;flex-shrink:0">
-                    <button class="btn btn-g" style="padding:6px 12px;font-size:12px" (click)="storeForm.set({...s})">{{ i18n.t('common.edit') }}</button>
-                    <button class="btn btn-danger" style="padding:6px 12px;font-size:12px" (click)="deleteStore(s.id)">{{ i18n.t('common.delete') }}</button>
+                  <div style="display:flex;gap:5px;flex-shrink:0">
+                    <span style="font-size:11px;color:var(--t3);padding:3px 8px;border-radius:99px;background:var(--bg2)">
+                      {{ s.members?.length || 0 }} members
+                    </span>
+                    <span style="font-size:11px;color:var(--p);padding:3px 8px;border-radius:99px;background:var(--px)">Manage →</span>
                   </div>
                 </div>
               </div>
@@ -522,6 +640,10 @@ export class ProviderComponent implements OnInit {
   storeForm = signal<Partial<Store> | null>(null);
   storeError = signal('');
   storeCoverUploading = signal<string | null>(null);
+  managingStore = signal<Store | null>(null);
+  memberSearch = '';
+  memberResults = signal<ProviderProfile[]>([]);
+  private memberSearchTimer: any;
 
   myPosts = signal<any[]>([]);
   postText = '';
@@ -638,20 +760,26 @@ export class ProviderComponent implements OnInit {
   }
 
   saveStore() {
+    const s = this.managingStore();
+    if (!s || !s.name?.trim()) return;
+    this.storeError.set('');
+    this.api.updateStore(s.id!, s).subscribe({
+      next: updated => {
+        this.stores.update(ss => ss.map(x => x.id === updated.id ? { ...x, ...updated } : x));
+        this.managingStore.set({ ...s, ...updated, members: s.members });
+      },
+      error: (e) => this.storeError.set(e.error?.message || 'Erro ao salvar loja.'),
+    });
+  }
+
+  createNewStore() {
     const f = this.storeForm();
     if (!f || !f.name?.trim()) return;
     this.storeError.set('');
-    if (f.id) {
-      this.api.updateStore(f.id, f).subscribe({
-        next: s => { this.stores.update(ss => ss.map(x => x.id === s.id ? s : x)); this.storeForm.set(null); },
-        error: (e) => this.storeError.set(e.error?.message || 'Erro ao salvar loja.'),
-      });
-    } else {
-      this.api.createStore(f).subscribe({
-        next: s => { this.stores.update(ss => [...ss, s]); this.storeForm.set(null); },
-        error: (e) => this.storeError.set(e.error?.message || 'Erro ao criar loja. Verifique seu plano.'),
-      });
-    }
+    this.api.createStore(f).subscribe({
+      next: s => { this.stores.update(ss => [...ss, s]); this.storeForm.set(null); },
+      error: (e) => this.storeError.set(e.error?.message || 'Erro ao criar loja. Verifique seu plano.'),
+    });
   }
 
   deleteStore(id: string) {
@@ -666,9 +794,93 @@ export class ProviderComponent implements OnInit {
     if (!file) return;
     this.storeCoverUploading.set(storeId);
     this.api.uploadStoreCover(storeId, file).subscribe({
-      next: updated => { this.stores.update(ss => ss.map(s => s.id === storeId ? updated : s)); this.storeCoverUploading.set(null); },
+      next: updated => {
+        this.stores.update(ss => ss.map(s => s.id === storeId ? { ...s, ...updated } : s));
+        if (this.managingStore()?.id === storeId) {
+          this.managingStore.update(s => s ? { ...s, coverUrl: updated.coverUrl } : s);
+        }
+        this.storeCoverUploading.set(null);
+      },
       error: () => this.storeCoverUploading.set(null),
     });
+  }
+
+  openManageStore(s: Store) {
+    this.managingStore.set(s);
+    this.memberSearch = '';
+    this.memberResults.set([]);
+    this.api.getPublicStore(s.id!).subscribe({
+      next: full => this.managingStore.set(full),
+      error: () => {},
+    });
+  }
+
+  onStoreLogoChange(event: Event, storeId: string) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.api.uploadStoreLogo(storeId, file).subscribe({
+      next: updated => {
+        this.stores.update(ss => ss.map(s => s.id === storeId ? { ...s, ...updated } : s));
+        if (this.managingStore()?.id === storeId) {
+          this.managingStore.update(s => s ? { ...s, logoUrl: updated.logoUrl } : s);
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  onStoreBgColor(event: Event, storeId: string) {
+    const color = (event.target as HTMLInputElement).value;
+    this.managingStore.update(s => s ? { ...s, backgroundColor: color } : s);
+    this.stores.update(ss => ss.map(s => s.id === storeId ? { ...s, backgroundColor: color } : s));
+    this.api.updateStore(storeId, { backgroundColor: color }).subscribe({ error: () => {} });
+  }
+
+  onMemberSearch(q: string) {
+    clearTimeout(this.memberSearchTimer);
+    if (!q.trim()) { this.memberResults.set([]); return; }
+    this.memberSearchTimer = setTimeout(() => {
+      this.api.getProviders({ q }).subscribe({
+        next: results => this.memberResults.set(results.filter(r => r.id !== this.profile().id)),
+        error: () => {},
+      });
+    }, 300);
+  }
+
+  addMember(provider: ProviderProfile) {
+    const storeId = this.managingStore()?.id;
+    if (!storeId) return;
+    this.api.addStoreMember(storeId, provider.id).subscribe({
+      next: updated => {
+        this.managingStore.update(s => s ? { ...s, members: updated.members } : s);
+        this.memberSearch = '';
+        this.memberResults.set([]);
+      },
+      error: () => {},
+    });
+  }
+
+  removeMember(providerId: string) {
+    const storeId = this.managingStore()?.id;
+    if (!storeId) return;
+    this.api.removeStoreMember(storeId, providerId).subscribe({
+      next: updated => this.managingStore.update(s => s ? { ...s, members: updated.members } : s),
+      error: () => {},
+    });
+  }
+
+  toggleServiceStore(svc: Partial<Service>) {
+    const storeId = this.managingStore()?.id;
+    if (!storeId || !svc.id) return;
+    const newStoreId = svc.storeId === storeId ? (null as any) : storeId;
+    this.api.updateService(svc.id, { ...svc, storeId: newStoreId }).subscribe({
+      next: updated => this.services.update(ss => ss.map(s => s.id === updated.id ? updated : s)),
+      error: () => {},
+    });
+  }
+
+  memberColor(p: ProviderProfile) {
+    return getInitialsColor(p.user?.avatarInitials || '');
   }
 
   onCoverChange(event: Event) {
