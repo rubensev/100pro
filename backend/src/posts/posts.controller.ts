@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname, join } from 'path';
+import { extname } from 'path';
 import { PostsService } from './posts.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../common/current-user.decorator';
@@ -31,7 +31,7 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('image', {
     storage: diskStorage({
-      destination: join(__dirname, '..', '..', '..', 'uploads', 'posts'),
+      destination: './uploads/posts',
       filename: (_, file, cb) => cb(null, Date.now() + extname(file.originalname)),
     }),
     limits: { fileSize: 8 * 1024 * 1024 },
