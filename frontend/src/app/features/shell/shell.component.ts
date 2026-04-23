@@ -188,10 +188,18 @@ const NAV = [
                   <path [attr.d]="item.icon"/>
                 </svg>
                 @if (item.id === 'messages' && notif.unreadMessages() > 0) {
-                  <div style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:var(--re);border:1.5px solid var(--ca)"></div>
+                  <div style="position:absolute;top:-5px;right:-8px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;
+                              background:var(--re);color:white;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;
+                              border:1.5px solid var(--ca)">{{ notif.unreadMessages() > 99 ? '99+' : notif.unreadMessages() }}</div>
                 }
-                @if (item.id === 'schedule' && (notif.upcomingBookings() > 0 || notif.incomingBookings() > 0)) {
-                  <div style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:var(--ac);border:1.5px solid var(--ca)"></div>
+                @if (item.id === 'schedule' && notif.incomingBookings() > 0) {
+                  <div style="position:absolute;top:-5px;right:-8px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;
+                              background:var(--ac);color:white;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;
+                              border:1.5px solid var(--ca)">{{ notif.incomingBookings() }}</div>
+                } @else if (item.id === 'schedule' && notif.upcomingBookings() > 0) {
+                  <div style="position:absolute;top:-5px;right:-8px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;
+                              background:var(--p);color:white;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;
+                              border:1.5px solid var(--ca)">{{ notif.upcomingBookings() }}</div>
                 }
               </div>
               {{ i18n.t(item.key) }}

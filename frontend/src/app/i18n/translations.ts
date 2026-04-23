@@ -284,6 +284,14 @@ export const T: Record<string, Record<Lang, string>> = {
   'pricing.upgrade.cta':    { en: 'See plans',  pt: 'Ver planos',  fr: 'Voir les plans' },
   'pricing.current':        { en: 'Current plan', pt: 'Plano atual', fr: 'Plan actuel' },
 
+  // Notifications
+  'notif.unread':       { en: 'unread messages',      pt: 'mensagens não lidas',    fr: 'messages non lus' },
+  'notif.unread.sub':   { en: 'Tap to open messages', pt: 'Toque para ver',         fr: 'Appuyer pour voir' },
+  'notif.incoming':     { en: 'new booking requests', pt: 'novas solicitações',      fr: 'nouvelles réservations' },
+  'notif.incoming.sub': { en: 'Tap to see schedule',  pt: 'Toque para ver agenda',  fr: 'Voir le calendrier' },
+  'notif.upcoming':     { en: 'upcoming bookings',    pt: 'agendamentos próximos',   fr: 'réservations à venir' },
+  'notif.upcoming.sub': { en: 'Tap to see schedule',  pt: 'Toque para ver agenda',  fr: 'Voir le calendrier' },
+
   // Profile
   'profile.title':          { en: 'My Account',   pt: 'Minha Conta',  fr: 'Mon Compte' },
   'profile.photo':          { en: 'Profile photo', pt: 'Foto de perfil', fr: 'Photo de profil' },

@@ -5,18 +5,20 @@ import { Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationsService } from '../../core/services/notifications.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
 import { StarsComponent } from '../../shared/components/stars.component';
 import { BookingModalComponent } from './booking-modal.component';
 import { Post, Promo, CATEGORIES, getInitialsColor, Service } from '../../shared/models';
 import { TranslationService } from '../../i18n/translation.service';
+import { RouterLink } from '@angular/router';
 
 const API_BASE = 'http://localhost:3000';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, AvatarComponent, StarsComponent, BookingModalComponent],
+  imports: [CommonModule, FormsModule, RouterLink, AvatarComponent, StarsComponent, BookingModalComponent],
   template: `
     <div style="display:flex;flex-direction:column;gap:14px">
 
@@ -32,6 +34,57 @@ const API_BASE = 'http://localhost:3000';
         @if (query) { <button (click)="query=''" style="color:var(--t3);font-size:18px;line-height:1">×</button> }
         <button class="btn btn-p" style="padding:6px 14px;font-size:12px" (click)="goSearch()">{{ i18n.t('home.search.btn') }}</button>
       </div>
+
+      <!-- Notification summary (logged-in only) -->
+      @if (auth.isLoggedIn() && (notif.unreadMessages() > 0 || notif.upcomingBookings() > 0 || notif.incomingBookings() > 0)) {
+        <div style="display:flex;flex-direction:column;gap:6px">
+          @if (notif.unreadMessages() > 0) {
+            <a routerLink="/messages" style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r);
+               background:var(--ca);border:1.5px solid var(--re);text-decoration:none;transition:var(--tr)"
+               (mouseenter)="$any($event.currentTarget).style.background='oklch(0.97 0.03 27)'"
+               (mouseleave)="$any($event.currentTarget).style.background='var(--ca)'">
+              <div style="width:36px;height:36px;border-radius:50%;background:oklch(0.94 0.05 27);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--re)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:700;font-size:13px;color:var(--t)">{{ notif.unreadMessages() }} {{ i18n.t('notif.unread') }}</div>
+                <div style="font-size:11px;color:var(--t3)">{{ i18n.t('notif.unread.sub') }}</div>
+              </div>
+              <div style="background:var(--re);color:white;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;flex-shrink:0">{{ notif.unreadMessages() }}</div>
+            </a>
+          }
+          @if (notif.incomingBookings() > 0) {
+            <a routerLink="/schedule" style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r);
+               background:var(--ca);border:1.5px solid var(--ac);text-decoration:none;transition:var(--tr)"
+               (mouseenter)="$any($event.currentTarget).style.background='oklch(0.97 0.03 200)'"
+               (mouseleave)="$any($event.currentTarget).style.background='var(--ca)'">
+              <div style="width:36px;height:36px;border-radius:50%;background:oklch(0.94 0.05 200);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2"><path d="M3 4h18v18H3z"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:700;font-size:13px;color:var(--t)">{{ notif.incomingBookings() }} {{ i18n.t('notif.incoming') }}</div>
+                <div style="font-size:11px;color:var(--t3)">{{ i18n.t('notif.incoming.sub') }}</div>
+              </div>
+              <div style="background:var(--ac);color:white;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;flex-shrink:0">{{ notif.incomingBookings() }}</div>
+            </a>
+          }
+          @if (notif.upcomingBookings() > 0) {
+            <a routerLink="/schedule" style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r);
+               background:var(--ca);border:1.5px solid var(--p);text-decoration:none;transition:var(--tr)"
+               (mouseenter)="$any($event.currentTarget).style.background='var(--px)'"
+               (mouseleave)="$any($event.currentTarget).style.background='var(--ca)'">
+              <div style="width:36px;height:36px;border-radius:50%;background:var(--px);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--p)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:700;font-size:13px;color:var(--t)">{{ notif.upcomingBookings() }} {{ i18n.t('notif.upcoming') }}</div>
+                <div style="font-size:11px;color:var(--t3)">{{ i18n.t('notif.upcoming.sub') }}</div>
+              </div>
+              <div style="background:var(--p);color:white;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;flex-shrink:0">{{ notif.upcomingBookings() }}</div>
+            </a>
+          }
+        </div>
+      }
 
       <!-- Categories -->
       <div style="display:flex;gap:7px;overflow-x:auto;padding-bottom:2px">
@@ -299,6 +352,7 @@ const API_BASE = 'http://localhost:3000';
 export class HomeComponent implements OnInit {
   api = inject(ApiService);
   auth = inject(AuthService);
+  notif = inject(NotificationsService);
   router = inject(Router);
   i18n = inject(TranslationService);
   sanitizer = inject(DomSanitizer);
