@@ -32,7 +32,11 @@ export class UsersController {
   @Patch('me/plan')
   @UseGuards(JwtAuthGuard)
   async updatePlan(@Request() req, @Body() body: UpdatePlanDto) {
-    await this.users.update(req.user.id, { plan: body.plan });
+    const updates: any = { plan: body.plan };
+    if (body.plan === 'pro' || body.plan === 'master') {
+      updates.isProvider = true;
+    }
+    await this.users.update(req.user.id, updates);
     const user = await this.users.findById(req.user.id);
     return this.sanitize(user);
   }

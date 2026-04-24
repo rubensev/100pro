@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
+import { CurrencyService } from '../../core/services/currency.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
 import { StarsComponent } from '../../shared/components/stars.component';
 import { BookingModalComponent } from '../home/booking-modal.component';
@@ -137,7 +138,7 @@ const API_BASE = 'http://localhost:3000';
                     <span style="font-size:10px;color:var(--t3)">({{ p.reviewsCount }} {{ i18n.t('explore.reviews') }})</span>
                   </div>
                   <div style="display:flex;gap:6px;margin-bottom:10px">
-                    @if (minPrice(p)) { <span class="badge badge-p">R$ {{ minPrice(p) }}/h</span> }
+                    @if (minPrice(p)) { <span class="badge badge-p">{{ cur.fmt(minPrice(p)) }}/h</span> }
                     <span class="badge badge-g">{{ p.jobsCount }} {{ i18n.t('explore.jobs') }}</span>
                   </div>
                   <div style="display:flex;gap:6px">
@@ -179,12 +180,17 @@ const API_BASE = 'http://localhost:3000';
                   }
                 </div>
                 <div style="text-align:right;flex-shrink:0">
-                  <div style="font-weight:800;font-size:15px;color:var(--p)">R$ {{ s.price }}</div>
+                  <div style="font-weight:800;font-size:15px;color:var(--p)">{{ cur.fmt(s.price) }}</div>
                   @if (s.duration) { <div style="font-size:10px;color:var(--t3)">{{ s.duration }} min</div> }
                   @if (s.provider) {
-                    <button class="btn btn-p" style="font-size:11px;padding:5px 12px;margin-top:6px" (click)="bookService(s)">
-                      {{ i18n.t('explore.book') }}
-                    </button>
+                    <div style="display:flex;flex-direction:column;gap:4px;margin-top:6px">
+                      <a [routerLink]="['/p', s.provider.id]" class="btn btn-g" style="font-size:11px;padding:5px 10px;text-decoration:none;text-align:center">
+                        {{ i18n.t('explore.profile') }}
+                      </a>
+                      <button class="btn btn-p" style="font-size:11px;padding:5px 12px" (click)="bookService(s)">
+                        {{ i18n.t('explore.book') }}
+                      </button>
+                    </div>
                   }
                 </div>
               </div>
@@ -202,7 +208,7 @@ const API_BASE = 'http://localhost:3000';
           }
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px">
             @for (s of stores(); track s.id; let i = $index) {
-              <a [routerLink]="['/p', s.provider?.id]" style="text-decoration:none"
+              <a [routerLink]="['/store', s.id]" style="text-decoration:none"
                  class="fu" [style.animation-delay]="i * 0.05 + 's'">
                 <div style="background:var(--ca);border-radius:var(--r);border:1px solid var(--bo);overflow:hidden;transition:var(--tr)"
                      (mouseenter)="$any($event.currentTarget).style.transform='translateY(-3px)';$any($event.currentTarget).style.boxShadow='var(--shm)'"
@@ -242,6 +248,7 @@ const API_BASE = 'http://localhost:3000';
 export class ExploreComponent implements OnInit {
   api = inject(ApiService);
   auth = inject(AuthService);
+  cur = inject(CurrencyService);
   router = inject(Router);
   route = inject(ActivatedRoute);
   i18n = inject(TranslationService);

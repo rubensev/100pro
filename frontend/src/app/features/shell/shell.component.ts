@@ -7,6 +7,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { TranslationService } from '../../i18n/translation.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { NotificationsService } from '../../core/services/notifications.service';
+import { CurrencyService, CURRENCIES } from '../../core/services/currency.service';
 
 const NAV = [
   { id: 'home',      key: 'nav.home',     path: '/home',      icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' },
@@ -67,6 +68,17 @@ const NAV = [
           }
 
           <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px">
+            <!-- Currency selector -->
+            <div style="display:flex;gap:2px;padding:6px 8px;background:var(--bg);border-radius:10px;border:1px solid var(--bo)">
+              @for (c of currencies; track c.code) {
+                <button (click)="currency.set(c.code)"
+                        [style.background]="currency.currency() === c.code ? 'var(--p)' : 'transparent'"
+                        [style.color]="currency.currency() === c.code ? 'white' : 'var(--t2)'"
+                        style="flex:1;padding:5px 4px;border-radius:7px;border:none;font-size:10px;font-weight:700;cursor:pointer;transition:var(--tr)">
+                  {{ c.label }}
+                </button>
+              }
+            </div>
             <!-- Language + dark mode row -->
             <div style="display:flex;gap:6px;align-items:center">
               <div style="flex:1;display:flex;gap:2px;padding:6px 8px;background:var(--bg);border-radius:10px;border:1px solid var(--bo)">
@@ -127,8 +139,18 @@ const NAV = [
             border-bottom:1px solid var(--bo);padding:10px 14px;
             display:flex;align-items:center;justify-content:space-between;gap:8px">
             <app-logo size="sm" />
-            <!-- Mobile lang + dark toggle -->
+            <!-- Mobile lang + dark toggle + currency -->
             <div style="display:flex;gap:4px;align-items:center">
+              <div style="display:flex;gap:1px;background:var(--bg);border-radius:8px;border:1px solid var(--bo);padding:2px">
+                @for (c of currencies; track c.code) {
+                  <button (click)="currency.set(c.code)"
+                          [style.background]="currency.currency() === c.code ? 'var(--p)' : 'transparent'"
+                          [style.color]="currency.currency() === c.code ? 'white' : 'var(--t2)'"
+                          style="padding:3px 5px;border-radius:6px;border:none;font-size:9px;font-weight:700;cursor:pointer;transition:var(--tr)">
+                    {{ c.label }}
+                  </button>
+                }
+              </div>
               <div style="display:flex;gap:1px;background:var(--bg);border-radius:8px;border:1px solid var(--bo);padding:2px">
                 @for (l of langs; track l.code) {
                   <button (click)="i18n.setLang(l.code)"
@@ -262,6 +284,8 @@ export class ShellComponent implements OnInit, OnDestroy {
   theme = inject(ThemeService);
   router = inject(Router);
   notif = inject(NotificationsService);
+  currency = inject(CurrencyService);
+  currencies = CURRENCIES;
   mobile = signal(window.innerWidth < 768);
 
   ngOnInit() { if (this.auth.isLoggedIn()) this.notif.start(); }

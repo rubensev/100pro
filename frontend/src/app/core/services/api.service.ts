@@ -102,6 +102,7 @@ export class ApiService {
 
   // Blocked dates / vacation
   getBlockedDates() { return this.http.get<BlockedDate[]>(`${API}/blocked-dates`); }
+  getPublicBlockedDates(providerId: string) { return this.http.get<BlockedDate[]>(`${API}/blocked-dates/public`, { params: { providerId } }); }
   createBlockedDate(data: Partial<BlockedDate>) { return this.http.post<BlockedDate>(`${API}/blocked-dates`, data); }
   deleteBlockedDate(id: string) { return this.http.delete(`${API}/blocked-dates/${id}`); }
 

@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { AvatarComponent } from '../../shared/components/avatar.component';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Service } from '../../shared/models';
+import { CurrencyService } from '../../core/services/currency.service';
+import { Service, BlockedDate } from '../../shared/models';
 import { TranslationService } from '../../i18n/translation.service';
 
 @Component({
@@ -50,7 +51,7 @@ import { TranslationService } from '../../i18n/translation.service';
                     <div style="font-size:11px;color:var(--t3);margin-top:1px">{{ svc.duration }} {{ i18n.t('booking.min') }}</div>
                   </div>
                   <div style="text-align:right">
-                    <div style="font-weight:700;font-size:14px;color:var(--p)">R$ {{ svc.price }}</div>
+                    <div style="font-weight:700;font-size:14px;color:var(--p)">{{ cur.fmt(svc.price) }}</div>
                   </div>
                 </div>
               }
@@ -61,13 +62,19 @@ import { TranslationService } from '../../i18n/translation.service';
           @if (step() === 1) {
             <p style="font-size:12px;color:var(--t2);margin-bottom:10px">{{ i18n.t('booking.pick.day') }}</p>
             <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px">
-              @for (d of days; track d.full) {
-                <button (click)="selDay.set(d)"
-                        [style.border]="selDay()?.full === d.full ? '1.5px solid var(--p)' : '1.5px solid var(--bo)'"
-                        [style.background]="selDay()?.full === d.full ? 'var(--p)' : 'var(--bg)'"
-                        [style.color]="selDay()?.full === d.full ? 'white' : 'var(--t)'"
-                        style="flex-shrink:0;width:46px;border-radius:var(--rs);padding:7px 0;font-weight:600;font-size:13px;cursor:pointer;transition:var(--tr)">
+              @for (d of days(); track d.full) {
+                <button (click)="!d.blocked && selDay.set(d)"
+                        [disabled]="d.blocked"
+                        [style.border]="selDay()?.full === d.full ? '1.5px solid var(--p)' : d.blocked ? '1.5px dashed var(--bo)' : '1.5px solid var(--bo)'"
+                        [style.background]="selDay()?.full === d.full ? 'var(--p)' : d.blocked ? 'var(--bg)' : 'var(--bg)'"
+                        [style.color]="selDay()?.full === d.full ? 'white' : d.blocked ? 'var(--t3)' : 'var(--t)'"
+                        [style.opacity]="d.blocked ? '0.4' : '1'"
+                        [style.cursor]="d.blocked ? 'not-allowed' : 'pointer'"
+                        style="flex-shrink:0;width:46px;border-radius:var(--rs);padding:7px 0;font-weight:600;font-size:13px;transition:var(--tr)">
                   <div style="font-size:9px;font-weight:500;opacity:0.7">{{ d.month }}</div>{{ d.day }}
+                  @if (d.blocked) {
+                    <div style="font-size:8px;opacity:0.6">×</div>
+                  }
                 </button>
               }
             </div>
@@ -127,7 +134,7 @@ import { TranslationService } from '../../i18n/translation.service';
                 {{ i18n.t('booking.on') }} <strong>{{ selDay()?.day }} {{ selDay()?.month }}</strong> {{ i18n.t('booking.at') }} <strong>{{ selTime() }}</strong>
               </div>
               <div style="background:var(--px);border-radius:var(--rs);padding:10px 16px;display:inline-flex;gap:8px;align-items:center">
-                <span style="font-size:13px;font-weight:700;color:var(--p)">R$ {{ selSvc()?.price }}</span>
+                <span style="font-size:13px;font-weight:700;color:var(--p)">{{ cur.fmt(selSvc()?.price) }}</span>
               </div>
               @if (!auth.isLoggedIn()) {
                 <div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:var(--rs);font-size:12px;color:var(--t2)">
@@ -160,13 +167,15 @@ export class BookingModalComponent {
 
   api = inject(ApiService);
   auth = inject(AuthService);
+  cur = inject(CurrencyService);
   i18n = inject(TranslationService);
 
   step = signal(0);
   selSvc = signal<Service | null>(null);
-  selDay = signal<{ day: number; month: string; full: string } | null>(null);
+  selDay = signal<{ day: number; month: string; full: string; blocked: boolean } | null>(null);
   selTime = signal<string | null>(null);
   bookedSlots = signal<string[]>([]);
+  blockedDates = signal<BlockedDate[]>([]);
   loadingSlots = signal(false);
 
   guestName = '';
@@ -187,6 +196,37 @@ export class BookingModalComponent {
     });
   }
 
+  ngOnInit() {
+    if (this.providerId) {
+      this.api.getPublicBlockedDates(this.providerId).subscribe({
+        next: bd => this.blockedDates.set(bd),
+        error: () => {},
+      });
+    }
+  }
+
+  isDateBlocked(iso: string): boolean {
+    return this.blockedDates().some(b => {
+      const end = b.endDate || b.startDate;
+      return iso >= b.startDate && iso <= end;
+    });
+  }
+
+  days = computed(() => {
+    return Array.from({ length: 30 }, (_, i) => {
+      const d = new Date(); d.setDate(d.getDate() + i);
+      const full = d.toISOString().split('T')[0];
+      return {
+        day: d.getDate(),
+        month: d.toLocaleString('pt-BR', { month: 'short' }).toUpperCase(),
+        full,
+        blocked: this.isDateBlocked(full),
+      };
+    });
+  });
+
+  times = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+
   isBooked(t: string) { return this.bookedSlots().includes(t); }
 
   steps = computed(() => this.auth.isLoggedIn()
@@ -195,12 +235,6 @@ export class BookingModalComponent {
   );
 
   confirmStep = computed(() => this.auth.isLoggedIn() ? 2 : 3);
-
-  days = Array.from({ length: 14 }, (_, i) => {
-    const d = new Date(); d.setDate(d.getDate() + i);
-    return { day: d.getDate(), month: d.toLocaleString('pt-BR', { month: 'short' }).toUpperCase(), full: d.toISOString().split('T')[0] };
-  });
-  times = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 
   pickService(svc: Service) {
     this.selSvc.set(svc);
