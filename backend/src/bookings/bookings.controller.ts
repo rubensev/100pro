@@ -34,6 +34,18 @@ export class BookingsController {
     return { count };
   }
 
+  @Get('provider-stats')
+  @UseGuards(JwtAuthGuard)
+  providerStats(@CurrentUser() user: { id: string }) {
+    return this.svc.getProviderStats(user.id);
+  }
+
+  @Post('manual')
+  @UseGuards(JwtAuthGuard)
+  createManual(@CurrentUser() user: { id: string }, @Body() body: any) {
+    return this.svc.createManual(user.id, body);
+  }
+
   @Get('booked-slots')
   async bookedSlots(@Query('providerId') providerId: string, @Query('date') date: string) {
     const slots = await this.svc.getBookedSlots(providerId, date);

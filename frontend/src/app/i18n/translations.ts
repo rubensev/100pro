@@ -7,6 +7,9 @@ export const T: Record<string, Record<Lang, string>> = {
   'nav.schedule': { en: 'Schedule',  pt: 'Agenda',     fr: 'Agenda' },
   'nav.messages': { en: 'Messages',  pt: 'Mensagens',  fr: 'Messages' },
   'nav.provider': { en: 'Provider',  pt: 'Prestador',  fr: 'Prestataire' },
+  'nav.store':    { en: 'Store',     pt: 'Loja',       fr: 'Boutique' },
+  'nav.services': { en: 'Services',  pt: 'Serviços',   fr: 'Services' },
+  'nav.agenda':   { en: 'Agenda',    pt: 'Agenda Pro', fr: 'Agenda Pro' },
   'nav.signin':   { en: 'Sign in',   pt: 'Entrar',     fr: 'Connexion' },
   'nav.signout':  { en: 'Sign out',  pt: 'Sair',       fr: 'Déconnexion' },
 

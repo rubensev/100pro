@@ -9,12 +9,14 @@ import { ThemeService } from '../../core/services/theme.service';
 import { NotificationsService } from '../../core/services/notifications.service';
 
 const NAV = [
-  { id: 'home',     key: 'nav.home',     path: '/home',     icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' },
-  { id: 'explore',  key: 'nav.explore',  path: '/explore',  icon: 'M21 21l-4.35-4.35 M11 11m-8 0a8 8 0 1 0 16 0a8 8 0 0 0 -16 0' },
-  { id: 'schedule', key: 'nav.schedule', path: '/schedule', icon: 'M3 4h18v18H3z M16 2v4 M8 2v4 M3 10h18', requireAuth: true },
-  { id: 'messages', key: 'nav.messages', path: '/messages', icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', requireAuth: true },
-  { id: 'provider', key: 'nav.provider', path: '/provider', icon: 'M2 7h20v14H2z M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16', requireAuth: true, requireProvider: true },
-  { id: 'pricing', key: 'nav.pricing', path: '/pricing', icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' },
+  { id: 'home',      key: 'nav.home',     path: '/home',      icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' },
+  { id: 'explore',   key: 'nav.explore',  path: '/explore',   icon: 'M21 21l-4.35-4.35 M11 11m-8 0a8 8 0 1 0 16 0a8 8 0 0 0 -16 0' },
+  { id: 'schedule',  key: 'nav.schedule', path: '/schedule',  icon: 'M3 4h18v18H3z M16 2v4 M8 2v4 M3 10h18', requireAuth: true },
+  { id: 'messages',  key: 'nav.messages', path: '/messages',  icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', requireAuth: true },
+  { id: 'my-store',  key: 'nav.store',    path: '/my-store',  icon: 'M2 7h20v14H2z M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16', requireAuth: true, requireProvider: true },
+  { id: 'my-services', key: 'nav.services', path: '/my-services', icon: 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z', requireAuth: true, requireProvider: true },
+  { id: 'my-agenda', key: 'nav.agenda',   path: '/my-agenda', icon: 'M3 4h18v18H3z M16 2v4 M8 2v4 M3 10h18 M8 14h.01 M12 14h.01 M16 14h.01 M8 18h.01 M12 18h.01', requireAuth: true, requireProvider: true },
+  { id: 'pricing',   key: 'nav.pricing',  path: '/pricing',   icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' },
 ];
 
 @Component({

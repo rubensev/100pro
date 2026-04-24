@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Post, ProviderProfile, Service, Promo, Booking, Message, Store, Review } from '../../shared/models';
+import { Post, ProviderProfile, Service, Promo, Booking, Message, Store, Review, BlockedDate, ProviderStats } from '../../shared/models';
 
 const API = 'http://localhost:3000/api';
 
@@ -99,6 +99,15 @@ export class ApiService {
   sendMessage(receiverId: string, text: string) { return this.http.post<Message>(`${API}/messages`, { receiverId, text }); }
   getUnreadCount() { return this.http.get<{ count: number }>(`${API}/messages/unread-count`); }
   markThreadRead(otherId: string) { return this.http.patch(`${API}/messages/${otherId}/read`, {}); }
+
+  // Blocked dates / vacation
+  getBlockedDates() { return this.http.get<BlockedDate[]>(`${API}/blocked-dates`); }
+  createBlockedDate(data: Partial<BlockedDate>) { return this.http.post<BlockedDate>(`${API}/blocked-dates`, data); }
+  deleteBlockedDate(id: string) { return this.http.delete(`${API}/blocked-dates/${id}`); }
+
+  // Provider stats
+  getProviderStats() { return this.http.get<ProviderStats>(`${API}/bookings/provider-stats`); }
+  createManualBooking(data: any) { return this.http.post<Booking>(`${API}/bookings/manual`, data); }
 
   // Bookings
   getBookings() { return this.http.get<Booking[]>(`${API}/bookings`); }

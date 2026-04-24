@@ -56,6 +56,39 @@ export class BookingsService {
     return bookings.map(b => b.time);
   }
 
+  async getProviderStats(userId: string) {
+    const profile = await this.providers.findByUser(userId);
+    if (!profile) return null;
+    const bookings = await this.repo.find({
+      where: { providerId: profile.id },
+      relations: ['service'],
+    });
+    const active = bookings.filter(b => b.status !== 'cancelled');
+    const totalRevenue = active.reduce((s, b) => s + Number(b.finalPrice || 0), 0);
+    const byService: Record<string, { name: string; count: number; revenue: number }> = {};
+    for (const b of active) {
+      const sid = b.serviceId;
+      if (!byService[sid]) byService[sid] = { name: (b as any).service?.name || sid, count: 0, revenue: 0 };
+      byService[sid].count++;
+      byService[sid].revenue += Number(b.finalPrice || 0);
+    }
+    return {
+      total: bookings.length,
+      confirmed: bookings.filter(b => b.status === 'confirmed').length,
+      completed: bookings.filter(b => b.status === 'completed').length,
+      cancelled: bookings.filter(b => b.status === 'cancelled').length,
+      totalRevenue,
+      byService: Object.entries(byService).map(([id, v]) => ({ id, ...v })),
+    };
+  }
+
+  async createManual(userId: string, data: any) {
+    const profile = await this.providers.findByUser(userId);
+    if (!profile) throw new Error('Provider profile not found');
+    const booking = this.repo.create({ ...data, providerId: profile.id, clientId: null, status: 'confirmed' });
+    return this.repo.save(booking);
+  }
+
   async cancel(id: string, userId: string) {
     const booking = await this.repo.findOne({ where: { id } });
     if (!booking) throw new NotFoundException('Booking not found');

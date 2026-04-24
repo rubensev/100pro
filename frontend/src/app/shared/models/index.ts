@@ -127,6 +127,26 @@ export interface Booking {
   createdAt: string;
 }
 
+export interface BlockedDate {
+  id: string;
+  providerId: string;
+  serviceId?: string;
+  startDate: string;
+  endDate?: string;
+  note?: string;
+  type: 'dayoff' | 'vacation';
+  createdAt: string;
+}
+
+export interface ProviderStats {
+  total: number;
+  confirmed: number;
+  completed: number;
+  cancelled: number;
+  totalRevenue: number;
+  byService: { id: string; name: string; count: number; revenue: number }[];
+}
+
 export interface Message {
   id: string;
   senderId: string;
