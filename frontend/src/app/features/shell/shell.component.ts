@@ -8,6 +8,11 @@ import { TranslationService } from '../../i18n/translation.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { NotificationsService } from '../../core/services/notifications.service';
 import { CurrencyService, CURRENCIES } from '../../core/services/currency.service';
+import { ApiService } from '../../core/services/api.service';
+import { Store } from '../../shared/models';
+
+interface NavSubItem { id: string; icon: string; label: string; path: string; params?: Record<string, string>; }
+interface NavSection  { id: string; icon: string; label: string; items: NavSubItem[]; }
 
 const NAV = [
   { id: 'home',      key: 'nav.home',     path: '/home',      icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' },
@@ -31,10 +36,11 @@ const NAV = [
       @if (!mobile()) {
         <aside style="width:220px;flex-shrink:0;height:100vh;position:sticky;top:0;
           background:var(--ca);border-right:1px solid var(--bo);padding:18px 10px;
-          display:flex;flex-direction:column;gap:2px">
+          display:flex;flex-direction:column;gap:2px;overflow-y:auto">
           <div style="padding:0 8px 20px"><app-logo /></div>
 
-          @for (item of visibleNav(); track item.id) {
+          <!-- Regular nav items (non-provider) -->
+          @for (item of desktopTopNav(); track item.id) {
             <a [routerLink]="item.path"
                [style.background]="isActive(item.path) ? 'var(--px)' : 'transparent'"
                [style.color]="isActive(item.path) ? 'var(--p)' : 'var(--t2)'"
@@ -64,6 +70,62 @@ const NAV = [
               } @else if (item.id === 'schedule' && notif.upcomingBookings() > 0) {
                 <span style="margin-left:auto;background:var(--p);color:white;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;min-width:20px;text-align:center">{{ notif.upcomingBookings() }}</span>
               }
+            </a>
+          }
+
+          <!-- Provider expandable sections -->
+          @if (auth.user()?.isProvider) {
+            <div style="border-top:1px solid var(--bo);margin:6px 0 4px"></div>
+
+            @for (section of providerSections(); track section.id) {
+              <!-- Section header -->
+              <button (click)="toggle(section.id)"
+                      style="display:flex;align-items:center;gap:10px;padding:9px 12px;width:100%;border:none;
+                             border-radius:11px;cursor:pointer;transition:var(--tr)"
+                      [style.background]="hasActiveSub(section) ? 'var(--px)' : 'transparent'"
+                      [style.color]="hasActiveSub(section) ? 'var(--p)' : 'var(--t2)'">
+                <span style="font-size:14px;flex-shrink:0;line-height:1">{{ section.icon }}</span>
+                <span style="font-size:13px;flex:1;text-align:left;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ section.label }}</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                     style="flex-shrink:0;transition:transform 0.2s"
+                     [style.transform]="expanded() === section.id ? 'rotate(180deg)' : 'none'">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+
+              <!-- Sub-items -->
+              @if (expanded() === section.id) {
+                <div style="padding-left:14px;display:flex;flex-direction:column;gap:1px;padding-bottom:4px">
+                  @for (item of section.items; track item.id) {
+                    <a [routerLink]="item.path" [queryParams]="item.params || null"
+                       style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;
+                              font-size:12px;text-decoration:none;transition:var(--tr)"
+                       [style.background]="isSubActive(item.path, item.params) ? 'var(--px)' : 'transparent'"
+                       [style.color]="isSubActive(item.path, item.params) ? 'var(--p)' : 'var(--t3)'"
+                       [style.fontWeight]="isSubActive(item.path, item.params) ? '700' : '500'"
+                       (mouseenter)="$any($event.currentTarget).style.background = isSubActive(item.path, item.params) ? 'var(--px)' : 'var(--bg)'"
+                       (mouseleave)="$any($event.currentTarget).style.background = isSubActive(item.path, item.params) ? 'var(--px)' : 'transparent'">
+                      <span style="font-size:13px">{{ item.icon }}</span>
+                      {{ item.label }}
+                    </a>
+                  }
+                </div>
+              }
+            }
+
+            <!-- Agenda direct link -->
+            <a routerLink="/my-agenda"
+               [style.background]="isActive('/my-agenda') ? 'var(--px)' : 'transparent'"
+               [style.color]="isActive('/my-agenda') ? 'var(--p)' : 'var(--t2)'"
+               [style.fontWeight]="isActive('/my-agenda') ? '700' : '500'"
+               (mouseenter)="onHover($event, true, '/my-agenda')"
+               (mouseleave)="onHover($event, false, '/my-agenda')"
+               style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:11px;
+                      font-size:13px;text-decoration:none;transition:var(--tr)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 4h18v18H3z M16 2v4 M8 2v4 M3 10h18 M8 14h.01 M12 14h.01 M16 14h.01 M8 18h.01 M12 18h.01"/>
+              </svg>
+              {{ i18n.t('nav.agenda') }}
             </a>
           }
 
@@ -285,8 +347,26 @@ export class ShellComponent implements OnInit, OnDestroy {
   router = inject(Router);
   notif = inject(NotificationsService);
   currency = inject(CurrencyService);
+  api = inject(ApiService);
   currencies = CURRENCIES;
   mobile = signal(window.innerWidth < 768);
+
+  myStores = signal<Store[]>([]);
+  myProviderId = signal<string | null>(null);
+  expanded = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      if (this.auth.user()?.isProvider) {
+        this.api.getMyStores().subscribe({ next: ss => this.myStores.set(ss), error: () => {} });
+        this.api.getMyProfile().subscribe({ next: p => this.myProviderId.set(p?.id ?? null), error: () => {} });
+      } else {
+        this.myStores.set([]);
+        this.myProviderId.set(null);
+        this.expanded.set(null);
+      }
+    });
+  }
 
   ngOnInit() { if (this.auth.isLoggedIn()) this.notif.start(); }
   ngOnDestroy() { this.notif.stop(); }
@@ -297,6 +377,14 @@ export class ShellComponent implements OnInit, OnDestroy {
     { code: 'fr' as const, label: 'FR' },
   ];
 
+  desktopTopNav = computed(() =>
+    NAV.filter(n => {
+      if ((n as any).requireProvider) return false;
+      if (n.requireAuth && !this.auth.isLoggedIn()) return false;
+      return true;
+    })
+  );
+
   visibleNav = computed(() =>
     NAV.filter(n => {
       if (n.requireAuth && !this.auth.isLoggedIn()) return false;
@@ -304,6 +392,67 @@ export class ShellComponent implements OnInit, OnDestroy {
       return true;
     })
   );
+
+  providerSections = computed((): NavSection[] => {
+    const pid = this.myProviderId();
+    const profilePath = pid ? `/p/${pid}` : '/provider';
+    const sections: NavSection[] = [];
+
+    for (const store of this.myStores()) {
+      sections.push({
+        id: `store_${store.id}`,
+        icon: '🏪',
+        label: store.name,
+        items: [
+          { id: 'dashboard', icon: '📊', label: this.i18n.t('nav.dashboard'), path: '/my-store', params: { s: store.id, t: 'dashboard' } },
+          { id: 'posts',     icon: '📝', label: this.i18n.t('nav.posts'),     path: '/provider', params: { tab: 'posts' } },
+          { id: 'profile',   icon: '👁', label: this.i18n.t('nav.profile'),   path: `/store/${store.id}` },
+          { id: 'settings',  icon: '⚙️', label: this.i18n.t('nav.settings'), path: '/my-store', params: { s: store.id, t: 'config' } },
+        ],
+      });
+    }
+
+    sections.push({
+      id: 'services',
+      icon: '🛠',
+      label: this.i18n.t('nav.services'),
+      items: [
+        { id: 'dashboard', icon: '📊', label: this.i18n.t('nav.dashboard'), path: '/my-services', params: { t: 'list' } },
+        { id: 'posts',     icon: '📝', label: this.i18n.t('nav.posts'),     path: '/provider', params: { tab: 'posts' } },
+        { id: 'profile',   icon: '👁', label: this.i18n.t('nav.profile'),   path: profilePath },
+        { id: 'settings',  icon: '⚙️', label: this.i18n.t('nav.settings'), path: '/my-services', params: { t: 'config' } },
+      ],
+    });
+
+    sections.push({
+      id: 'person',
+      icon: '👤',
+      label: this.i18n.t('nav.person'),
+      items: [
+        { id: 'posts',    icon: '📝', label: this.i18n.t('nav.posts'),    path: '/provider', params: { tab: 'posts' } },
+        { id: 'profile',  icon: '👁', label: this.i18n.t('nav.profile'),  path: profilePath },
+        { id: 'settings', icon: '⚙️', label: this.i18n.t('nav.settings'), path: '/provider', params: { tab: 'profile' } },
+      ],
+    });
+
+    return sections;
+  });
+
+  toggle(id: string) {
+    this.expanded.set(this.expanded() === id ? null : id);
+  }
+
+  isSubActive(path: string, params?: Record<string, string>): boolean {
+    const [base, qs] = this.router.url.split('?');
+    if (base !== path) return false;
+    if (!params || !Object.keys(params).length) return !qs;
+    const sp = new URLSearchParams(qs || '');
+    return Object.entries(params).every(([k, v]) => sp.get(k) === v);
+  }
+
+  hasActiveSub(section: NavSection): boolean {
+    return section.items.some(item => this.isSubActive(item.path, item.params));
+  }
 
   get userInitials() {
     return this.auth.user()?.avatarInitials || this.auth.user()?.name?.slice(0, 2).toUpperCase() || 'VC';

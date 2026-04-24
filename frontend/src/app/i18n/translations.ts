@@ -9,9 +9,14 @@ export const T: Record<string, Record<Lang, string>> = {
   'nav.provider': { en: 'Provider',  pt: 'Prestador',  fr: 'Prestataire' },
   'nav.store':    { en: 'Store',     pt: 'Loja',       fr: 'Boutique' },
   'nav.services': { en: 'Services',  pt: 'Serviços',   fr: 'Services' },
-  'nav.agenda':   { en: 'Agenda',    pt: 'Agenda Pro', fr: 'Agenda Pro' },
-  'nav.signin':   { en: 'Sign in',   pt: 'Entrar',     fr: 'Connexion' },
-  'nav.signout':  { en: 'Sign out',  pt: 'Sair',       fr: 'Déconnexion' },
+  'nav.agenda':    { en: 'Agenda',     pt: 'Agenda Pro',   fr: 'Agenda Pro' },
+  'nav.person':    { en: 'Person',     pt: 'Pessoa',       fr: 'Personne' },
+  'nav.dashboard': { en: 'Dashboard',  pt: 'Dashboard',    fr: 'Tableau de bord' },
+  'nav.posts':     { en: 'Posts',      pt: 'Posts',        fr: 'Publications' },
+  'nav.profile':   { en: 'Profile',    pt: 'Perfil',       fr: 'Profil' },
+  'nav.settings':  { en: 'Settings',   pt: 'Configurações',fr: 'Paramètres' },
+  'nav.signin':    { en: 'Sign in',    pt: 'Entrar',       fr: 'Connexion' },
+  'nav.signout':   { en: 'Sign out',   pt: 'Sair',         fr: 'Déconnexion' },
 
   // Categories
   'cat.all':    { en: 'All',          pt: 'Todos',       fr: 'Tous' },

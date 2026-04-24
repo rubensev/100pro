@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AvatarComponent } from '../../shared/components/avatar.component';
@@ -252,6 +252,7 @@ const API_BASE = 'http://localhost:3000';
 export class StoreMgmtComponent implements OnInit {
   api = inject(ApiService);
   auth = inject(AuthService);
+  route = inject(ActivatedRoute);
 
   API_BASE = API_BASE;
   cats = CATEGORIES.filter(c => c.id !== 'all');
@@ -281,10 +282,19 @@ export class StoreMgmtComponent implements OnInit {
   currentStore = computed(() => this.activeStore() ?? this.stores()[0] ?? null);
 
   ngOnInit() {
+    const params = this.route.snapshot.queryParams;
+    if (params['t'] && ['dashboard', 'config', 'team'].includes(params['t'])) {
+      this.tab.set(params['t']);
+    }
     this.api.getMyStores().subscribe({
       next: stores => {
         this.stores.set(stores);
         this.loading.set(false);
+        const targetId = params['s'];
+        if (targetId) {
+          const found = stores.find(s => s.id === targetId);
+          if (found) { this.selectStore(found); return; }
+        }
         if (stores.length === 1) this.selectStore(stores[0]);
       },
       error: () => this.loading.set(false),

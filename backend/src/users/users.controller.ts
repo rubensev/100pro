@@ -35,6 +35,8 @@ export class UsersController {
     const updates: any = { plan: body.plan };
     if (body.plan === 'pro' || body.plan === 'master') {
       updates.isProvider = true;
+    } else {
+      updates.isProvider = false;
     }
     await this.users.update(req.user.id, updates);
     const user = await this.users.findById(req.user.id);

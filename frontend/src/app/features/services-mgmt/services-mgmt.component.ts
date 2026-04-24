@@ -15,7 +15,44 @@ const API_BASE = 'http://localhost:3000';
   template: `
     <div style="display:flex;flex-direction:column;gap:14px">
 
+      <!-- Top-level tab bar -->
       @if (!selected()) {
+        <div style="display:flex;gap:4px;background:var(--ca);border-radius:var(--r);padding:5px;border:1px solid var(--bo)">
+          <button (click)="mainTab.set('list')"
+                  [style.background]="mainTab() === 'list' ? 'var(--p)' : 'transparent'"
+                  [style.color]="mainTab() === 'list' ? 'white' : 'var(--t2)'"
+                  style="flex:1;padding:8px 4px;border-radius:var(--rs);border:none;font-weight:600;font-size:12px;cursor:pointer;transition:var(--tr)">
+            🛠 Dashboard
+          </button>
+          <button (click)="mainTab.set('config')"
+                  [style.background]="mainTab() === 'config' ? 'var(--p)' : 'transparent'"
+                  [style.color]="mainTab() === 'config' ? 'white' : 'var(--t2)'"
+                  style="flex:1;padding:8px 4px;border-radius:var(--rs);border:none;font-weight:600;font-size:12px;cursor:pointer;transition:var(--tr)">
+            ⚙️ Configurações
+          </button>
+        </div>
+      }
+
+      @if (mainTab() === 'config' && !selected()) {
+        <!-- ── GENERAL CONFIG ── -->
+        <div class="card" style="padding:24px;text-align:center;color:var(--t3)">
+          <div style="font-size:36px;margin-bottom:10px">⚙️</div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:4px">Configurações Gerais</div>
+          <div style="font-size:13px">Selecione um serviço para configurar horários e disponibilidade.</div>
+          <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+            @for (s of services(); track s.id) {
+              <div class="card" style="padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer"
+                   (click)="selectService(s); svcTab.set('horario')">
+                <span style="font-size:18px">{{ catIcon(s.category) }}</span>
+                <span style="font-weight:600;font-size:13px;flex:1">{{ s.name }}</span>
+                <span style="font-size:12px;color:var(--p)">Horário →</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      @if (mainTab() === 'list' && !selected()) {
         <!-- ── SERVICES LIST ── -->
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
@@ -80,7 +117,9 @@ const API_BASE = 'http://localhost:3000';
           </div>
         }
 
-      } @else {
+      }
+
+      @if (selected()) {
         <!-- ── SERVICE DETAIL ── -->
         <div style="display:flex;align-items:center;gap:10px">
           <button class="btn btn-g" style="padding:6px 12px;font-size:12px" (click)="selected.set(null)">← Serviços</button>
@@ -341,6 +380,7 @@ export class ServicesMgmtComponent implements OnInit {
   ];
   hours = ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'];
 
+  mainTab = signal<'list' | 'config'>('list');
   services = signal<Partial<Service>[]>([]);
   selected = signal<Partial<Service> | null>(null);
   svcTab = signal('dashboard');
@@ -378,6 +418,9 @@ export class ServicesMgmtComponent implements OnInit {
   });
 
   ngOnInit() {
+    const qt = this.route.snapshot.queryParams['t'];
+    if (qt === 'config') this.mainTab.set('config');
+
     this.api.getMyServices().subscribe({ next: s => { this.services.set(s); this.initDayHours(); }, error: () => {} });
     this.api.getMyPromos().subscribe({ next: p => this.promos.set(p), error: () => {} });
     this.api.getBlockedDates().subscribe({ next: b => this.blockedDates.set(b), error: () => {} });
