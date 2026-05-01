@@ -6,7 +6,7 @@ import { AvatarComponent } from '../../shared/components/avatar.component';
 import { AuthService } from '../../core/services/auth.service';
 import { TranslationService } from '../../i18n/translation.service';
 import { ThemeService } from '../../core/services/theme.service';
-import { NotificationsService } from '../../core/services/notifications.service';
+import { NotificationsService, AppNotification } from '../../core/services/notifications.service';
 import { CurrencyService, CURRENCIES } from '../../core/services/currency.service';
 import { ApiService } from '../../core/services/api.service';
 import { Store } from '../../shared/models';
@@ -130,6 +130,35 @@ const NAV = [
           }
 
           <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px">
+            <!-- Notification bell -->
+            @if (auth.isLoggedIn()) {
+              <button (click)="notif.togglePanel()"
+                      style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;
+                             border:none;background:var(--bg);cursor:pointer;transition:var(--tr);width:100%;position:relative"
+                      [style.background]="notif.panelOpen() ? 'var(--px)' : 'var(--bg)'"
+                      [style.color]="notif.panelOpen() ? 'var(--p)' : 'var(--t2)'"
+                      (mouseenter)="$any($event.currentTarget).style.background='var(--px)'"
+                      (mouseleave)="$any($event.currentTarget).style.background=notif.panelOpen()?'var(--px)':'var(--bg)'">
+                <div style="position:relative;flex-shrink:0">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
+                  </svg>
+                  @if (notif.unreadCount() > 0) {
+                    <span style="position:absolute;top:-5px;right:-6px;min-width:16px;height:16px;padding:0 4px;
+                                 border-radius:99px;background:var(--re);color:white;font-size:9px;font-weight:700;
+                                 display:flex;align-items:center;justify-content:center;border:1.5px solid var(--ca)">
+                      {{ notif.unreadCount() > 9 ? '9+' : notif.unreadCount() }}
+                    </span>
+                  }
+                </div>
+                <span style="font-size:13px;font-weight:600">Notificações</span>
+                @if (notif.unreadCount() > 0) {
+                  <span style="margin-left:auto;background:var(--re);color:white;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700">
+                    {{ notif.unreadCount() }}
+                  </span>
+                }
+              </button>
+            }
             <!-- Currency selector -->
             <div style="display:flex;gap:2px;padding:6px 8px;background:var(--bg);border-radius:10px;border:1px solid var(--bo)">
               @for (c of currencies; track c.code) {
@@ -239,6 +268,21 @@ const NAV = [
               </button>
             </div>
             @if (auth.isLoggedIn()) {
+              <button (click)="notif.togglePanel()" style="position:relative;background:var(--bg);border:1px solid var(--bo);
+                      border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer"
+                      [style.background]="notif.panelOpen() ? 'var(--px)' : 'var(--bg)'"
+                      [style.color]="notif.panelOpen() ? 'var(--p)' : 'var(--t2)'">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                @if (notif.unreadCount() > 0) {
+                  <span style="position:absolute;top:-4px;right:-4px;min-width:14px;height:14px;border-radius:99px;
+                               background:var(--re);color:white;font-size:8px;font-weight:700;
+                               display:flex;align-items:center;justify-content:center;border:1.5px solid var(--ca)">
+                    {{ notif.unreadCount() > 9 ? '9+' : notif.unreadCount() }}
+                  </span>
+                }
+              </button>
               <a routerLink="/profile" style="text-decoration:none">
                 @if (auth.user()?.avatarUrl) {
                   <img [src]="'http://localhost:3000' + auth.user()!.avatarUrl"
@@ -310,6 +354,64 @@ const NAV = [
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
         </button>
+      }
+
+      <!-- Notification panel -->
+      @if (notif.panelOpen()) {
+        <div style="position:fixed;inset:0;z-index:150" (click)="notif.closePanel()"></div>
+        <div style="position:fixed;z-index:160;width:340px;max-height:520px;display:flex;flex-direction:column;
+                    background:var(--ca);border:1px solid var(--bo);border-radius:var(--r);box-shadow:var(--shm);overflow:hidden"
+             [style.bottom]="mobile() ? '70px' : 'auto'"
+             [style.top]="mobile() ? 'auto' : '60px'"
+             [style.left]="mobile() ? '8px' : '228px'"
+             (click)="$event.stopPropagation()">
+          <!-- Header -->
+          <div style="padding:14px 16px;border-bottom:1px solid var(--bo);display:flex;align-items:center;justify-content:space-between">
+            <div style="font-weight:800;font-size:14px">Notificações</div>
+            <div style="display:flex;gap:6px">
+              @if (notif.unreadCount() > 0) {
+                <button (click)="notif.markAllRead()" class="btn btn-g" style="font-size:11px;padding:4px 10px">
+                  Marcar tudo lido
+                </button>
+              }
+              @if (notif.items().length > 0) {
+                <button (click)="notif.clearAll()" class="btn btn-g" style="font-size:11px;padding:4px 10px;color:var(--re)">
+                  Limpar
+                </button>
+              }
+            </div>
+          </div>
+          <!-- List -->
+          <div style="overflow-y:auto;flex:1">
+            @if (notif.items().length === 0) {
+              <div style="padding:40px 16px;text-align:center;color:var(--t3)">
+                <div style="font-size:32px;margin-bottom:8px">🔔</div>
+                <div style="font-size:13px">Sem notificações</div>
+              </div>
+            }
+            @for (item of notif.items(); track item.id) {
+              <div (click)="notif.navigateTo(item)"
+                   style="padding:12px 16px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;
+                          border-bottom:1px solid var(--bo);transition:var(--tr)"
+                   [style.background]="item.read ? 'transparent' : 'var(--px)'"
+                   (mouseenter)="$any($event.currentTarget).style.background='var(--bg)'"
+                   (mouseleave)="$any($event.currentTarget).style.background=item.read?'transparent':'var(--px)'">
+                <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px"
+                     [style.background]="item.type === 'message' ? 'oklch(0.85 0.10 250)' : 'oklch(0.85 0.12 150)'">
+                  {{ item.type === 'message' ? '💬' : '📅' }}
+                </div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-weight:700;font-size:13px;color:var(--t)">{{ item.title }}</div>
+                  <div style="font-size:12px;color:var(--t2);margin-top:1px">{{ item.body }}</div>
+                  <div style="font-size:10px;color:var(--t3);margin-top:3px">{{ notif.timeAgo(item.time) }}</div>
+                </div>
+                @if (!item.read) {
+                  <div style="width:8px;height:8px;border-radius:50%;background:var(--p);flex-shrink:0;margin-top:4px"></div>
+                }
+              </div>
+            }
+          </div>
+        </div>
       }
 
       <!-- Login prompt overlay -->
