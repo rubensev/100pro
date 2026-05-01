@@ -46,8 +46,8 @@ export class StoresService {
   async create(userId: string, data: Partial<Store>) {
     const user = await this.users.findById(userId);
     const userPlan = user?.plan || 'free';
-    const provider = await this.providers.findByUser(userId);
-    if (!provider) throw new ForbiddenException('Provider profile required');
+    let provider = await this.providers.findByUser(userId);
+    if (!provider) provider = await this.providers.upsert(userId, {});
 
     const limit = PLAN_LIMITS[userPlan] ?? 0;
     if (limit === 0) throw new ForbiddenException('Upgrade to Pro or Master to create stores');

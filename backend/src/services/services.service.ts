@@ -27,8 +27,8 @@ export class ServicesService {
   }
 
   async create(userId: string, data: Partial<Service>) {
-    const profile = await this.providers.findByUser(userId);
-    if (!profile) throw new ForbiddenException('Provider profile required');
+    let profile = await this.providers.findByUser(userId);
+    if (!profile) profile = await this.providers.upsert(userId, {});
     const svc = this.repo.create({ ...data, providerId: profile.id });
     return this.repo.save(svc);
   }
