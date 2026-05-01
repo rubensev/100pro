@@ -18,16 +18,27 @@ import { BlockedDatesModule } from './blocked-dates/blocked-dates.module';
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (cfg: ConfigService) => ({
-        type: 'postgres',
-        host: cfg.get('DATABASE_HOST', 'localhost'),
-        port: cfg.get<number>('DATABASE_PORT', 5432),
-        username: cfg.get('DATABASE_USER', 'postgres'),
-        password: cfg.get('DATABASE_PASS', 'postgres'),
-        database: cfg.get('DATABASE_NAME', 'hundredpro'),
-        autoLoadEntities: true,
-        synchronize: true,
-      }),
+      useFactory: (cfg: ConfigService) => {
+        const usePostgres = cfg.get('DATABASE_HOST');
+        if (usePostgres) {
+          return {
+            type: 'postgres',
+            host: cfg.get('DATABASE_HOST', 'localhost'),
+            port: cfg.get<number>('DATABASE_PORT', 5432),
+            username: cfg.get('DATABASE_USER', 'postgres'),
+            password: cfg.get('DATABASE_PASS', 'postgres'),
+            database: cfg.get('DATABASE_NAME', 'hundredpro'),
+            autoLoadEntities: true,
+            synchronize: true,
+          };
+        }
+        return {
+          type: 'better-sqlite3',
+          database: 'dev.db',
+          autoLoadEntities: true,
+          synchronize: true,
+        };
+      },
     }),
     AuthModule,
     UsersModule,
