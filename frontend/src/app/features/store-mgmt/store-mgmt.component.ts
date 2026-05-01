@@ -282,6 +282,8 @@ export class StoreMgmtComponent implements OnInit {
   currentStore = computed(() => this.activeStore() ?? this.stores()[0] ?? null);
 
   ngOnInit() {
+    // Refresh user so plan is always current (e.g. after upgrading)
+    this.api.getMe().subscribe({ next: u => this.auth.updateUser(u), error: () => {} });
     const params = this.route.snapshot.queryParams;
     if (params['t'] && ['dashboard', 'config', 'team'].includes(params['t'])) {
       this.tab.set(params['t']);

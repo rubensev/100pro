@@ -184,6 +184,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   private convPoll: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit() {
+    this.notif.refresh();
     this.loadConversations();
     this.convPoll = setInterval(() => this.silentRefreshConvs(), 15000);
     const p = this.route.snapshot.queryParams;

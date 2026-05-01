@@ -15,7 +15,7 @@ export class NotificationsService implements OnDestroy {
 
   start() {
     this.poll();
-    this.timer = setInterval(() => this.poll(), 30000);
+    this.timer = setInterval(() => this.poll(), 10000);
   }
 
   stop() {
@@ -25,6 +25,7 @@ export class NotificationsService implements OnDestroy {
     this.incomingBookings.set(0);
   }
 
+  refresh() { this.poll(); }
   decrementMessages() { this.unreadMessages.update(n => Math.max(0, n - 1)); }
   clearIncoming() { this.incomingBookings.set(0); }
 
